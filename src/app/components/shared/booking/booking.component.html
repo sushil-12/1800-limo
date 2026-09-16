@@ -2044,7 +2044,6 @@
 				<!-- Visible in only In-Progress Affiliate Section -->
 				<!-- In-Progress Affiliate Section -->
 				<div class="row px-4" *ngIf="Form.affiliate_type.value == 'in_progress_affiliate'">
-				<div class="row px-4" *ngIf="Form.affiliate_type.value == 'in_progress_affiliate'">
 					<div class="col-md-12">
 						<!-- Same server-side search / distance ranking / paging as the
 						     approved list; rows additionally show onboarding state. -->
@@ -2081,7 +2080,6 @@
 							</ng-template>
 						</ng-select>
 					</div>
-				</div>
 				</div>
 				<!-- In-Progress Affiliate Section Ends -->
 			</div>
@@ -2209,7 +2207,6 @@
 				<div class="row px-4" *ngIf="Form.affiliate_type.value == 'loose_affiliate'">
 					<!-- Vehicle Type -->
 					<div id="vehicle-type" [ngClass]="Form.vehicle_type.value ? 'col-md-4 mb-3' : 'col-md-12 mb-3'">
-					<div id="vehicle-type" class="col-md-12 mb-3">
 						<!-- Ng-Select -->
 						<ng-select appearance="outline" [items]="BigData?.vehicleCategories" bindLabel="name" bindValue="id"
 							placeholder="Select Vehicle Type" dropdownPosition="bottom" [markFirst]="true"
@@ -2322,12 +2319,6 @@
 						<ng-select appearance="outline"
 							[items]="selectedPendingAffiliate?.has_vehicle ? vehicleType_arr : BigData?.vehicleCategories"
 							bindLabel="name" bindValue="id"
-				<div class="row px-4" *ngIf="Form.affiliate_type.value == 'in_progress_affiliate'">
-					<!-- Vehicle Type -->
-					<div id="vehicle-type" class="col-md-12 mb-3">
-						<ng-select appearance="outline"
-							[items]="selectedPendingAffiliate?.has_vehicle ? vehicleType_arr : BigData?.vehicleCategories"
-							bindLabel="name" bindValue="id"
 							placeholder="Select Vehicle Type" dropdownPosition="bottom" [markFirst]="true"
 							[virtualScroll]="true" formControlName="vehicle_type"
 							(change)="selectedPendingAffiliate?.has_vehicle ? handleChangeVehicleType($event) : null"
@@ -2343,9 +2334,6 @@
 					<!-- Make -->
 					<div id="make" *ngIf="Form.vehicle_type.value" class="col-md-4" [class.block-cursor]="selectedPendingAffiliate?.has_vehicle">
 						<!-- Make - Ng-Select -->
-					<!-- Make -->
-					<div id="make" *ngIf="Form.vehicle_type.value" class="col-md-4" [class.block-cursor]="selectedPendingAffiliate?.has_vehicle">
-						<!-- Make - Ng-Select -->
 						<ng-select appearance="outline" [items]="BigData?.vehicleMakes" dropdownPosition="bottom"
 							[markFirst]="true" [virtualScroll]="true" bindLabel="name" bindValue="id"
 							placeholder="Select Make" formControlName="vehicle_make"
@@ -2353,9 +2341,6 @@
 						</ng-select>
 					</div>
 
-					<!-- Model -->
-					<div id="model" class="col-md-4" *ngIf="Form.vehicle_type.value" [class.block-cursor]="selectedPendingAffiliate?.has_vehicle">
-						<!-- Ng-Select -->
 					<!-- Model -->
 					<div id="model" class="col-md-4" *ngIf="Form.vehicle_type.value" [class.block-cursor]="selectedPendingAffiliate?.has_vehicle">
 						<!-- Ng-Select -->
@@ -2369,9 +2354,6 @@
 					<!-- Year -->
 					<div id="year" class="col-md-3" [class.block-cursor]="selectedPendingAffiliate?.has_vehicle">
 						<!-- Ng-Select -->
-					<!-- Year -->
-					<div id="year" class="col-md-4" [class.block-cursor]="selectedPendingAffiliate?.has_vehicle">
-						<!-- Ng-Select -->
 						<ng-select appearance="outline" [items]="BigData?.vehicleYears" bindLabel="name" bindValue="id"
 							placeholder="Select Year" dropdownPosition="bottom" [markFirst]="true" [virtualScroll]="true"
 							formControlName="vehicle_year"
@@ -2382,9 +2364,6 @@
 					<!-- Color -->
 					<div id="color" class="col-md-3" [class.block-cursor]="selectedPendingAffiliate?.has_vehicle">
 						<!-- Ng-Select -->
-					<!-- Color -->
-					<div id="color" class="col-md-4" [class.block-cursor]="selectedPendingAffiliate?.has_vehicle">
-						<!-- Ng-Select -->
 						<ng-select appearance="outline" [items]="BigData?.vehicleColors" bindLabel="name" bindValue="id"
 							placeholder="Select Color" dropdownPosition="bottom" [markFirst]="true" [virtualScroll]="true"
 							formControlName="vehicle_color"
@@ -2394,8 +2373,6 @@
 
 					<!-- License Plate -->
 					<div class="col-md-3">
-					<!-- License Plate -->
-					<div class="col-md-4">
 						<mat-form-field appearance="outline" style="margin-top: 0 !important;">
 							<mat-label>
 								License Plate #
@@ -2415,8 +2392,6 @@
 
 					<!-- Number of Seats -->
 					<div class="col-md-3">
-					<!-- Number of Seats -->
-					<div class="col-md-4">
 						<mat-form-field appearance="outline" style="margin-top: 0 !important;">
 							<mat-label>
 								Number of Seats
@@ -2450,7 +2425,6 @@
 								number</div>
 						</div>
 					</div>
-				</div>
 				</div>
 			</div>
 			<!-- Affiliate Vehicle Information Ends -->
@@ -3787,11 +3761,6 @@
 								*ngFor="let aa of booking_params.affiliate_accounts">
 								{{ textFormatter(aa) | titlecase }}
 							</mat-radio-button>
-							<mat-radio-button [value]="aa" class="my-2 mx-2 mx-md-4"
-								(click)="resetReturnDriverAndVehicle(aa)"
-								*ngFor="let aa of booking_params.affiliate_accounts">
-								{{ textFormatter(aa) | titlecase }}
-							</mat-radio-button>
 						</mat-radio-group>
 					</div>
 				</div>
@@ -3954,7 +3923,6 @@
 				<!-- Visible in only In-Progress Affiliate Section -->
 				<!-- In-Progress Affiliate Section -->
 				<div class="row px-4" *ngIf="Form.return_affiliate_type.value == 'in_progress_affiliate'">
-				<div class="row px-4" *ngIf="Form.return_affiliate_type.value == 'in_progress_affiliate'">
 					<div class="col-md-12">
 						<!-- Same server-side search / distance ranking / paging as the
 						     approved list; rows additionally show onboarding state. -->
@@ -3991,7 +3959,6 @@
 							</ng-template>
 						</ng-select>
 					</div>
-				</div>
 				</div>
 				<!-- In-Progress Affiliate Section Ends -->
 
@@ -4234,12 +4201,6 @@
 								<ng-select appearance="outline"
 									[items]="selectedReturnPendingAffiliate?.has_vehicle ? return_vehicleType_arr : BigData?.vehicleCategories"
 									bindLabel="name" bindValue="id"
-						<div class="row px-4" *ngIf="Form.return_affiliate_type.value == 'in_progress_affiliate'">
-							<!-- Vehicle Type -->
-							<div id="vehicle-type" class="col-md-12 mb-3">
-								<ng-select appearance="outline"
-									[items]="selectedReturnPendingAffiliate?.has_vehicle ? return_vehicleType_arr : BigData?.vehicleCategories"
-									bindLabel="name" bindValue="id"
 									placeholder="Select Vehicle Type" dropdownPosition="bottom" [markFirst]="true"
 									[virtualScroll]="true" formControlName="return_vehicle_type"
 									(change)="selectedReturnPendingAffiliate?.has_vehicle ? handleReturnSelectVehicleType($event) : null"
@@ -4265,9 +4226,6 @@
 							<!-- Model -->
 							<div id="model" class="col-md-4" *ngIf="Form.return_vehicle_type.value" [class.block-cursor]="selectedReturnPendingAffiliate?.has_vehicle">
 								<!-- Ng-Select -->
-							<!-- Model -->
-							<div id="model" class="col-md-4" *ngIf="Form.return_vehicle_type.value" [class.block-cursor]="selectedReturnPendingAffiliate?.has_vehicle">
-								<!-- Ng-Select -->
 								<ng-select appearance="outline" [items]="BigData?.vehicleModels" bindLabel="name" bindValue="id"
 									placeholder="Select Model" dropdownPosition="bottom" [markFirst]="true" [virtualScroll]="true"
 									formControlName="return_vehicle_model"
@@ -4277,9 +4235,6 @@
 
 							<!-- Year -->
 							<div id="year" class="col-md-3" [class.block-cursor]="selectedReturnPendingAffiliate?.has_vehicle">
-								<!-- Ng-Select -->
-							<!-- Year -->
-							<div id="year" class="col-md-4" [class.block-cursor]="selectedReturnPendingAffiliate?.has_vehicle">
 								<!-- Ng-Select -->
 								<ng-select appearance="outline" [items]="BigData?.vehicleYears" bindLabel="name" bindValue="id"
 									placeholder="Select Year" dropdownPosition="bottom" [markFirst]="true" [virtualScroll]="true"
@@ -4291,9 +4246,6 @@
 							<!-- Color -->
 							<div id="color" class="col-md-3" [class.block-cursor]="selectedReturnPendingAffiliate?.has_vehicle">
 								<!-- Ng-Select -->
-							<!-- Color -->
-							<div id="color" class="col-md-4" [class.block-cursor]="selectedReturnPendingAffiliate?.has_vehicle">
-								<!-- Ng-Select -->
 								<ng-select appearance="outline" [items]="BigData?.vehicleColors" bindLabel="name" bindValue="id"
 									placeholder="Select Color" dropdownPosition="bottom" [markFirst]="true" [virtualScroll]="true"
 									formControlName="return_vehicle_color"
@@ -4303,9 +4255,6 @@
 
 							<!-- License Plate -->
 							<div class="col-md-3">
-
-							<!-- License Plate -->
-							<div class="col-md-4">
 								<mat-form-field appearance="outline" style="margin-top: 0 !important;">
 									<mat-label>
 										License Plate #
@@ -4326,8 +4275,6 @@
 
 							<!-- Number of Seats -->
 							<div class="col-md-3">
-							<!-- Number of Seats -->
-							<div class="col-md-4">
 								<mat-form-field appearance="outline" style="margin-top: 0 !important;">
 									<mat-label>
 										Number of Seats
@@ -4362,7 +4309,6 @@
 										number</div>
 								</div>
 							</div>
-						</div>
 						</div>
 					</div>
 					<!-- Affiliate Vehicle Information Ends -->

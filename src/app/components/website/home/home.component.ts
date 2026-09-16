@@ -3701,94 +3701,69 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 		return group
 	}
 
-	calculateDistance(pickup_coordinates: string | any[], dropoff_coordinates: string | any[]) {
-		console.group(`\n\nCalculating Distance between\n\n`, pickup_coordinates, dropoff_coordinates);
+	/**
+	 * Resolves distance/duration for each leg (outbound, and return for round trips) and
+	 * fills `location_info`, which the master-vehicle / vehicle-listing APIs read for pricing.
+	 *
+	 * Extra stops are routed as waypoints so the quoted distance already includes them —
+	 * same as `_MapController` on the booking page — otherwise the listing price would be
+	 * lower than the price recalculated at booking time.
+	 */
+	calculateDistance(pickup_coordinates: any[], dropoff_coordinates: any[]) {
+		const legs = [
+			{ origin: pickup_coordinates[0], destination: dropoff_coordinates[0], stops: this.getPersistedExtraStops() }
+		];
+		if (this.QBForm.service_type.value === 'round_trip' && pickup_coordinates.length > 1 && dropoff_coordinates.length > 1) {
+			legs.push({ origin: pickup_coordinates[1], destination: dropoff_coordinates[1], stops: this.getPersistedExtraStops(true) });
+		}
 
-		const newPromise = new Promise((resolve, reject) => {
-			// ✅ Ensure Google Maps API is available
-			if (!google || !google.maps) {
-				reject('Google Maps JavaScript API not loaded');
-				return;
-			}
+		// a failed submit must not leave a stale entry behind; the backend reads [0] and [1] by index
+		(<FormArray>this.QBForm.location_info).clear();
 
-			const distanceMatrixService = new google.maps.DistanceMatrixService();
-
-			// generate request for distance matrix service
-			const request: google.maps.DistanceMatrixRequest = {
-				origins: [pickup_coordinates[0]],
-				destinations: [dropoff_coordinates[0]],
-				travelMode: google.maps.TravelMode.DRIVING,
-				unitSystem: google.maps.UnitSystem.METRIC,
-				avoidHighways: false,
-				avoidTolls: false
-			};
-
-			if (pickup_coordinates.length > 1 || dropoff_coordinates.length > 1) {
-				request.origins = [pickup_coordinates[0], pickup_coordinates[1]];
-				request.destinations = [dropoff_coordinates[0], dropoff_coordinates[1]];
-			}
-
-			// get distance matrix of that route
-			distanceMatrixService.getDistanceMatrix(request, (response) => {
-				console.log(response);
-				if (response) {
-					try {
-						if (
-							response.rows[0].elements[0].status === 'ZERO_RESULTS' ||
-							(pickup_coordinates.length > 1 &&
-								response.rows[1].elements[1].status === 'ZERO_RESULTS')
-						) {
-							reject('InvalidLocationPoints');
-							return;
-						}
-
-						// push into the desired field
-						(<FormArray>this.QBForm.location_info).push(this.formBuilder.group({
-							distance: [response.rows[0].elements[0].distance, Validators.required],
-							duration: [response.rows[0].elements[0].duration, Validators.required]
-						}));
-
-						if (response.rows.length > 1) {
-							(<FormArray>this.QBForm.location_info).push(this.formBuilder.group({
-								distance: [response.rows[1].elements[1].distance, Validators.required],
-								duration: [response.rows[1].elements[1].duration, Validators.required]
-							}));
-						}
-
-						resolve(true);
-						return;
-					} catch (err) {
-						reject(err);
-						return;
-					}
-				}
+		return Promise.all(legs.map(leg => this.routeDistance(leg))).then((results) => {
+			results.forEach((leg) => {
+				(<FormArray>this.QBForm.location_info).push(this.formBuilder.group({
+					distance: [leg.distance, Validators.required],
+					duration: [leg.duration, Validators.required]
+				}));
 			});
+			return true;
 		});
-
-		console.groupEnd();
-		return newPromise;
 	}
 
-	private validateExtraStopsRoute(
-		pickupCoord: { lat: number; lng: number },
+	private routeDistance(leg: {
+		origin: { lat: number; lng: number },
+		destination: { lat: number; lng: number },
 		stops: Array<{ address: string; latitude: number; longitude: number }>
-	): Promise<void> {
-		const reachable = stops.filter(s => s.address.trim() && (s.latitude !== 0 || s.longitude !== 0));
-		if (!reachable.length) return Promise.resolve();
+	}): Promise<{ distance: { text: string; value: number }, duration: { text: string; value: number } }> {
 		return new Promise((resolve, reject) => {
-			if (!google?.maps) { reject('Google Maps not loaded'); return; }
-			new google.maps.DistanceMatrixService().getDistanceMatrix({
-				origins: [{ lat: pickupCoord.lat, lng: pickupCoord.lng }],
-				destinations: reachable.map(s => ({ lat: s.latitude, lng: s.longitude })),
+			if (!google?.maps) { reject('Google Maps JavaScript API not loaded'); return; }
+
+			const waypoints: google.maps.DirectionsWaypoint[] = leg.stops
+				.filter(s => s.latitude !== 0 || s.longitude !== 0)
+				.map(s => ({ location: new google.maps.LatLng(s.latitude, s.longitude), stopover: true }));
+
+			new google.maps.DirectionsService().route({
+				origin: leg.origin,
+				destination: leg.destination,
+				waypoints,
+				optimizeWaypoints: false,
 				travelMode: google.maps.TravelMode.DRIVING,
-				unitSystem: google.maps.UnitSystem.METRIC,
-			}, (response) => {
-				if (!response) { reject('No response'); return; }
-				const hasInvalid = response.rows[0]?.elements.some(
-					el => el.status === 'ZERO_RESULTS' || el.status === 'NOT_FOUND'
-				);
-				if (hasInvalid) reject('InvalidExtraStop');
-				else resolve();
+				unitSystem: google.maps.UnitSystem.METRIC
+			}, (response, status) => {
+				const routeLegs = response?.routes?.[0]?.legs;
+				if (status !== google.maps.DirectionsStatus.OK || !routeLegs?.length) {
+					reject(waypoints.length ? 'InvalidLocationPointsOrExtraStop' : 'InvalidLocationPoints');
+					return;
+				}
+
+				// sum every leg so the extra stops count towards distance/time
+				const distance = routeLegs.reduce((sum, l) => sum + (l.distance?.value || 0), 0);
+				const duration = routeLegs.reduce((sum, l) => sum + (l.duration?.value || 0), 0);
+				resolve({
+					distance: { text: (distance / 1000).toFixed(1) + ' km', value: distance },
+					duration: { text: Math.round(duration / 60) + ' mins', value: duration }
+				});
 			});
 		});
 	}
@@ -4135,17 +4110,13 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 
 
 		this.spinner.show();
-		const allExtraStops = [
-			...this.getPersistedExtraStops(),
-			...(this.QBForm.service_type.value === 'round_trip' ? this.getPersistedExtraStops(true) : [])
-		];
+		// routes pickup -> extra stops -> dropoff (and the return leg) so the quoted distance includes the stops
 		const distanceCheck = (pickup_coordinates.length > 0 || dropoff_coordinates.length > 0)
 			? this.calculateDistance(pickup_coordinates, dropoff_coordinates)
 			: Promise.resolve(true);
-		const extraStopCheck = this.validateExtraStopsRoute(pickup_coordinates[0], allExtraStops);
 
 		// finally calculate the distance between the coordinates and proceed after success only else show error
-		Promise.all([distanceCheck, extraStopCheck]).then((response: any) => {
+		distanceCheck.then((response: any) => {
 			//store data in localstorage after succesfully sending request to backend
 			this.quoteBotForm.value['other_details'] = this.vars
 
@@ -4168,7 +4139,9 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.spinner.hide();
 			this.errorDialogService.openDialog({
 				errors: {
-					error: "Please provide valid location points."
+					error: error === 'InvalidLocationPointsOrExtraStop'
+						? "Please provide valid location points. One of the extra stops could not be routed."
+						: "Please provide valid location points."
 				}
 			})
 			console.groupEnd()

@@ -5,8 +5,8 @@ import { StateManagementService } from '../../../services/statemanagement.servic
 import { Router, ActivatedRoute } from '@angular/router';
 import { catchError } from 'rxjs/operators';
 import { NgxSpinnerService } from "ngx-spinner";
-import { throwError } from 'rxjs';
-import { HttpClient } from "@angular/common/http";
+import { throwError, of } from 'rxjs';
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { CustomvalidationService } from '../../../services/customvalidation.service';
 import { SharedModule } from '../../shared/shared.module';
 import { CommonService } from '../../../services/common.service';
@@ -82,6 +82,13 @@ export class AffiliateStep2Component implements OnInit {
 	addressSearchLoading: boolean = false;
 	private customPlacesService: google.maps.places.PlacesService | null = null;
 	private addressSearchVersion = 0;
+
+	// License OCR scan (limortservice) - reads the uploaded ID photo and prefills the business address.
+	private readonly scanLicenseUrl = "http://10.20.10.135:3000/api/scan-license";
+	private readonly scanLicenseHeaders = new HttpHeaders({
+		"x-secret": "limoapi_admin_secret_2024_xyz789",
+		"x-api-key": "limoapi_notifications_secret_2024_xyz789",
+	});
 
 	constructor(
 		private adminService: AdminService,
@@ -856,8 +863,106 @@ export class AffiliateStep2Component implements OnInit {
 						}
 						// this.stateManagementService.setprogressBar(false);
 					});
+				// Scan the ID photo in parallel with the upload above and use it to prefill the address.
+				this.scanLicenseImage(this.imageSrc);
 			};
 		}
+	}
+
+	/**
+	 * Send the uploaded ID photo to the license-scan OCR service and prefill the
+	 * business address from whatever address it can read off the document.
+	 */
+	private scanLicenseImage(imageDataUrl: string): void {
+		const body: { base64: string; mimeType?: string } = { base64: imageDataUrl };
+		const mimeType = this.extractMimeTypeFromDataUrl(imageDataUrl);
+		if (mimeType) {
+			body.mimeType = mimeType;
+		}
+
+		this.httpClient
+			.post<any>(this.scanLicenseUrl, body, { headers: this.scanLicenseHeaders })
+			.pipe(
+				catchError((err) => {
+					console.error('License scan failed', err);
+					return of(null);
+				})
+			)
+			.subscribe((response: any) => {
+				const scanned = response?.data ?? response?.result ?? response;
+				void this.prefillAddressFromScannedLicense(scanned);
+			});
+	}
+
+	/** Pulls the mime type out of a `data:<mime>;base64,...` URL, e.g. "image/jpeg". */
+	private extractMimeTypeFromDataUrl(dataUrl: string): string {
+		const match = /^data:([^;]+);base64,/.exec(dataUrl || '');
+		return match ? match[1] : '';
+	}
+
+	/**
+	 * The scan-license response shape isn't geocoded, so the raw address text it reads
+	 * is run back through the same Places autocomplete + details lookup used for manual
+	 * address search, which is what actually fills in lat/lng, city, state, zip, country.
+	 */
+	private async prefillAddressFromScannedLicense(scanned: any): Promise<void> {
+		const addressText = this.buildAddressTextFromScan(scanned);
+		if (!addressText) {
+			return;
+		}
+
+		const predictions = await this.searchGooglePredictions(addressText);
+		const bestMatch = predictions[0];
+		if (!bestMatch) {
+			// Nothing matched on Places - offer the raw scanned text so the user can still confirm it.
+			this.addBankForm.patchValue({ address: addressText });
+			this.isAddressSelected = false;
+			return;
+		}
+
+		const place = await this.fetchPlaceDetails(bestMatch.placeId);
+		if (place) {
+			this.ngZone.run(() => this.applySelectedAddress(place));
+		}
+	}
+
+	/** Each OCR field comes back as `{ value, confidence }` rather than a bare string. */
+	private unwrapScannedField(field: any): string {
+		if (field === null || field === undefined) {
+			return '';
+		}
+		if (typeof field === 'string') {
+			return field.trim();
+		}
+		if (typeof field === 'object' && 'value' in field) {
+			return String(field.value ?? '').trim();
+		}
+		return String(field).trim();
+	}
+
+	/** Best-effort mapping of the OCR response onto a single address string. */
+	private buildAddressTextFromScan(scanned: any): string {
+		if (!scanned) {
+			return '';
+		}
+		if (typeof scanned === 'string') {
+			return scanned.trim();
+		}
+
+		const direct = this.unwrapScannedField(scanned.address || scanned.full_address || scanned.formatted_address);
+		if (direct) {
+			return direct;
+		}
+
+		const parts = [
+			this.unwrapScannedField(scanned.street || scanned.address_line1 || scanned.street_address),
+			this.unwrapScannedField(scanned.city),
+			this.unwrapScannedField(scanned.state),
+			this.unwrapScannedField(scanned.zip || scanned.zip_code || scanned.zipCode || scanned.postal_code),
+			this.unwrapScannedField(scanned.country),
+		].filter(Boolean);
+
+		return parts.join(', ');
 	}
 
 	addCardClick(accountId) {

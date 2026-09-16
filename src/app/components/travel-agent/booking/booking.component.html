@@ -184,7 +184,7 @@
 												<div class="dropdown-item-icon"></div>
 												Edit / Change
 											</a>
-											<a class="dropdown-item" data-toggle="modal"
+											<!-- <a class="dropdown-item" data-toggle="modal"
 												data-target="#return_repeat_booking_Modal"
 												(click)="returnRepeatAction(booking?.booking_id,'repeat')">
 												<div class="dropdown-item-icon"></div>
@@ -201,7 +201,7 @@
 												(click)="returnRepeatAction(booking?.booking_id,'round')">
 												<div class="dropdown-item-icon"></div>
 												Round Trip
-											</a>
+											</a> -->
 											<a class="dropdown-item" (click)="editAction(booking?.booking_id,'cancel')"
 												data-toggle="modal" data-target="#cancel_booking_modal"
 												*ngIf="(booking?.booking_status != 'paid' && booking?.booking_status != 'paid_cash' && booking?.booking_status != 'cancelled')">

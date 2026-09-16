@@ -826,6 +826,11 @@ export class RatesFormComponent implements OnInit, OnChanges, OnDestroy {
 
 		if (data.vehicle_id !== undefined && data.vehicle_id !== null && data.vehicle_id !== '') {
 			vehicle_id = data?.vehicle_id.toString().length ? data?.vehicle_id : this.master_vehicle_id
+		} else if (shouldUseMasterVehicle) {
+			// Individual/quote-flow bookings have no vehicle_id until a vehicle is
+			// picked - fall back to the master vehicle id so the rate request still
+			// carries vehicle context instead of going out empty.
+			vehicle_id = this.master_vehicle_id
 		}
 		console.log('fetchRatesArrayByAffiliateVehicle data:', data, 'vehicle_id:', vehicle_id, 'shouldUseMasterVehicle:', shouldUseMasterVehicle);
 		data['is_master_vehicle'] = shouldUseMasterVehicle;
@@ -937,11 +942,15 @@ export class RatesFormComponent implements OnInit, OnChanges, OnDestroy {
 	 * @returns true if data is complete, false if incomplete/initial state
 	 */
 	private isBookingDataComplete(bookingData: any): boolean {
-		// Check if vehicle_id is present and not empty
-		const hasVehicleId = bookingData?.vehicle_id &&
+		// Check if vehicle_id is present and not empty. Individual/quote-flow
+		// bookings legitimately have no vehicle_id until a vehicle is picked -
+		// an explicit master-vehicle booking is "complete" on distance/service_type
+		// alone, otherwise this permanently blocks the rate refetch for them.
+		const hasVehicleId = (bookingData?.vehicle_id &&
 			bookingData.vehicle_id !== '' &&
 			bookingData.vehicle_id !== null &&
-			bookingData.vehicle_id !== undefined;
+			bookingData.vehicle_id !== undefined) ||
+			bookingData?.is_master_vehicle === true;
 
 		// Check if distance is set (greater than 0) - this indicates actual route calculation
 		const hasDistance = bookingData?.distance !== undefined &&

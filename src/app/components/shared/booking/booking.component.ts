@@ -591,8 +591,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 			hasEmptyVehicleId ||
 			this.is_master_vehicle === true;
 		const vehicleTypeId = this.BookingForm.get('vehicle_type').value;
-		// master-vehicle bookings must not fall back to the vehicle-type id
-		const effectiveVehicleId = vehicleId || this.QB_vehicle_id || this.route_vehicle_id || this.firstLoadVehicleId || (isMasterVehiclePayload ? '' : vehicleTypeId) || '';
+		const effectiveVehicleId = vehicleId || this.QB_vehicle_id || this.route_vehicle_id || this.firstLoadVehicleId || vehicleTypeId || '';
 		console.log('[buildBookingData] vehicle_id sources', {
 			formVehicleId: vehicleId,
 			QB_vehicle_id: this.QB_vehicle_id,

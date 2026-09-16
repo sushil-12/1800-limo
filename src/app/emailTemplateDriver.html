@@ -100,12 +100,14 @@
       max-width: 600px;
     }
 
-    /* 2-up columns that stack on small screens */
-    .col-2 {
-      width: 50%;
-      max-width: 268px;
-      display: inline-block;
-      vertical-align: top;
+    /* 2-up columns on wider screens; full width by default so unsupported clients stack instead of squeezing 2-up */
+    @media only screen and (min-width: 621px) {
+      .col-2 {
+        width: 50%;
+        max-width: 276px;
+        display: inline-block;
+        vertical-align: top;
+      }
     }
 
     /* ---------- RESPONSIVE ---------- */
@@ -167,7 +169,6 @@
         display: table-cell !important;
         padding-left: 16px !important;
         font-size: 12px !important;
-        white-space: nowrap !important;
       }
 
       .brand-logo img,
@@ -177,8 +178,27 @@
         height: auto !important;
       }
 
+      /* footer: social icons drop under the logo (logo + 4 icons don't fit at 320px) */
+      .footer-logo,
       .footer-social {
-        padding-left: 16px !important;
+        display: block !important;
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+
+      .footer-social {
+        padding-top: 16px !important;
+      }
+
+      .footer-social table {
+        float: none !important;
+        margin: 0 !important;
+      }
+
+      .footer-social td {
+        padding-left: 0 !important;
+        padding-right: 10px !important;
       }
 
       /* hero */
@@ -242,6 +262,7 @@
       }
 
       .phone-wrap {
+        float: none !important;
         margin: 0 auto !important;
         max-width: 260px !important;
       }
@@ -286,17 +307,17 @@
 
           <!-- ============ HEADER / BRAND ============ -->
           <tr>
-            <td class="px" bgcolor="#0a101e" style="background-color:#0a101e; padding:20px 32px;">
+            <td class="px" bgcolor="#0a101e" style="background-color:#0a101e; padding:20px 24px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td class="brand-logo" align="left" valign="middle" style="font-family:'Inter',Arial,Helvetica,sans-serif; padding-right:8px;">
                     <a href="https://1800limo.com" style="text-decoration:none;">
-                      <img src="https://1800limo.com/assets/images/limo-home-new-logo.png" width="190" height="41" alt="1-800-LIMO.COM"
-                        style="display:block; width:190px; max-width:190px; height:auto; border:0; outline:none; text-decoration:none;" />
+                      <img src="https://1800limo.com/assets/images/limo-home-new-logo.png" width="150" height="32" alt="1-800-LIMO.COM"
+                        style="display:block; width:150px; max-width:150px; height:auto; border:0; outline:none; text-decoration:none;" />
                     </a>
                   </td>
                   <td class="hdr-nav" align="right" valign="middle"
-                    style="font-family:'Inter',Arial,Helvetica,sans-serif; font-size:13px; font-weight:500; letter-spacing:0.3px; color:#a6b1c7; white-space:nowrap; padding-left:16px;">
+                    style="font-family:'Inter',Arial,Helvetica,sans-serif; font-size:13px; font-weight:500; letter-spacing:0.3px; color:#a6b1c7; padding-left:16px;">
                     <a href="https://1800limo.com/login/driver" style="color:#a6b1c7; text-decoration:none;">Network</a>
                     &nbsp;&nbsp;&nbsp;
                     <a href="https://1800limo.com/contact-us" style="color:#a6b1c7; text-decoration:none;">Contact</a>
@@ -329,23 +350,22 @@
                   style="max-width:600px;">
                   <tr>
                     <td class="hero-cell px"
-                      background="https://1800limo.s3.us-east-2.amazonaws.com/images/21IItB6kVPSYpsoy3n3UQ0MfDTA8O1632dv1p6U9.png"
+                      background="https://1800limo.s3.us-east-2.amazonaws.com/images/1ubUsnZSHTy8xcfy125VKheT9lNTb2Bo0wUeJYWA.webp"
                       bgcolor="#070b14" valign="bottom" height="470"
-                      style="height:470px; padding:36px 40px 40px 40px; background-color:#070b14; background-image:url('https://1800limo.s3.us-east-2.amazonaws.com/images/21IItB6kVPSYpsoy3n3UQ0MfDTA8O1632dv1p6U9.png'); background-position:center center; background-size:cover; background-repeat:no-repeat;">
+                      style="height:470px; padding:36px 24px 40px 24px; background-color:#070b14; background-image:url('https://1800limo.s3.us-east-2.amazonaws.com/images/1ubUsnZSHTy8xcfy125VKheT9lNTb2Bo0wUeJYWA.webp'); background-position:center center; background-size:cover; background-repeat:no-repeat;">
 
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                         <tr>
                           <td class="hero-copy" style="font-family:'Inter',Arial,Helvetica,sans-serif;">
 
-                            <p
-                              style="margin:0 0 10px 0; font-size:10px; font-weight:600; letter-spacing:2px; color:#EBDCBB; text-transform:uppercase;">
+                             <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: 600;letter-spacing: 2px;color: #f6f2ea;text-transform: uppercase;background-color: black;padding: 8px;display: inline-block;border-radius: 20px;">
                               <span
-                                style="display:inline-block; width:24px; border-top:1px solid #d9b87c; vertical-align:middle; margin-right:8px;">&nbsp;</span>Affiliate
+                                style="display: inline-block; width: 24px; border-top: 1px solid #f6f2ea; vertical-align: middle; margin-right: 8px; margin-top: 4px;">&nbsp;</span>Affiliate
                               Operator Network
                             </p>
 
                             <h1 class="h-hero"
-                              style="margin:0 0 14px 0; font-family:'Instrument Serif',Georgia,'Times New Roman',serif; font-weight:400; font-size:46px; line-height:50px; letter-spacing:-0.5px; color:#ffffff; text-shadow:0 2px 18px rgba(7,11,20,0.55);">
+                              style="margin:0 0 14px 0; font-family:'Instrument Serif',Georgia,'Times New Roman',serif; font-weight:400; font-size:38px; line-height:42px; letter-spacing:-0.5px; color:#ffffff; text-shadow:0 2px 18px rgba(7,11,20,0.55);">
                               Keep your wheels<br />turning.
                             </h1>
 
@@ -370,11 +390,6 @@
                                     style="display:inline-block; padding:14px 28px; background-color:#d9b87c; background-image:linear-gradient(90deg,#ebdcbb 0%,#c29a55 100%); font-family:'Inter',Arial,Helvetica,sans-serif; font-size:15px; font-weight:600; letter-spacing:0.15px; line-height:20px; color:#070b14; text-decoration:none; border-radius:999px;">Apply to the network</a>
                                   <!--<![endif]-->
                                 </td>
-                                <td class="cta-gap" style="width:16px; font-size:0; line-height:0;">&nbsp;</td>
-                                <td class="cta-cell cta-sub" valign="middle"
-                                  style="font-family:'Inter',Arial,Helvetica,sans-serif; font-size:13px; font-weight:500; color:#c9d2e2;">
-                                  takes about 5 minutes
-                                </td>
                               </tr>
                             </table>
 
@@ -398,7 +413,7 @@
           <!-- ============ ONBOARDING STRIP ============ -->
           <tr>
             <td class="px" bgcolor="#d9b87c"
-              style="background-color:#d9b87c; background-image:linear-gradient(90deg,#c29a55 0%,#ebdcbb 50%,#d9b87c 100%); padding:16px 32px;">
+              style="background-color:#d9b87c; background-image:linear-gradient(90deg,#c29a55 0%,#ebdcbb 50%,#d9b87c 100%); padding:16px 24px;">
               <table role="presentation" class="offer-row" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td class="offer-cell" align="left" valign="middle"
@@ -417,18 +432,18 @@
 
           <!-- ============ WHY OPERATORS JOIN ============ -->
           <tr>
-            <td class="px bg-cream sec" bgcolor="#f6f2ea" style="background-color:#f6f2ea; padding:44px 32px 36px 32px;">
+            <td class="px bg-cream sec" bgcolor="#f6f2ea" style="background-color:#f6f2ea; padding:44px 24px 36px 24px;">
               <p
-                style="margin:0 0 8px 0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; color:#c29a55; text-transform:uppercase;">
+                style="margin:0 0 8px 0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:12px; font-weight:600; letter-spacing:2px; color:#c29a55; text-transform:uppercase;">
                 Why operators join</p>
               <h2 class="h-sec"
                 style="margin:0 0 26px 0; font-family:'Instrument Serif',Georgia,'Times New Roman',serif; font-weight:400; font-size:32px; line-height:38px; letter-spacing:-0.16px; color:#0d1424;">
                 Work that fits around your work.</h2>
 
-              <div style="font-size:0; line-height:0; text-align:center;">
+              <div style="font-size:0; line-height:0; text-align:left;">
                 <!--[if mso]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td width="50%" valign="top" style="padding-right:11px;"><![endif]-->
-                <div class="col-2" style="width:50%; max-width:268px; display:inline-block; vertical-align:top;">
-                  <div class="card-gap" style="padding:0 11px 14px 0;">
+                <div class="col-2" style="vertical-align:top;">
+                  <div class="card-gap" style="padding:0 6px 14px 6px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"
                       style="background-color:#ffffff; border:1px solid #e2dacb; border-radius:14px;">
                       <tr>
@@ -443,8 +458,8 @@
                   </div>
                 </div>
                 <!--[if mso]></td><td width="50%" valign="top" style="padding-left:11px;"><![endif]-->
-                <div class="col-2" style="width:50%; max-width:268px; display:inline-block; vertical-align:top;">
-                  <div class="card-gap" style="padding:0 0 14px 11px;">
+                <div class="col-2" style="vertical-align:top;">
+                  <div class="card-gap" style="padding:0 6px 14px 6px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"
                       style="background-color:#ffffff; border:1px solid #e2dacb; border-radius:14px;">
                       <tr>
@@ -459,24 +474,23 @@
                   </div>
                 </div>
                 <!--[if mso]></td></tr><tr><td width="50%" valign="top" style="padding-right:11px;"><![endif]-->
-                <div class="col-2" style="width:50%; max-width:268px; display:inline-block; vertical-align:top;">
-                  <div class="card-gap" style="padding:0 11px 0 0;">
+                <div class="col-2" style="vertical-align:top;">
+                  <div class="card-gap" style="padding:0 6px 14px 6px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"
                       style="background-color:#ffffff; border:1px solid #e2dacb; border-radius:14px;">
                       <tr>
                         <td style="padding:18px 16px; font-family:'Inter',Arial,Helvetica,sans-serif; text-align:left;">
                           <div style="font-size:14px; font-weight:600; line-height:19px; color:#0d1424;">Paid within
                             48 hours</div>
-                          <div style="margin-top:6px; font-size:13px; line-height:20px; color:#56617a;">Weekly
-                            settlement with itemized statements. No monthly platform fee, ever.</div>
+                          <div style="margin-top:6px; font-size:13px; line-height:20px; color:#56617a;">Direct payouts, transparent fare breakdowns, and no platform fees.</div>
                         </td>
                       </tr>
                     </table>
                   </div>
                 </div>
                 <!--[if mso]></td><td width="50%" valign="top" style="padding-left:11px;"><![endif]-->
-                <div class="col-2" style="width:50%; max-width:268px; display:inline-block; vertical-align:top;">
-                  <div class="card-gap" style="padding:0 0 0 11px;">
+                <div class="col-2" style="vertical-align:top;">
+                  <div class="card-gap" style="padding:0 6px 0 6px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"
                       style="background-color:#ffffff; border:1px solid #e2dacb; border-radius:14px;">
                       <tr>
@@ -498,12 +512,13 @@
           <!-- ============ CHAUFFEUR APP ============ -->
           <tr>
             <td class="px" bgcolor="#070b14"
-              style="background-color:#070b14; background-image:linear-gradient(120deg,#070b14 0%,#16203a 100%); padding:44px 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td class="stack" valign="top" style="width:58%;">
+              style="background-color:#070b14; background-image:linear-gradient(120deg,#070b14 0%,#16203a 100%); padding:44px 24px;">
+              <!-- Hybrid 2-col: copy (320) + phone (232) = 552 content width. Phone wraps under the copy on phones without needing a media query. Parent is centered (not left) so the wrapped phone block centers on narrow screens; the copy column pins its own text-align:left to avoid inheriting that. -->
+              <div style="font-size:0; line-height:0; text-align:center;">
+                <!--[if mso]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td width="320" valign="top"><![endif]-->
+                <div class="stack" style="width:100%; max-width:320px; display:inline-block; vertical-align:top; font-size:14px; line-height:20px; text-align:left;">
                     <p
-                      style="margin:0 0 14px 0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; color:#d9b87c; text-transform:uppercase;">
+                      style="margin:0 0 14px 0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:12px; font-weight:600; letter-spacing:2px; color:#d9b87c; text-transform:uppercase;">
                       The chauffeur app</p>
                     <h2
                       style="margin:0 0 14px 0; font-family:'Instrument Serif',Georgia,'Times New Roman',serif; font-weight:400; font-size:28px; line-height:34px; letter-spacing:-0.14px; color:#ffffff;">
@@ -519,7 +534,7 @@
                           <a href="https://apps.apple.com/in/app/1800limo-chauffeur/id6748669445"
                             style="display:block; text-decoration:none; background-color:#070b14; border:1px solid #26324f; border-radius:8px; padding:8px 16px 9px 14px; font-family:'Inter',Arial,Helvetica,sans-serif;">
                             <span
-                              style="display:block; font-size:7px; font-weight:500; letter-spacing:0.6px; color:#a6b1c7; text-transform:uppercase;">Download
+                              style="display:block; font-size:9px; font-weight:500; letter-spacing:0.6px; color:#a6b1c7; text-transform:uppercase;">Download
                               on the</span>
                             <span style="display:block; font-size:13px; font-weight:600; color:#ffffff; margin-top:3px;">App
                               Store</span>
@@ -529,7 +544,7 @@
                           <a href="https://play.google.com/store/apps/details?id=com.limo1800driver.app&hl=en_IN"
                             style="display:block; text-decoration:none; background-color:#070b14; border:1px solid #26324f; border-radius:8px; padding:8px 16px 9px 14px; font-family:'Inter',Arial,Helvetica,sans-serif;">
                             <span
-                              style="display:block; font-size:7px; font-weight:500; letter-spacing:0.6px; color:#a6b1c7; text-transform:uppercase;">Get
+                              style="display:block; font-size:9px; font-weight:500; letter-spacing:0.6px; color:#a6b1c7; text-transform:uppercase;">Get
                               it on</span>
                             <span style="display:block; font-size:13px; font-weight:600; color:#ffffff;  margin-top:3px;">Google
                               Play</span>
@@ -537,12 +552,14 @@
                         </td>
                       </tr>
                     </table>
-                  </td>
-
-                  <td class="stack stack-center mt-24" valign="top" align="right" style="width:42%;">
+                </div>
+                <!--[if mso]></td><td width="232" valign="top" align="right"><![endif]-->
+                <div class="stack stack-center mt-24" style="width:100%; max-width:232px; display:inline-block; vertical-align:top; font-size:14px; line-height:20px; text-align:center;">
+                    <!-- spacer: gap when the phone wraps under the copy on small screens -->
+                    <div style="height:20px; font-size:0; line-height:0;">&nbsp;</div>
                     <!-- Phone mock -->
-                    <table role="presentation" class="phone-wrap" cellpadding="0" cellspacing="0" border="0" width="220"
-                      style="width:60%; max-width:220px; background-color:#0d1424; border:1px solid #26324f; border-radius:22px;">
+                    <table role="presentation" class="phone-wrap" align="center" cellpadding="0" cellspacing="0" border="0" width="220"
+                      style="width:100%; max-width:220px; background-color:#0d1424; border:1px solid #26324f; border-radius:22px;">
                       <tr>
                         <td style="padding:12px 10px;">
                           <img
@@ -557,17 +574,17 @@
                         </td>
                       </tr>
                     </table>
-                  </td>
-                </tr>
-              </table>
+                </div>
+                <!--[if mso]></td></tr></table><![endif]-->
+              </div>
             </td>
           </tr>
 
           <!-- ============ BEFORE YOU APPLY ============ -->
           <tr>
-            <td class="px bg-cream sec" bgcolor="#f6f2ea" style="background-color:#f6f2ea; padding:30px 32px;">
+            <td class="px bg-cream sec" bgcolor="#f6f2ea" style="background-color:#f6f2ea; padding:30px 24px;">
               <p
-                style="margin:0 0 8px 0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; color:#c29a55; text-transform:uppercase;">
+                style="margin:0 0 8px 0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:12px; font-weight:600; letter-spacing:2px; color:#c29a55; text-transform:uppercase;">
                 Before you apply</p>
               <h2 class="h-sec"
                 style="margin:0 0 22px 0; font-family:'Instrument Serif',Georgia,'Times New Roman',serif; font-weight:400; font-size:32px; line-height:38px; letter-spacing:-0.16px; color:#0d1424;">
@@ -658,9 +675,9 @@
           <!-- ============ CLOSING CTA ============ -->
           <tr>
             <td class="px bg-cream py-lg" align="center" bgcolor="#f6f2ea"
-              style="background-color:#f6f2ea; padding:10px 32px;">
+              style="background-color:#f6f2ea; padding:10px 24px;">
               <p
-                style="margin:0 0 18px 0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; color:#c29a55; text-transform:uppercase;">
+                style="margin:0 0 18px 0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:12px; font-weight:600; letter-spacing:2px; color:#c29a55; text-transform:uppercase;">
                 Applications open</p>
               <h2 class="h-cta"
                 style="margin:0 0 18px 0; font-family:'Instrument Serif',Georgia,'Times New Roman',serif; font-weight:400; font-size:34px; line-height:40px; letter-spacing:-0.17px; color:#0d1424;">
@@ -694,38 +711,38 @@
 
           <!-- ============ FOOTER ============ -->
           <tr>
-            <td class="px" bgcolor="#070b14" style="background-color:#070b14; padding:36px 32px 34px 32px;">
+            <td class="px" bgcolor="#070b14" style="background-color:#070b14; padding:36px 24px 34px 24px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td class="footer-logo" align="left" valign="middle" style="font-family:'Inter',Arial,Helvetica,sans-serif; padding-right:8px;">
                     <a href="https://1800limo.com" style="text-decoration:none;">
-                      <img src="https://1800limo.com/assets/images/limo-home-new-logo.png" width="190" height="41" alt="1-800-LIMO.COM"
-                        style="display:block; width:190px; max-width:190px; height:auto; border:0; outline:none; text-decoration:none;" />
+                      <img src="https://1800limo.com/assets/images/limo-home-new-logo.png" width="150" height="32" alt="1-800-LIMO.COM"
+                        style="display:block; width:150px; max-width:150px; height:auto; border:0; outline:none; text-decoration:none;" />
                     </a>
                   </td>
-                  <td class="footer-social" align="right" valign="middle" style="padding-left:16px;">
+                  <td class="footer-social" align="right" valign="middle" style="padding-left:12px;">
                     <!-- Social icons: hosted PNGs (30x30). Inline SVG / icon fonts do NOT render in Gmail/Outlook. -->
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right">
                       <tr>
-                        <td style="padding-left:8px;"><a href="https://facebook.com/1800limo" target="_blank"
+                        <td style="padding-left:6px;"><a href="https://facebook.com/1800limo" target="_blank"
                             style="display:inline-block; width:30px; height:30px; line-height:0; border-radius:999px; text-decoration:none;">
                             <img src="https://1800limo.s3.us-east-2.amazonaws.com/images/y9T83exrfawJkh6LAbE1lfDHL8sjIxuz2YcT703E.png"
                               width="30" height="30" alt="Facebook"
                               style="display:block; width:30px; height:30px; border:0; border-radius:999px; object-fit:cover;" /></a>
                         </td>
-                        <td style="padding-left:8px;"><a href="https://linkedin.com/company/1800limo" target="_blank"
+                        <td style="padding-left:6px;"><a href="https://linkedin.com/company/1800limo" target="_blank"
                             style="display:inline-block; width:30px; height:30px; line-height:0; border-radius:999px; text-decoration:none;">
                             <img src="https://1800limo.s3.us-east-2.amazonaws.com/images/EFgnWd4B3fpt5vIOVhzgcoBgBjZFt6MjjJeAt2dS.png"
                               width="30" height="30" alt="LinkedIn"
                               style="display:block; width:30px; height:30px; border:0; border-radius:999px; object-fit:cover;" /></a>
                         </td>
-                        <td style="padding-left:8px;"><a href="https://instagram.com/1800limo" target="_blank"
+                        <td style="padding-left:6px;"><a href="https://instagram.com/1800limo" target="_blank"
                             style="display:inline-block; width:30px; height:30px; line-height:0; border-radius:999px; text-decoration:none;">
                             <img src="https://1800limo.s3.us-east-2.amazonaws.com/images/UKgAhXMXD48LDrUxaolzohdMC05gJzn1XL5p0tCy.png"
                               width="30" height="30" alt="Instagram"
                               style="display:block; width:30px; height:30px; border:0; border-radius:999px; object-fit:cover;" /></a>
                         </td>
-                        <td style="padding-left:8px;"><a href="https://x.com/1800LIMO" target="_blank"
+                        <td style="padding-left:6px;"><a href="https://x.com/1800LIMO" target="_blank"
                             style="display:inline-block; width:30px; height:30px; line-height:0; border-radius:999px; text-decoration:none;">
                             <img src="https://1800limo.s3.us-east-2.amazonaws.com/images/KN7B0Crel5CxlSgD5QcU5RVqVo7T1PmiZ5D2K7lI.png"
                               width="30" height="30" alt="Twitter"

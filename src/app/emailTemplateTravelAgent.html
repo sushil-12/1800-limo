@@ -101,10 +101,14 @@
     }
 
     /* 3-up and 2-up columns that stack on small screens */
+    .card-row {
+      display: block;
+    }
+
     .col-3 {
-      width: 33.333%;
-      max-width: 178px;
-      display: inline-block;
+      width: 100%;
+      max-width: 100%;
+      display: block;
       vertical-align: top;
     }
 
@@ -115,7 +119,21 @@
       vertical-align: top;
     }
 
-    /* ---------- RESPONSIVE ---------- */
+    /* ---------- DESKTOP (601px and above) ---------- */
+    @media only screen and (min-width: 601px) {
+      .card-row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+      }
+
+      .col-3 {
+        width: 33.333% !important;
+        max-width: 184px !important;
+        display: inline-block !important;
+      }
+    }
+
+    /* ---------- RESPONSIVE MOBILE ---------- */
     @media only screen and (max-width: 620px) {
       .wrapper {
         width: 100% !important;
@@ -144,17 +162,23 @@
         padding-bottom: 34px !important;
       }
 
+      .card-row {
+        display: block !important;
+      }
+
       /* single-column stack */
       .col-3,
       .col-2 {
         width: 100% !important;
         max-width: 100% !important;
         display: block !important;
+        height: auto !important;
       }
 
       .col-3 .card-gap,
       .col-2 .card-gap {
-        padding: 6px 0 !important;
+        padding: 6px 0 14px 0 !important;
+        height: auto !important;
       }
 
       .stack {
@@ -169,6 +193,7 @@
 
       .mt-24 {
         padding-top: 24px !important;
+        padding-left: 0 !important; /* commission copy: drop the side gap once it stacks under the badge */
       }
 
       /* header & footer nav/logo spacing on mobile */
@@ -176,7 +201,6 @@
         display: table-cell !important;
         padding-left: 16px !important;
         font-size: 12px !important;
-        white-space: nowrap !important;
       }
 
       .brand-logo img,
@@ -186,8 +210,27 @@
         height: auto !important;
       }
 
+      /* footer: social icons drop under the logo (logo + 4 icons don't fit at 320px) */
+      .footer-logo,
       .footer-social {
-        padding-left: 16px !important;
+        display: block !important;
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+
+      .footer-social {
+        padding-top: 16px !important;
+      }
+
+      .footer-social table {
+        float: none !important;
+        margin: 0 !important;
+      }
+
+      .footer-social td {
+        padding-left: 0 !important;
+        padding-right: 10px !important;
       }
 
       /* hero */
@@ -295,20 +338,18 @@
 
           <!-- ============ HEADER / BRAND ============ -->
           <tr>
-            <td class="px" bgcolor="#0a101e" style="background-color:#0a101e; padding:20px 32px;">
+            <td class="px" bgcolor="#0a101e" style="background-color:#0a101e; padding:20px 24px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td class="brand-logo" align="left" valign="middle" style="font-family:'Inter',Arial,Helvetica,sans-serif; padding-right:8px;">
                     <a href="https://1800limo.com" style="text-decoration:none;">
-                      <img src="https://1800limo.com/assets/images/limo-home-new-logo.png" width="190" height="41" alt="1-800-LIMO.COM"
-                        style="display:block; width:190px; max-width:190px; height:auto; border:0; outline:none; text-decoration:none;" />
+                      <img src="https://1800limo.com/assets/images/limo-home-new-logo.png" width="150" height="32" alt="1-800-LIMO.COM"
+                        style="display:block; width:150px; max-width:150px; height:auto; border:0; outline:none; text-decoration:none;" />
                     </a>
                   </td>
                   <td class="hdr-nav" align="right" valign="middle"
-                    style="font-family:'Inter',Arial,Helvetica,sans-serif; font-size:13px; font-weight:500; letter-spacing:0.3px; color:#a6b1c7; white-space:nowrap; padding-left:16px;">
+                    style="font-family:'Inter',Arial,Helvetica,sans-serif; font-size:13px; font-weight:500; letter-spacing:0.3px; color:#a6b1c7; padding-left:16px;">
                     <a href="https://1800limo.com/login/travel_agent" style="color:#a6b1c7; text-decoration:none;">Portal</a>
-                    &nbsp;&nbsp;&nbsp;
-                    <a href="https://1800limo.com/fleet" style="color:#a6b1c7; text-decoration:none;">Net rates</a>
                     &nbsp;&nbsp;&nbsp;
                     <a href="https://1800limo.com/contact-us" style="color:#a6b1c7; text-decoration:none;">Contact</a>
                   </td>
@@ -341,21 +382,21 @@
                     <td class="hero-cell px"
                       background="https://1800limo.s3.us-east-2.amazonaws.com/images/MPGQlFNxuv2MO23YhsZTNy5Wu84q5lj8R2QX5JML.png"
                       bgcolor="#070b14" valign="bottom" height="470"
-                      style="height:470px; padding:36px 40px 40px 40px; background-color:#070b14; background-image:url('https://1800limo.s3.us-east-2.amazonaws.com/images/b30gQX1Dbl3MPtOEuGr490eu2DfKqGF7zKZEbluZ.png'); background-position:center center; background-size:cover; background-repeat:no-repeat;">
+                      style="height:470px; padding:36px 24px 40px 24px; background-color:#070b14; background-image:url('https://1800limo.s3.us-east-2.amazonaws.com/images/b30gQX1Dbl3MPtOEuGr490eu2DfKqGF7zKZEbluZ.png'); background-position:center center; background-size:cover; background-repeat:no-repeat;">
 
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                         <tr>
                           <td class="hero-copy" style="font-family:'Inter',Arial,Helvetica,sans-serif;">
 
                             <p
-                              style="margin: 0 0 10px 0; font-size: 11px; font-weight: 600;letter-spacing: 2px;color: #f6f2ea;text-transform: uppercase;background-color: black;padding: 8px;width: max-content;border-radius: 20px;">
+                              style="margin: 0 0 10px 0; font-size: 11px; font-weight: 600;letter-spacing: 2px;color: #f6f2ea;text-transform: uppercase;background-color: black;padding: 8px;display: inline-block;border-radius: 20px;">
                               <span
                                 style="display: inline-block; width: 24px; border-top: 1px solid #f6f2ea; vertical-align: middle; margin-right: 8px; margin-top: 4px;">&nbsp;</span>Travel
                               Advisor Programme
                             </p>
 
                             <h1 class="h-hero"
-                              style="margin:0 0 14px 0; font-family:'Instrument Serif',Georgia,'Times New Roman',serif; font-weight:400; font-size:46px; line-height:50px; letter-spacing:-0.5px; color:#ffffff; text-shadow:0 2px 18px rgba(7,11,20,0.55);">
+                              style="margin:0 0 14px 0; font-family:'Instrument Serif',Georgia,'Times New Roman',serif; font-weight:400; font-size:38px; line-height:42px; letter-spacing:-0.5px; color:#ffffff; text-shadow:0 2px 18px rgba(7,11,20,0.55);">
                               Your client lands.<br />Someone is already waiting.
                             </h1>
 
@@ -407,7 +448,7 @@
 
           <!-- ============ COMMISSION STRIP ============ -->
           <tr>
-            <td class="px bg-cream sec" bgcolor="#f6f2ea" style="background-color:#f6f2ea; padding:40px 32px 34px 32px;">
+            <td class="px bg-cream sec" bgcolor="#f6f2ea" style="background-color:#f6f2ea; padding:40px 24px 34px 24px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td class="stack comm-badge" valign="top" style="width:132px;">
@@ -443,7 +484,7 @@
 
           <!-- ============ STATS BAR ============ -->
           <tr>
-            <td class="px" bgcolor="#0a101e" style="background-color:#0a101e; padding:26px 32px;">
+            <td class="px" bgcolor="#0a101e" style="background-color:#0a101e; padding:26px 24px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td width="33%" align="center" valign="middle"
@@ -480,7 +521,7 @@
 
           <!-- ============ WHAT YOU GET ============ -->
           <tr>
-            <td class="px bg-cream sec" bgcolor="#f6f2ea" style="background-color:#f6f2ea; padding:44px 32px 36px 32px;">
+            <td class="px bg-cream sec" bgcolor="#f6f2ea" style="background-color:#f6f2ea; padding:44px 24px 36px 24px;">
               <p
                 style="margin:0 0 8px 0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; color:#c29a55; text-transform:uppercase;">
                 What you get</p>
@@ -488,14 +529,14 @@
                 style="margin:0 0 26px 0; font-family:'Instrument Serif',Georgia,'Times New Roman',serif; font-weight:400; font-size:32px; line-height:38px; letter-spacing:-0.16px; color:#0d1424;">
                 Built for how advisors actually work.</h2>
 
-              <div style="font-size:0; line-height:0; text-align:center;">
+              <div class="card-row" style="font-size:0; line-height:0; text-align:left;">
                 <!--[if mso]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td width="33%" valign="top" style="padding-right:7px;"><![endif]-->
-                <div class="col-3" style="width:33.333%; max-width:178px; display:inline-block; vertical-align:top;">
-                  <div class="card-gap" style="padding:0 7px;">
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"
-                      style="background-color:#ffffff; border:1px solid #e2dacb; border-radius:14px;">
+                <div class="col-3" style="width:100%; max-width:100%; display:block; vertical-align:top; box-sizing:border-box;">
+                  <div class="card-gap" style="padding:0 0 14px 0; margin-top:5px; height:100%; box-sizing:border-box; display:flex; flex-direction:column; flex:1;">
+                    <table role="presentation" width="100%" height="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"
+                      style="background-color:#ffffff; border:1px solid #e2dacb; border-radius:14px; height:100%; flex:1;">
                       <tr>
-                        <td style="padding:18px 16px; font-family:'Inter',Arial,Helvetica,sans-serif; text-align:left;">
+                        <td valign="top" style="padding:18px 16px; font-family:'Inter',Arial,Helvetica,sans-serif; text-align:left; vertical-align:top; height:100%;">
                           <div
                             style="font-family:'Instrument Serif',Georgia,serif; font-size:30px; line-height:32px; letter-spacing:-0.3px; color:#c29a55;">
                             01</div>
@@ -510,18 +551,18 @@
                   </div>
                 </div>
                 <!--[if mso]></td><td width="33%" valign="top" style="padding-right:7px;"><![endif]-->
-                <div class="col-3" style="width:33.333%; max-width:178px; display:inline-block; vertical-align:top;">
-                  <div class="card-gap" style="padding:0 7px;">
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"
-                      style="background-color:#ffffff; border:1px solid #e2dacb; border-radius:14px;">
+                <div class="col-3" style="width:100%; max-width:100%; display:block; vertical-align:top; box-sizing:border-box;">
+                  <div class="card-gap" style="padding:0 0 14px 0; margin-top:5px; height:100%; box-sizing:border-box; display:flex; flex-direction:column; flex:1;">
+                    <table role="presentation" width="100%" height="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"
+                      style="background-color:#ffffff; border:1px solid #e2dacb; border-radius:14px; height:100%; flex:1;">
                       <tr>
-                        <td style="padding:18px 16px; font-family:'Inter',Arial,Helvetica,sans-serif; text-align:left;">
+                        <td valign="top" style="padding:18px 16px; font-family:'Inter',Arial,Helvetica,sans-serif; text-align:left; vertical-align:top; height:100%;">
                           <div
                             style="font-family:'Instrument Serif',Georgia,serif; font-size:30px; line-height:32px; letter-spacing:-0.3px; color:#c29a55;">
                             02</div>
                           <div
                             style="margin-top:8px; font-size:14px; font-weight:600; line-height:19px; color:#0d1424;">
-                            Net rates, instantly</div>
+                            Net rates </div>
                           <div style="margin-top:6px; font-size:13px; line-height:20px; color:#56617a;">See your net and
                             your client price side by side before you send the quote. No callbacks, no waiting.</div>
                         </td>
@@ -530,18 +571,18 @@
                   </div>
                 </div>
                 <!--[if mso]></td><td width="33%" valign="top"><![endif]-->
-                <div class="col-3" style="width:33.333%; max-width:178px; display:inline-block; vertical-align:top;">
-                  <div class="card-gap" style="padding:0 7px;">
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"
-                      style="background-color:#ffffff; border:1px solid #e2dacb; border-radius:14px;">
+                <div class="col-3" style="width:100%; max-width:100%; display:block; vertical-align:top; box-sizing:border-box;">
+                  <div class="card-gap" style="padding:0 0 14px 0; margin-top:5px; height:100%; box-sizing:border-box; display:flex; flex-direction:column; flex:1;">
+                    <table role="presentation" width="100%" height="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"
+                      style="background-color:#ffffff; border:1px solid #e2dacb; border-radius:14px; height:100%; flex:1;">
                       <tr>
-                        <td style="padding:18px 16px; font-family:'Inter',Arial,Helvetica,sans-serif; text-align:left;">
+                        <td valign="top" style="padding:18px 16px; font-family:'Inter',Arial,Helvetica,sans-serif; text-align:left; vertical-align:top; height:100%;">
                           <div
                             style="font-family:'Instrument Serif',Georgia,serif; font-size:30px; line-height:32px; letter-spacing:-0.3px; color:#c29a55;">
                             03</div>
                           <div
                             style="margin-top:8px; font-size:14px; font-weight:600; line-height:19px; color:#0d1424;">
-                            Meet &amp; greet included</div>
+                            Meet &amp; greet</div>
                           <div style="margin-top:6px; font-size:13px; line-height:20px; color:#56617a;">Name-board
                             greeting, flight tracking and 60 minutes free wait time on every airport arrival.</div>
                         </td>
@@ -556,7 +597,7 @@
 
           <!-- ============ ONE ACCOUNT, EVERY REGION ============ -->
           <tr>
-            <td class="px" bgcolor="#0a101e" style="background-color:#0a101e; padding:44px 32px;">
+            <td class="px" bgcolor="#0a101e" style="background-color:#0a101e; padding:44px 24px;">
               <table role="presentation" class="sec-head" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td class="sh-cell" align="left" valign="bottom">
@@ -569,17 +610,17 @@
                   </td>
                   <td class="sh-cell sh-cell-r" align="right" valign="bottom"
                     style="font-family:'Inter',Arial,Helvetica,sans-serif; font-size:13px; font-weight:600; color:#d9b87c; white-space:nowrap;">
-                    <a href="https://1800limo.com/countries" style="color:#d9b87c; text-decoration:none;">Full list &rarr;</a>
+                    <a href="https://1800limo.com/countries" style="color:#d9b87c; text-decoration:none;">Full&nbsp;list&nbsp;&rarr;</a>
                   </td>
                 </tr>
               </table>
 
               <div style="height:24px; font-size:0; line-height:0;">&nbsp;</div>
 
-              <div style="font-size:0; line-height:0; text-align:center;">
+              <div style="font-size:0; line-height:0; text-align:left;">
                 <!--[if mso]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td width="50%" valign="top" style="padding-right:11px;"><![endif]-->
-                <div class="col-2" style="width:50%; max-width:268px; display:inline-block; vertical-align:top;">
-                  <div class="card-gap" style="padding:0 11px 22px 0;">
+                <div class="col-2" style="width:100%; max-width:276px; display:inline-block; vertical-align:top;">
+                  <div class="card-gap" style="padding:0 6px 22px 6px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
                       style="border:1px solid #26324f; border-radius:12px;">
                       <tr>
@@ -592,8 +633,8 @@
                   </div>
                 </div>
                 <!--[if mso]></td><td width="50%" valign="top" style="padding-left:11px;"><![endif]-->
-                <div class="col-2" style="width:50%; max-width:268px; display:inline-block; vertical-align:top;">
-                  <div class="card-gap" style="padding:0 0 22px 11px;">
+                <div class="col-2" style="width:100%; max-width:276px; display:inline-block; vertical-align:top;">
+                  <div class="card-gap" style="padding:0 6px 22px 6px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
                       style="border:1px solid #26324f; border-radius:12px;">
                       <tr>
@@ -606,8 +647,8 @@
                   </div>
                 </div>
                 <!--[if mso]></td></tr><tr><td width="50%" valign="top" style="padding-right:11px;"><![endif]-->
-                <div class="col-2" style="width:50%; max-width:268px; display:inline-block; vertical-align:top;">
-                  <div class="card-gap" style="padding:0 11px 0 0;">
+                <div class="col-2" style="width:100%; max-width:276px; display:inline-block; vertical-align:top;">
+                  <div class="card-gap" style="padding:0 6px 22px 6px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
                       style="border:1px solid #26324f; border-radius:12px;">
                       <tr>
@@ -620,8 +661,8 @@
                   </div>
                 </div>
                 <!--[if mso]></td><td width="50%" valign="top" style="padding-left:11px;"><![endif]-->
-                <div class="col-2" style="width:50%; max-width:268px; display:inline-block; vertical-align:top;">
-                  <div class="card-gap" style="padding:0 0 0 11px;">
+                <div class="col-2" style="width:100%; max-width:276px; display:inline-block; vertical-align:top;">
+                  <div class="card-gap" style="padding:0 6px 0 6px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
                       style="border:1px solid #26324f; border-radius:12px;">
                       <tr>
@@ -640,7 +681,7 @@
 
           <!-- ============ GETTING STARTED ============ -->
           <tr>
-            <td class="px bg-cream sec" bgcolor="#f6f2ea" style="background-color:#f6f2ea; padding:30px 32px;">
+            <td class="px bg-cream sec" bgcolor="#f6f2ea" style="background-color:#f6f2ea; padding:30px 24px;">
               <p
                 style="margin:0 0 8px 0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; color:#c29a55; text-transform:uppercase;">
                 Getting started</p>
@@ -702,7 +743,7 @@
           <!-- ============ CLOSING CTA ============ -->
           <tr>
             <td class="px bg-cream py-lg" align="center" bgcolor="#f6f2ea"
-              style="background-color:#f6f2ea; padding:10px 32px;">
+              style="background-color:#f6f2ea; padding:10px 24px;">
               <p
                 style="margin:0 0 18px 0; font-family:'Inter',Arial,Helvetica,sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; color:#c29a55; text-transform:uppercase;">
                 Applications open</p>
@@ -738,38 +779,38 @@
 
           <!-- ============ FOOTER ============ -->
           <tr>
-            <td class="px" bgcolor="#070b14" style="background-color:#070b14; padding:36px 32px 34px 32px;">
+            <td class="px" bgcolor="#070b14" style="background-color:#070b14; padding:36px 24px 34px 24px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td class="footer-logo" align="left" valign="middle" style="font-family:'Inter',Arial,Helvetica,sans-serif; padding-right:8px;">
                     <a href="https://1800limo.com" style="text-decoration:none;">
-                      <img src="https://1800limo.com/assets/images/limo-home-new-logo.png" width="190" height="41" alt="1-800-LIMO.COM"
-                        style="display:block; width:190px; max-width:190px; height:auto; border:0; outline:none; text-decoration:none;" />
+                      <img src="https://1800limo.com/assets/images/limo-home-new-logo.png" width="150" height="32" alt="1-800-LIMO.COM"
+                        style="display:block; width:150px; max-width:150px; height:auto; border:0; outline:none; text-decoration:none;" />
                     </a>
                   </td>
-                  <td class="footer-social" align="right" valign="middle" style="padding-left:16px;">
+                  <td class="footer-social" align="right" valign="middle" style="padding-left:12px;">
                     <!-- Social icons: hosted PNGs (30x30). Inline SVG / icon fonts do NOT render in Gmail/Outlook. -->
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="right">
                       <tr>
-                        <td style="padding-left:8px;"><a href="https://facebook.com/1800limo" target="_blank"
+                        <td style="padding-left:6px;"><a href="https://facebook.com/1800limo" target="_blank"
                             style="display:inline-block; width:30px; height:30px; line-height:0; border-radius:999px; text-decoration:none;">
                             <img src="https://1800limo.s3.us-east-2.amazonaws.com/images/y9T83exrfawJkh6LAbE1lfDHL8sjIxuz2YcT703E.png"
                               width="30" height="30" alt="Facebook"
                               style="display:block; width:30px; height:30px; border:0; border-radius:999px; object-fit:cover;" /></a>
                         </td>
-                        <td style="padding-left:8px;"><a href="https://linkedin.com/company/1800limo" target="_blank"
+                        <td style="padding-left:6px;"><a href="https://linkedin.com/company/1800limo" target="_blank"
                             style="display:inline-block; width:30px; height:30px; line-height:0; border-radius:999px; text-decoration:none;">
                             <img src="https://1800limo.s3.us-east-2.amazonaws.com/images/EFgnWd4B3fpt5vIOVhzgcoBgBjZFt6MjjJeAt2dS.png"
                               width="30" height="30" alt="LinkedIn"
                               style="display:block; width:30px; height:30px; border:0; border-radius:999px; object-fit:cover;" /></a>
                         </td>
-                        <td style="padding-left:8px;"><a href="https://instagram.com/1800limo" target="_blank"
+                        <td style="padding-left:6px;"><a href="https://instagram.com/1800limo" target="_blank"
                             style="display:inline-block; width:30px; height:30px; line-height:0; border-radius:999px; text-decoration:none;">
                             <img src="https://1800limo.s3.us-east-2.amazonaws.com/images/UKgAhXMXD48LDrUxaolzohdMC05gJzn1XL5p0tCy.png"
                               width="30" height="30" alt="Instagram"
                               style="display:block; width:30px; height:30px; border:0; border-radius:999px; object-fit:cover;" /></a>
                         </td>
-                        <td style="padding-left:8px;"><a href="https://x.com/1800LIMO" target="_blank"
+                        <td style="padding-left:6px;"><a href="https://x.com/1800LIMO" target="_blank"
                             style="display:inline-block; width:30px; height:30px; line-height:0; border-radius:999px; text-decoration:none;">
                             <img src="https://1800limo.s3.us-east-2.amazonaws.com/images/KN7B0Crel5CxlSgD5QcU5RVqVo7T1PmiZ5D2K7lI.png"
                               width="30" height="30" alt="Twitter"
@@ -784,8 +825,8 @@
                 <tr>
                   <td
                     style="font-family:'Inter',Arial,Helvetica,sans-serif; font-size:13px; font-weight:500; line-height:20px; color:#a6b1c7;">
-                    <a class="footer-link" href="https://1800limo.com/fleet"
-                      style="color:#a6b1c7; text-decoration:none;">Net rates</a>&nbsp;&nbsp;&nbsp;
+                    <!-- <a class="footer-link" href="https://1800limo.com/fleet"
+                      style="color:#a6b1c7; text-decoration:none;">Net rates</a>&nbsp;&nbsp;&nbsp; -->
                     <a class="footer-link" href="https://1800limo.com/group-travel-planner"
                       style="color:#a6b1c7; text-decoration:none;">Group travel</a>&nbsp;&nbsp;&nbsp;
                     <a class="footer-link" href="https://1800limo.com/home"

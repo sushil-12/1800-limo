@@ -2982,8 +2982,8 @@ export class BookingComponent implements OnInit, OnDestroy {
 			this.isUserManualReturnSelection = false;
 			this.firstLoadAffiliateId = response.data.affiliate_id
 			this.number_of_hours = response?.data?.number_of_hours === 0 ? 2 : response?.data?.number_of_hours
-			this.isTravelShare = (this.isTravelAgentMode || response?.data?.account_type == 'travel_planner') && this.updateType != 'repeat' ? true : false
-			this.isFarmoutBooking = response?.data?.reservation_type == 'farmout' ? true : false
+			this.isTravelShare = (this.isTravelAgentMode || response?.data?.account_type == 'travel_planner') && this.updateType != 'repeat' && this.updateType != 'return' && this.updateType != 'round' ? true : false
+			this.isFarmoutBooking = (response?.data?.reservation_type == 'farmout' && this.updateType != 'repeat' && this.updateType != 'return' && this.updateType != 'round') ? true : false
 			this.isCreatedByAdmin = response?.data?.created_by == 1 ? true : false
 
 			// chooseUser is an admin API; individual mode shows the logged-in user's own card instead
@@ -6951,7 +6951,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 				affiliateShare: grandTotal - base_rate * 0.25
 			}
 			// travelAgentShare : 
-			if (this.BookingForm.value?.account_type == 'travel_planner' && !this.isCreatedByAdmin && this.updateType != 'repeat' && this.Form?.updateType?.value != 'repeat') {
+			if (this.BookingForm.value?.account_type == 'travel_planner' && !this.isCreatedByAdmin && !['repeat', 'return', 'round'].includes(this.updateType) && !['repeat', 'return', 'round'].includes(this.Form?.updateType?.value)) {
 				this.adminSharePercent = 15
 				shareArray['adminShare'] = (base_rate * this.adminSharePercent) / 100
 				shareArray['deducted_admin_share'] = shareArray['adminShare'] - shareArray['stripeFee']
@@ -7000,7 +7000,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 				affiliateShare: returnGrandTotal - adminShare
 			}
 			// travelAgentShare : 
-			if (this.BookingForm.value?.account_type == 'travel_planner' && !this.isCreatedByAdmin && this.updateType != 'repeat' && this.Form?.updateType?.value != 'repeat') {
+			if (this.BookingForm.value?.account_type == 'travel_planner' && !this.isCreatedByAdmin && !['repeat', 'return', 'round'].includes(this.updateType) && !['repeat', 'return', 'round'].includes(this.Form?.updateType?.value)) {
 				returnShareArray['adminShare'] = (base_rate * this.adminSharePercent) / 100
 				returnShareArray['deducted_admin_share'] = returnShareArray['adminShare'] - returnShareArray['stripeFee']
 				returnShareArray['travelAgentShare'] = base_rate * 0.10

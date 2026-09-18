@@ -646,10 +646,24 @@ export class BookingTripPreviewComponent implements OnInit {
     }
 
     try {
-      const isCreatedByAdmin = b?.created_by == 1 || b?.created_by_role === 'admin' || (this.userRole === 'admin' && !b?.share_array?.travelAgentShare);
-      if ((b?.account_type == 'travel_planner' || b?.account_type == 'travel_agent') && !isCreatedByAdmin) {
-        this.adminSharePercent = 15;
-      } else if (b?.share_array?.farmoutShare) {
+      const hasTravelAgentShare =
+        (b?.share_array?.travelAgentShare && b?.share_array?.travelAgentShare != '0' && b?.share_array?.travelAgentShare != 0) ||
+        (b?.return_share_array?.travelAgentShare && b?.return_share_array?.travelAgentShare != '0' && b?.return_share_array?.travelAgentShare != 0) ||
+        (b?.r_share_array?.travelAgentShare && b?.r_share_array?.travelAgentShare != '0' && b?.r_share_array?.travelAgentShare != 0);
+
+      const isTravelAgentInvolved =
+        hasTravelAgentShare ||
+        this.userRole === 'travel_agent' ||
+        b?.account_type === 'travel_planner' ||
+        b?.account_type === 'travel_agent' ||
+        b?.created_by_role === 'travel_agent' ||
+        b?.created_by_role === 'travel_planner' ||
+        !!b?.travel_agent_id;
+
+      const isFarmoutShare = b?.share_array?.farmoutShare && b?.share_array?.farmoutShare != '0' && b?.share_array?.farmoutShare != 0;
+      const isFarmoutType = b?.reservation_type === 'farmout';
+
+      if (isTravelAgentInvolved || isFarmoutShare || isFarmoutType) {
         this.adminSharePercent = 15;
       } else {
         this.adminSharePercent = 25;

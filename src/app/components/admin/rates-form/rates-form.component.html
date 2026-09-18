@@ -50,7 +50,8 @@
 			<div class="col-6 col-sm-4 col-md-5 my-3" [formGroupName]="sub_item.key"
 				*ngIf="sub_item.key !== 'Minimum_Rate'">
 				<div class="rate-label">
-					<mat-form-field appearance="outline" class="m-0">
+					<mat-form-field appearance="outline" class="m-0"
+						[class.disabled-rate-field]="(userRole === 'affiliate' || isAffiliateMode) && sub_item.key === 'Base_Rate'">
 						<mat-label>
 							{{ textFormatter(sub_item?.value?.controls?.rate_label?.value) |
 							titlecase }}
@@ -289,7 +290,8 @@
 			<div class="col-6 col-sm-4 col-md-5 my-3" [formGroupName]="sub_item.key"
 				*ngIf="sub_item.key !== 'Minimum_Rate'">
 				<div class="rate-label">
-					<mat-form-field appearance="outline" class="m-0">
+					<mat-form-field appearance="outline" class="m-0"
+						[class.disabled-rate-field]="(userRole === 'affiliate' || isAffiliateMode) && sub_item.key === 'Base_Rate'">
 						<mat-label>
 							{{ textFormatter(sub_item?.value?.controls?.rate_label?.value) |
 							titlecase }}

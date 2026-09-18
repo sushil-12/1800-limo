@@ -360,3 +360,19 @@
 		border-color: transparent !important;
 	}
 }
+
+.disabled-rate-field {
+	::ng-deep .mat-mdc-text-field-wrapper {
+		background-color: #eeeeee !important;
+	}
+
+	::ng-deep .mdc-text-field__input,
+	::ng-deep .mat-mdc-form-field-infix input {
+		color: #9e9e9e !important;
+		-webkit-text-fill-color: #9e9e9e !important;
+	}
+
+	::ng-deep .mat-mdc-form-field-infix input {
+		cursor: not-allowed;
+	}
+}

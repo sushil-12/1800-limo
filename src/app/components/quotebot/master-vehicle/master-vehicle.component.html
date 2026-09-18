@@ -562,12 +562,22 @@
 											vehicle_obj?.luggage }}</span>
 									</div>
 								</div>
-								<div class="d-flex justify-content-end mb-1">
+								<!-- <div class="d-flex justify-content-end mb-1">
 									<button type="button" class="view-more-circle-button"
 										(click)="$event.stopPropagation(); vehicle_obj?.vehicle_count === 0 ? bookNow(vehicle_obj) : selectCategory(vehicle_obj?.name)">
 										{{ vehicle_obj?.vehicle_count === 0 ? 'Book Now' : 'View More' }}
 									</button>
-								</div>
+								</div> -->
+								<div class="d-flex justify-content-end mb-1">
+									<button *ngIf="vehicle_obj?.vehicle_count>0" type="button" class="view-more-circle-button"
+										(click)="$event.stopPropagation(); selectCategory(vehicle_obj?.name)">
+										{{ vehicle_obj?.vehicle_count }} {{ vehicle_obj?.vehicle_count === 1 ? 'Choice' : 'Choices' }}
+									</button>
+									<button  *ngIf="vehicle_obj?.vehicle_count===0" type="button"
+										(click)="$event.stopPropagation(); bookNow(vehicle_obj)" class="view-more-circle-button">
+										Book Now
+									</button>
+							    </div>
 							</div>
 						</div>
 					</div>

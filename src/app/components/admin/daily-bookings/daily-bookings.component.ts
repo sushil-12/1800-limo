@@ -799,6 +799,14 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 			});
 	}
 
+	sendEmailAll() {
+		if (this.selectedEmailBookingShowChangedFields) {
+			this.updatedEmailAll('emailAll');
+		} else {
+			this.emailAll();
+		}
+	}
+
 	emailAll() {
 		console.log(
 			"In function email all",
@@ -1459,7 +1467,7 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 			});
 	}
 
-sendEmailClicked(bookingId, emailTarget, showChangedFields = false, bookingStatus = '') {
+    sendEmailClicked(bookingId, emailTarget, showChangedFields = false, bookingStatus = '') {
         console.log('in func send email click', bookingId, emailTarget)
         this.selectedEmailBookingShowChangedFields = !!showChangedFields;
         this.selectedEmailBookingStatus = bookingStatus || '';

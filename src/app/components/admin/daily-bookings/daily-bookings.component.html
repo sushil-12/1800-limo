@@ -757,7 +757,7 @@
 		</div>
 	</div>
 </div>
-<div class="modal fade" id="emailAll" tabindex="-1" role="dialog" aria-labelledby="emailAll" aria-hidden="true">
+<!-- <div class="modal fade" id="emailAll" tabindex="-1" role="dialog" aria-labelledby="emailAll" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered email-all-modal-dialog" role="document">
 		<div class="modal-content email-all-modal">
 			<div class="modal-header pb-0 email-all-modal__header">
@@ -800,7 +800,26 @@
 		</div>
 	</div>
 
+</div> -->
+
+<div class="modal fade" id="emailAll" tabindex="-1" role="dialog" aria-labelledby="emailAll" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header pb-0">
+				<h3 class="mb-0">Email</h3>
+			</div>
+			<div class="modal-body text-center">
+				<p>Are you sure, You want to send <span *ngIf="selectedEmailBookingShowChangedFields">Updated</span> Email?</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="custom-btn savebutton" (click)="sendEmailAll()">Send
+					Email</button>
+				<button type="button" class="custom-btn resetbutton" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
 </div>
+
 <div class="modal fade" id="updatedEmailAll" tabindex="-1" role="dialog" aria-labelledby="updatedEmailAll"
 	aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered" role="document">

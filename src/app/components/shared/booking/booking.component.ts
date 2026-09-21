@@ -7228,6 +7228,19 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return false;
 	}
 
+	private check24HourTimeout: any;
+
+	/** Schedule 24-hour warning check after form value changes settle (avoiding race conditions when multiple date/time fields update in sequence). */
+	schedule24HourWarningCheck() {
+		this.hasConfirmed24HourWarning = false;
+		if (this.check24HourTimeout) {
+			clearTimeout(this.check24HourTimeout);
+		}
+		this.check24HourTimeout = setTimeout(() => {
+			this.checkAndShow24HourWarning();
+		}, 100);
+	}
+
 	/** Check 24-hour warning and show modal if booking is scheduled within 24 hours. */
 	checkAndShow24HourWarning(): boolean {
 		if (this.isBookingWithin24Hours()) {
@@ -8545,16 +8558,14 @@ export class BookingComponent implements OnInit, OnDestroy {
 		if (this.updateType == 'edit') {
 			this.BookingForm?.get('pickup_time')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe((value: string) => {
 				this.clearPastDateTimeError();
-				this.hasConfirmed24HourWarning = false;
-				this.checkAndShow24HourWarning();
+				this.schedule24HourWarningCheck();
 				if (!this.isManualRateEntered()) {
 					this.buildBookingData();
 				}
 			})
 			this.BookingForm?.get('return_pickup_time')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe((value: string) => {
 				this.clearPastDateTimeError();
-				this.hasConfirmed24HourWarning = false;
-				this.checkAndShow24HourWarning();
+				this.schedule24HourWarningCheck();
 				if (!this.isManualRateEntered()) {
 					this.buildBookingData();
 				}
@@ -8563,27 +8574,23 @@ export class BookingComponent implements OnInit, OnDestroy {
 			//pickup time change
 			this.BookingForm?.get('pickup_time')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe((value: string) => {
 				this.clearPastDateTimeError();
-				this.hasConfirmed24HourWarning = false;
-				this.checkAndShow24HourWarning();
+				this.schedule24HourWarningCheck();
 				this.buildBookingData()
 			})
 			this.BookingForm?.get('return_pickup_time')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe((value: string) => {
 				this.clearPastDateTimeError();
-				this.hasConfirmed24HourWarning = false;
-				this.checkAndShow24HourWarning();
+				this.schedule24HourWarningCheck();
 				this.buildBookingData()
 			})
 		}
 		// Clear the past date & time errors as soon as either pickup date is changed.
 		this.BookingForm?.get('pickup_date')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe(() => {
 			this.clearPastDateTimeError();
-			this.hasConfirmed24HourWarning = false;
-			this.checkAndShow24HourWarning();
+			this.schedule24HourWarningCheck();
 		})
 		this.BookingForm?.get('return_pickup_date')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe(() => {
 			this.clearPastDateTimeError();
-			this.hasConfirmed24HourWarning = false;
-			this.checkAndShow24HourWarning();
+			this.schedule24HourWarningCheck();
 		})
 
 		// Service Type

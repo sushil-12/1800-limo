@@ -1841,16 +1841,41 @@ export class BookingComponent implements OnInit, OnDestroy {
 		this.validateAddressSuggestions();
 	}
 
+	currentTerminalMissingField: string | null = null;
+
+	checkAndShowTerminalPopup(controlName: string, displayValue: string, airportId?: string): boolean {
+		if (!displayValue) return false;
+		const id = airportId || String(this.BookingForm.get(controlName.replace('_option', ''))?.value || '').trim();
+		if (id === '3283') return false; // Skip FBO
+
+		if (!displayValue.toLowerCase().includes('terminal')) {
+			this.currentTerminalMissingField = controlName.endsWith('_option') ? controlName : `${controlName}_option`;
+			try {
+				$('#selectTerminalModal').modal('show');
+			} catch (e) {
+				console.error('Error opening terminal modal:', e);
+			}
+			return true;
+		}
+		return false;
+	}
+
+	onTerminalModalProceed(): void {
+		try {
+			$('#selectTerminalModal').modal('hide');
+		} catch (e) {}
+		this.currentTerminalMissingField = null;
+	}
+
 	validateAddressSuggestions(): void {
 		if (!this.BookingForm) return;
 
-		const checkField = (controlName: string, latControlName: string, isAirportField: boolean = false, airportIdControlName?: string) => {
+		const checkField = (controlName: string, latControlName: string) => {
 			const ctrl = this.BookingForm.get(controlName);
 			if (ctrl) {
 				const errors = ctrl.errors ? { ...ctrl.errors } : null;
 				if (errors) {
 					delete errors['suggestionRequired'];
-					delete errors['terminalRequired'];
 				}
 				ctrl.setErrors(errors && Object.keys(errors).length ? errors : null);
 
@@ -1861,12 +1886,6 @@ export class BookingComponent implements OnInit, OnDestroy {
 				if (val && !latVal) {
 					ctrl.setErrors({ ...(ctrl.errors || {}), suggestionRequired: true });
 					ctrl.markAsTouched();
-				} else if (val && isAirportField) {
-					const airportId = airportIdControlName ? String(this.BookingForm.get(airportIdControlName)?.value || '').trim() : '';
-					if (airportId !== '3283' && !val.toLowerCase().includes('terminal')) {
-						ctrl.setErrors({ ...(ctrl.errors || {}), terminalRequired: true });
-						ctrl.markAsTouched();
-					}
 				}
 			}
 		};
@@ -1874,14 +1893,14 @@ export class BookingComponent implements OnInit, OnDestroy {
 		// 1. Pickup
 		const transferType = this.Form?.transfer_type?.value || '';
 		if (transferType.startsWith('airport_')) {
-			checkField('pickup_airport_option', 'pickup_airport_latitude', true, 'pickup_airport');
+			checkField('pickup_airport_option', 'pickup_airport_latitude');
 		} else {
 			checkField('pickup', 'pickup_latitude');
 		}
 
 		// 2. Dropoff
 		if (transferType.endsWith('_airport')) {
-			checkField('dropoff_airport_option', 'dropoff_airport_latitude', true, 'dropoff_airport');
+			checkField('dropoff_airport_option', 'dropoff_airport_latitude');
 		} else {
 			checkField('dropoff', 'dropoff_latitude');
 		}
@@ -1890,13 +1909,13 @@ export class BookingComponent implements OnInit, OnDestroy {
 		if (this.Form?.service_type?.value === 'round_trip') {
 			const returnTransferType = this.Form?.return_transfer_type?.value || '';
 			if (returnTransferType.startsWith('airport_')) {
-				checkField('return_pickup_airport_option', 'return_pickup_airport_latitude', true, 'return_pickup_airport');
+				checkField('return_pickup_airport_option', 'return_pickup_airport_latitude');
 			} else {
 				checkField('return_pickup', 'return_pickup_latitude');
 			}
 
 			if (returnTransferType.endsWith('_airport')) {
-				checkField('return_dropoff_airport_option', 'return_dropoff_airport_latitude', true, 'return_dropoff_airport');
+				checkField('return_dropoff_airport_option', 'return_dropoff_airport_latitude');
 			} else {
 				checkField('return_dropoff', 'return_dropoff_latitude');
 			}
@@ -2404,6 +2423,9 @@ export class BookingComponent implements OnInit, OnDestroy {
 				this.handleAirportPlaceSelection(`${fieldName}_airport`, place);
 				this.promoteAddressFieldToAirport(fieldName as 'pickup' | 'dropoff' | 'return_pickup' | 'return_dropoff');
 				this.closeCustomAddressDropdown(fieldName);
+				const optionControlName = `${fieldName}_airport_option`;
+				const displayVal = String(this.BookingForm.get(optionControlName)?.value || '').trim();
+				this.checkAndShowTerminalPopup(optionControlName, displayVal);
 				return;
 			}
 
@@ -2464,15 +2486,8 @@ export class BookingComponent implements OnInit, OnDestroy {
 		this.closeCustomAirportDropdown(fieldName);
 
 		const optionControlName = fieldName.endsWith('_option') ? fieldName : `${fieldName}_option`;
-		const ctrl = this.BookingForm.get(optionControlName);
-		if (ctrl && ctrl.errors?.terminalRequired) {
-			const inputRef = this.getSameLocationFieldInput(optionControlName);
-			if (inputRef?.nativeElement) {
-				setTimeout(() => {
-					inputRef.nativeElement.focus();
-				}, 100);
-			}
-		}
+		const displayVal = String(this.BookingForm.get(optionControlName)?.value || '').trim();
+		this.checkAndShowTerminalPopup(optionControlName, displayVal);
 	}
 
 

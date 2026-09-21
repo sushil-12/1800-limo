@@ -740,6 +740,7 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 			.bookingEmailAllUpdated(this.sendEmailForm.value.reservation_id)
 			.pipe(
 				catchError((err) => {
+					this.spinner.hide();
 					return throwError(err);
 				})
 			)
@@ -749,6 +750,13 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 				$(`#${sourceModal}`).modal("hide");
 				$('#successModal').modal('show')
 				this.successMessage = 'Updated email has been sent successfully'
+				this.loadBookings(
+					null,
+					this.startDate,
+					this.endDate,
+					this.searchText,
+					this.selectedStatus
+				);
 				setTimeout(() => {
 					$('#successModal').modal('hide')
 				}, 2000)
@@ -771,6 +779,13 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 				$(`#${sourceModal}`).modal("hide");
 				$('#successModal').modal('show')
 				this.successMessage = 'Updated email has been sent successfully'
+				this.loadBookings(
+					null,
+					this.startDate,
+					this.endDate,
+					this.searchText,
+					this.selectedStatus
+				);
 				setTimeout(() => {
 					$('#successModal').modal('hide')
 				}, 2000)
@@ -793,6 +808,13 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 				$(`#${sourceModal}`).modal("hide");
 				$('#successModal').modal('show')
 				this.successMessage = 'Updated email has been sent successfully'
+				this.loadBookings(
+					null,
+					this.startDate,
+					this.endDate,
+					this.searchText,
+					this.selectedStatus
+				);
 				setTimeout(() => {
 					$('#successModal').modal('hide')
 				}, 2000)

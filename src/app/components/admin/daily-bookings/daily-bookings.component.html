@@ -383,7 +383,11 @@
 
 									</td>
 
-									<td class="sorting_1">
+									<td class="sorting_1 cursor-pointer"
+										*ngIf="((currentUser?.roleName == 'admin' || subModules.includes('edit_booking')) && (booking?.booking_status != 'paid' && booking?.booking_status != 'paid_cash')); else readOnlyDate"
+										(click)="editAction(booking.booking_id, booking.booking_status, 'travel_date')"
+										title="Click to go to date and time details"
+										style="cursor: pointer;">
 										<p style="font-weight: 600 !important; white-space: nowrap !important;">{{
 											FormatDate(booking.pickup_date)
 											}}
@@ -393,6 +397,18 @@
 											}}
 										</p>
 									</td>
+									<ng-template #readOnlyDate>
+										<td class="sorting_1">
+											<p style="font-weight: 600 !important; white-space: nowrap !important;">{{
+												FormatDate(booking.pickup_date)
+												}}
+											</p>
+											<p style="font-weight: 600 !important;">{{booking?.pickup_day}}</p>
+											<p style="font-weight: 600 !important;">{{ FormatTime(booking.pickup_time)
+												}}
+											</p>
+										</td>
+									</ng-template>
 									<td class="text-left font-weight-bolder ">
 										<p (click)="showBookingPreviewModal(booking?.booking_id)"
 											class="booking-id-font font-weight-bolder cursor-pointer">

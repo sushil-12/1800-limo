@@ -2071,9 +2071,13 @@ sendEmailClicked(bookingId, emailTarget, showChangedFields = false, bookingStatu
 	}
 
 
-	editAction(booking_id, booking_status) {
+	editAction(booking_id, booking_status, focusSection?: string) {
 		if (booking_status != 'paid' && booking_status != 'paid_cash') {
-			this.router.navigate(['/admin/new-booking-v2'], { queryParams: { bookingId: booking_id, updateType: 'edit' } });
+			const queryParams: any = { bookingId: booking_id, updateType: 'edit' };
+			if (focusSection) {
+				queryParams.focus = focusSection;
+			}
+			this.router.navigate(['/admin/new-booking-v2'], { queryParams, fragment: focusSection });
 		}
 	}
 }

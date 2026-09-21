@@ -320,6 +320,8 @@ export class BookingComponent implements OnInit, OnDestroy {
 	quotePayload: any = null;
 	quoteLoading: boolean = false;
 	confirmMsg: any;
+	hasConfirmed24HourWarning: boolean = false;
+	pendingSubmitPreview?: boolean;
 	booking_data: any;
 	// Bumped on explicit vehicle/affiliate picks so rates-form re-fetches even when
 	// every other booking_data field is unchanged (e.g. re-selecting the same vehicle).
@@ -388,6 +390,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 	/** Route map panels start collapsed; the map only initializes when expanded. */
 	isRouteMapVisible = true;
 	isReturnRouteMapVisible = true;
+	targetFocusElementId: string = null;
 
 	constructor(
 		private $form: FormBuilder,
@@ -429,6 +432,9 @@ export class BookingComponent implements OnInit, OnDestroy {
 		// build the form first
 		this.buildBookingForm()
 		this.queryParamsSubscription = this.$routeurl.queryParams.subscribe((params: any) => {
+			if (params?.focus || this.$routeurl.snapshot.fragment) {
+				this.targetFocusElementId = params?.focus || this.$routeurl.snapshot.fragment;
+			}
 			// Guests have no reservation-read endpoint, so edit/repeat/return/reaffiliate
 			// can only half-load. Send them back to the quote instead of rendering a
 			// form that silently drops the booking they think they are editing.
@@ -1075,6 +1081,14 @@ export class BookingComponent implements OnInit, OnDestroy {
 		const el = document.querySelector<HTMLElement>(`[data-bksec="${key}"]`);
 		if (el) {
 			el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	}
+
+	scrollToTargetElement(targetId: string): void {
+		if (!targetId) return;
+		const el = document.getElementById(targetId) || document.querySelector<HTMLElement>(`[data-bksec="${targetId}"]`);
+		if (el) {
+			el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 		}
 	}
 
@@ -3248,6 +3262,11 @@ export class BookingComponent implements OnInit, OnDestroy {
 			this.enforceCharterTourForExtraStops();
 			this.runEmbeddedQuote();
 			console.log('DEBUGRATES - PREFILL CP12 COMPLETE (no throw)');
+			if (this.targetFocusElementId) {
+				setTimeout(() => {
+					this.scrollToTargetElement(this.targetFocusElementId);
+				}, 400);
+			}
 			} catch (e) {
 				console.log('DEBUGRATES - PREFILL THREW | message:', e?.message);
 				console.log('DEBUGRATES - PREFILL THREW | stack:', e?.stack);
@@ -7162,6 +7181,62 @@ export class BookingComponent implements OnInit, OnDestroy {
 		}
 	}
 
+	/** Check if the new booking pickup datetime (or return leg) is within 24 hours from system_time (current datetime). */
+	isBookingWithin24Hours(): boolean {
+		if (!this.BookingForm) return false;
+		const now = moment();
+		const timeFormats = ['YYYY-MM-DD hh:mm A', 'YYYY-MM-DD HH:mm', 'YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD h:mm A', 'YYYY-MM-DD h:mm a', 'YYYY-MM-DD hh:mm a'];
+
+		const checkLegWithin24 = (dateControl: string, timeControl: string): boolean => {
+			const dateValue = this.BookingForm.get(dateControl)?.value;
+			const timeValue = this.BookingForm.get(timeControl)?.value;
+			if (!dateValue) return false;
+
+			const dateStr = typeof dateValue === 'string' ? dateValue : moment(dateValue).format('YYYY-MM-DD');
+			const fullTimeStr = `${dateStr} ${timeValue || '12:00 am'}`;
+			const bookingTime = moment(fullTimeStr, timeFormats);
+			if (!bookingTime.isValid()) return false;
+
+			const diffInHours = bookingTime.diff(now, 'hours', true);
+			return diffInHours >= 0 && diffInHours <= 24;
+		};
+
+		if (checkLegWithin24('pickup_date', 'pickup_time')) {
+			return true;
+		}
+		if (this.Form?.service_type?.value === 'round_trip' && checkLegWithin24('return_pickup_date', 'return_pickup_time')) {
+			return true;
+		}
+		return false;
+	}
+
+	/** Check 24-hour warning and show modal if booking is scheduled within 24 hours. */
+	checkAndShow24HourWarning(): boolean {
+		if (this.isBookingWithin24Hours()) {
+			$('#within24HoursModal').modal('show');
+			return true;
+		}
+		return false;
+	}
+
+	/** Modal action handlers for 24 hour booking popup */
+	onConfirm24HourBooking() {
+		this.hasConfirmed24HourWarning = true;
+		$('#within24HoursModal').modal('hide');
+		if (this.pendingSubmitPreview !== undefined) {
+			const previewMode = this.pendingSubmitPreview;
+			this.pendingSubmitPreview = undefined;
+			this.submitForm(previewMode);
+		}
+	}
+
+	onCancel24HourBooking() {
+		this.hasConfirmed24HourWarning = false;
+		this.pendingSubmitPreview = undefined;
+		$('#within24HoursModal').modal('hide');
+	}
+
+
 	/**
 	 * Every reason the preview/submit can bail out, logged with the vehicle context.
 	 * Master-vehicle quotes carry no concrete vehicle_id, so that state is included
@@ -7451,6 +7526,12 @@ export class BookingComponent implements OnInit, OnDestroy {
 		// Master vehicles have no affiliate — keep affiliate_id empty (set by
 		// onQuoteVehicleSelected/setValueByBookNow) instead of stamping the
 		// subscriber's own account_id on the booking.
+		if (this.isBookingWithin24Hours() && !this.hasConfirmed24HourWarning) {
+			this.pendingSubmitPreview = preview;
+			$('#within24HoursModal').modal('show');
+			return;
+		}
+
 		if (this.booking_created_from == 'subscriber' && !this.is_master_vehicle) {
 			this.BookingForm.patchValue({
 				affiliate_id: this.currentUser?.account_id
@@ -8446,12 +8527,16 @@ export class BookingComponent implements OnInit, OnDestroy {
 		if (this.updateType == 'edit') {
 			this.BookingForm?.get('pickup_time')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe((value: string) => {
 				this.clearPastDateTimeError();
+				this.hasConfirmed24HourWarning = false;
+				this.checkAndShow24HourWarning();
 				if (!this.isManualRateEntered()) {
 					this.buildBookingData();
 				}
 			})
 			this.BookingForm?.get('return_pickup_time')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe((value: string) => {
 				this.clearPastDateTimeError();
+				this.hasConfirmed24HourWarning = false;
+				this.checkAndShow24HourWarning();
 				if (!this.isManualRateEntered()) {
 					this.buildBookingData();
 				}
@@ -8460,19 +8545,27 @@ export class BookingComponent implements OnInit, OnDestroy {
 			//pickup time change
 			this.BookingForm?.get('pickup_time')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe((value: string) => {
 				this.clearPastDateTimeError();
+				this.hasConfirmed24HourWarning = false;
+				this.checkAndShow24HourWarning();
 				this.buildBookingData()
 			})
 			this.BookingForm?.get('return_pickup_time')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe((value: string) => {
 				this.clearPastDateTimeError();
+				this.hasConfirmed24HourWarning = false;
+				this.checkAndShow24HourWarning();
 				this.buildBookingData()
 			})
 		}
 		// Clear the past date & time errors as soon as either pickup date is changed.
 		this.BookingForm?.get('pickup_date')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe(() => {
 			this.clearPastDateTimeError();
+			this.hasConfirmed24HourWarning = false;
+			this.checkAndShow24HourWarning();
 		})
 		this.BookingForm?.get('return_pickup_date')?.valueChanges.pipe(takeUntil(this.formSubscriptionsReset$)).subscribe(() => {
 			this.clearPastDateTimeError();
+			this.hasConfirmed24HourWarning = false;
+			this.checkAndShow24HourWarning();
 		})
 
 		// Service Type

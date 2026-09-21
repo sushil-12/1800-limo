@@ -4571,6 +4571,30 @@
 	</div>
 </div>
 
+<div class="modal fade" id="within24HoursModal" tabindex="-1" role="dialog" aria-labelledby="within24HoursModalLabel"
+	aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header pb-0 d-flex justify-content-center">
+				<h5 class="modal-title font-weight-bold text-danger" id="within24HoursModalLabel">
+					Notice: Booking Within 24 Hours
+				</h5>
+			</div>
+			<div class="modal-body text-center py-3">
+				<p class="mb-0 font-weight-bold">
+					This booking is within 24 hours and may not be accepted. Rest assured, we’ll do our best to arrange your requested service.
+				</p>
+			</div>
+			<div class="modal-footer justify-content-center">
+				<button type="button" class="bk-btn bk-btn--primary" data-dismiss="modal" (click)="onConfirm24HourBooking()">
+					Proceed
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
 
 <!-- <div class="modal fade" id="previewBooking" aria-labelledby="previewBookingLabel" aria-hidden="true">
 	<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">

@@ -856,11 +856,11 @@ export class BookingTripPreviewComponent implements OnInit {
 
     // Override based on transfer_type
     if (this.bookingPreview.transfer_type?.includes('airport_')) {
-      origin = new google.maps.LatLng(this.bookingPreview.pickup_airport_latitude, this.bookingPreview.pickup_airport_longitude);
+      origin = new google.maps.LatLng(this.bookingPreview.pickup_latitude, this.bookingPreview.pickup_longitude);
     }
 
     if (this.bookingPreview.transfer_type?.includes('_airport')) {
-      destination = new google.maps.LatLng(this.bookingPreview.dropoff_airport_latitude, this.bookingPreview.dropoff_airport_longitude);
+      destination = new google.maps.LatLng(this.bookingPreview.dropoff_latitude, this.bookingPreview.dropoff_longitude);
     }
 
     // Handle Extra Stops

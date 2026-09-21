@@ -23,7 +23,7 @@
 		<div class="fp-action" *ngIf="isFinalizeButton">
 			<span class="fp-hint-done">Booking finalized — charge now to get paid</span>
 			<button type="button" class="fp-charge-btn" (click)="scroll('nextSection')">
-				Charge Now <i class="bi bi-arrow-down-short"></i>
+				Scroll Down <i class="bi bi-arrow-down-short"></i>
 			</button>
 		</div>
 	</div>
@@ -285,9 +285,9 @@
 						</tbody>
 					</ng-template>
 				</table>
-				<a class="addCardClass" (click)="changeDetection('new_card')">
+				<a class="addCardClass" (click)="changeDetection('new_card')" style="font-size:17px">
 					<input id="card" name="AddCard" type="radio" [checked]="isCardFormOpen">
-					<img src="../../../../assets/images/credit-card.png" alt="">
+					<img src="../../../../assets/images/credit-card.png" alt="" style="width:20px; height:30px">
 					Add a credit or debit card</a>
 			</div>
 			<!-- Credit Card Details -->

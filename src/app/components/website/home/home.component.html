@@ -90,7 +90,7 @@
 					</div>
 				</div>
 
-				<div class="mobile-app-minimal">
+				<div class="mobile-app-minimal d-none d-md-block">
 					<!-- <div class="icon-container">
 						<img src="../../../../assets/admin/images/announcement.png" class="announcement-icon" alt="Announcement">
 					</div> -->
@@ -1248,7 +1248,7 @@
 									</div>
 									<div class="amenity-checkbox-grid">
 										<label *ngFor="let amenity of amenitiesList; let i = index"
-											class="amenity-checkbox-item" [hidden]="i >= 4 && !showAllAmenities">
+											class="amenity-checkbox-item" [hidden]="i >= 2 && !showAllAmenities">
 											<input type="checkbox" class="amenity-real-checkbox"
 												[checked]="isAmenitySelected(amenity.id)"
 												(change)="toggleAmenity(amenity.id)" />
@@ -1273,10 +1273,6 @@
 										<i class="fas fa-search mr-2"></i> Choose Vehicle and Quote
 									</button>
 								</div>
-							</div>
-							<div class="qb-hint-row">
-								<span><i class="fas fa-info-circle mr-1"></i>2 carry-on = 1 large bag</span>
-								<span><i class="fas fa-info-circle mr-1"></i> # of luggage = vehicle size</span>
 							</div>
 						</div>
 						<ul class="qutedrates">
@@ -1308,6 +1304,28 @@
 	</div>
 	<div id="ourfleet"></div>
 </section>
+
+	<div class="mobile-app-minimal d-md-none">
+					<!-- <div class="icon-container">
+						<img src="../../../../assets/admin/images/announcement.png" class="announcement-icon" alt="Announcement">
+					</div> -->
+
+					<div class="content-container">
+						<div class="release-text">
+							Install Our Applications Now
+						</div>
+						<div class="store-icons">
+							<img src="../../../../assets/images/appstore.png" alt="App Store" class="store-img"
+								style="cursor: pointer;" data-toggle="modal" data-target="#appStorePopup">
+							<img style="filter: grayscale(1);" src="../../../../assets/images/googleplay.png"
+								alt="Google Play" class="store-img store-img-android" style="cursor: pointer;"
+								data-toggle="modal" data-target="#googlePlayPopup">
+						</div>
+					</div>
+				
+	</div>
+
+
 
 <!------------------VIEW OUR VEHICLES------------------------------->
 <!-- <section class="checkourveh_wrapper" *ngIf="fetchPageData('VIEW OUR VEHICLES')?.section_status == 'enable' ">

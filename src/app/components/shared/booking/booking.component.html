@@ -1133,9 +1133,10 @@
 									</div>
 									<div *ngIf="((submitBookingForm || Form.pickup_airport_option.touched) && Form.pickup_airport_option.invalid)"
 										class="text-danger my-mat-hint" style="margin-bottom: 10px;">
-										<div *ngIf="Form.pickup_airport_option.errors.required && !Form.pickup_airport_option.errors?.suggestionRequired">Pickup address is required</div>
+										<div *ngIf="Form.pickup_airport_option.errors.required && !Form.pickup_airport_option.errors?.suggestionRequired && !Form.pickup_airport_option.errors?.terminalRequired">Pickup address is required</div>
 										<div *ngIf="Form.pickup_airport_option.errors?.sameLocation">Pickup, drop-off and stop locations must be different</div>
 										<div *ngIf="Form.pickup_airport_option.errors?.suggestionRequired">Please select an address from the suggestions list</div>
+										<div *ngIf="Form.pickup_airport_option.errors?.terminalRequired">Please select the Terminal</div>
 									</div>
 								</div>
 
@@ -1562,9 +1563,10 @@
 									</div>
 									<div *ngIf="((submitBookingForm || Form.dropoff_airport_option.touched) && Form.dropoff_airport_option.invalid)"
 										class="text-danger my-mat-hint" style="margin-bottom: 10px;">
-										<div *ngIf="Form.dropoff_airport_option.errors.required && !Form.dropoff_airport_option.errors?.suggestionRequired">Dropoff address is required</div>
+										<div *ngIf="Form.dropoff_airport_option.errors.required && !Form.dropoff_airport_option.errors?.suggestionRequired && !Form.dropoff_airport_option.errors?.terminalRequired">Dropoff address is required</div>
 										<div *ngIf="Form.dropoff_airport_option.errors?.sameLocation">Pickup, drop-off and stop locations must be different</div>
 										<div *ngIf="Form.dropoff_airport_option.errors?.suggestionRequired">Please select an address from the suggestions list</div>
+										<div *ngIf="Form.dropoff_airport_option.errors?.terminalRequired">Please select the Terminal</div>
 									</div>
 								</div>
 
@@ -3120,9 +3122,10 @@
 									</div>
 									<div *ngIf="((submitBookingForm || Form.return_pickup_airport_option.touched) && Form.return_pickup_airport_option.invalid)"
 										class="text-danger my-mat-hint" style="margin-bottom: 10px;">
-										<div *ngIf="Form.return_pickup_airport_option.errors.required && !Form.return_pickup_airport_option.errors?.suggestionRequired">Return pickup address is required</div>
+										<div *ngIf="Form.return_pickup_airport_option.errors.required && !Form.return_pickup_airport_option.errors?.suggestionRequired && !Form.return_pickup_airport_option.errors?.terminalRequired">Return pickup address is required</div>
 										<div *ngIf="Form.return_pickup_airport_option.errors?.sameLocation">Pickup, drop-off and stop locations must be different</div>
 										<div *ngIf="Form.return_pickup_airport_option.errors?.suggestionRequired">Please select an address from the suggestions list</div>
+										<div *ngIf="Form.return_pickup_airport_option.errors?.terminalRequired">Please select the Terminal</div>
 									</div>
 								</div>
 
@@ -3550,9 +3553,10 @@
 									</div>
 									<div *ngIf="((submitBookingForm || Form.return_dropoff_airport_option.touched) && Form.return_dropoff_airport_option.invalid)"
 										class="text-danger my-mat-hint" style="margin-bottom: 10px;">
-										<div *ngIf="Form.return_dropoff_airport_option.errors.required && !Form.return_dropoff_airport_option.errors?.suggestionRequired">Return dropoff address is required</div>
+										<div *ngIf="Form.return_dropoff_airport_option.errors.required && !Form.return_dropoff_airport_option.errors?.suggestionRequired && !Form.return_dropoff_airport_option.errors?.terminalRequired">Return dropoff address is required</div>
 										<div *ngIf="Form.return_dropoff_airport_option.errors?.sameLocation">Pickup, drop-off and stop locations must be different</div>
 										<div *ngIf="Form.return_dropoff_airport_option.errors?.suggestionRequired">Please select an address from the suggestions list</div>
+										<div *ngIf="Form.return_dropoff_airport_option.errors?.terminalRequired">Please select the Terminal</div>
 									</div>
 								</div>
 

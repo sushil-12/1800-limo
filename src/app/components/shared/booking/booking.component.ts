@@ -1844,12 +1844,13 @@ export class BookingComponent implements OnInit, OnDestroy {
 	validateAddressSuggestions(): void {
 		if (!this.BookingForm) return;
 
-		const checkField = (controlName: string, latControlName: string) => {
+		const checkField = (controlName: string, latControlName: string, isAirportField: boolean = false, airportIdControlName?: string) => {
 			const ctrl = this.BookingForm.get(controlName);
 			if (ctrl) {
 				const errors = ctrl.errors ? { ...ctrl.errors } : null;
 				if (errors) {
 					delete errors['suggestionRequired'];
+					delete errors['terminalRequired'];
 				}
 				ctrl.setErrors(errors && Object.keys(errors).length ? errors : null);
 
@@ -1860,6 +1861,12 @@ export class BookingComponent implements OnInit, OnDestroy {
 				if (val && !latVal) {
 					ctrl.setErrors({ ...(ctrl.errors || {}), suggestionRequired: true });
 					ctrl.markAsTouched();
+				} else if (val && isAirportField) {
+					const airportId = airportIdControlName ? String(this.BookingForm.get(airportIdControlName)?.value || '').trim() : '';
+					if (airportId !== '3283' && !val.toLowerCase().includes('terminal')) {
+						ctrl.setErrors({ ...(ctrl.errors || {}), terminalRequired: true });
+						ctrl.markAsTouched();
+					}
 				}
 			}
 		};
@@ -1867,14 +1874,14 @@ export class BookingComponent implements OnInit, OnDestroy {
 		// 1. Pickup
 		const transferType = this.Form?.transfer_type?.value || '';
 		if (transferType.startsWith('airport_')) {
-			checkField('pickup_airport_option', 'pickup_airport_latitude');
+			checkField('pickup_airport_option', 'pickup_airport_latitude', true, 'pickup_airport');
 		} else {
 			checkField('pickup', 'pickup_latitude');
 		}
 
 		// 2. Dropoff
 		if (transferType.endsWith('_airport')) {
-			checkField('dropoff_airport_option', 'dropoff_airport_latitude');
+			checkField('dropoff_airport_option', 'dropoff_airport_latitude', true, 'dropoff_airport');
 		} else {
 			checkField('dropoff', 'dropoff_latitude');
 		}
@@ -1883,13 +1890,13 @@ export class BookingComponent implements OnInit, OnDestroy {
 		if (this.Form?.service_type?.value === 'round_trip') {
 			const returnTransferType = this.Form?.return_transfer_type?.value || '';
 			if (returnTransferType.startsWith('airport_')) {
-				checkField('return_pickup_airport_option', 'return_pickup_airport_latitude');
+				checkField('return_pickup_airport_option', 'return_pickup_airport_latitude', true, 'return_pickup_airport');
 			} else {
 				checkField('return_pickup', 'return_pickup_latitude');
 			}
 
 			if (returnTransferType.endsWith('_airport')) {
-				checkField('return_dropoff_airport_option', 'return_dropoff_airport_latitude');
+				checkField('return_dropoff_airport_option', 'return_dropoff_airport_latitude', true, 'return_dropoff_airport');
 			} else {
 				checkField('return_dropoff', 'return_dropoff_latitude');
 			}
@@ -2455,6 +2462,17 @@ export class BookingComponent implements OnInit, OnDestroy {
 		}
 		this.resetCustomAirportSessionToken(fieldName);
 		this.closeCustomAirportDropdown(fieldName);
+
+		const optionControlName = fieldName.endsWith('_option') ? fieldName : `${fieldName}_option`;
+		const ctrl = this.BookingForm.get(optionControlName);
+		if (ctrl && ctrl.errors?.terminalRequired) {
+			const inputRef = this.getSameLocationFieldInput(optionControlName);
+			if (inputRef?.nativeElement) {
+				setTimeout(() => {
+					inputRef.nativeElement.focus();
+				}, 100);
+			}
+		}
 	}
 
 

@@ -1841,30 +1841,142 @@ export class BookingComponent implements OnInit, OnDestroy {
 		this.validateAddressSuggestions();
 	}
 
-	currentTerminalMissingField: string | null = null;
+	modalMissingField: string | null = null;
+	modalFieldLabel: string = 'Airport Address';
+	modalSelectedAirportName: string = '';
+	modalTerminalOptions: Array<any> = [];
+	modalSelectedTerminalOption: any | null = null;
+	isModalTerminalLoading: boolean = false;
+	isModalDropdownOpen: boolean = false;
+	modalInputSearchText: string = '';
+	private modalSearchDebounceTimeout: any = undefined;
 
-	checkAndShowTerminalPopup(controlName: string, displayValue: string, airportId?: string): boolean {
+	getFieldDisplayName(fieldName: string): string {
+		if (fieldName.includes('pickup') && !fieldName.includes('return')) return 'Pickup Address';
+		if (fieldName.includes('dropoff') && !fieldName.includes('return')) return 'Dropoff Address';
+		if (fieldName.includes('return_pickup')) return 'Return Pickup Address';
+		if (fieldName.includes('return_dropoff')) return 'Return Dropoff Address';
+		return 'Airport Address';
+	}
+
+	async checkAndShowTerminalPopup(controlName: string, displayValue: string, airportId?: string): Promise<boolean> {
 		if (!displayValue) return false;
 		const id = airportId || String(this.BookingForm.get(controlName.replace('_option', ''))?.value || '').trim();
 		if (id === '3283') return false; // Skip FBO
 
 		if (!displayValue.toLowerCase().includes('terminal')) {
-			this.currentTerminalMissingField = controlName.endsWith('_option') ? controlName : `${controlName}_option`;
+			const baseField = controlName.endsWith('_option') ? controlName.replace('_option', '') : controlName;
+			this.modalMissingField = baseField;
+			this.modalFieldLabel = this.getFieldDisplayName(controlName);
+			this.modalSelectedAirportName = displayValue;
+			this.modalInputSearchText = '';
+			this.modalTerminalOptions = [];
+			this.modalSelectedTerminalOption = null;
+			this.isModalTerminalLoading = true;
+			this.isModalDropdownOpen = true;
+
 			try {
 				$('#selectTerminalModal').modal('show');
 			} catch (e) {
 				console.error('Error opening terminal modal:', e);
 			}
+
+			void this.fetchTerminalOptionsForModal(displayValue);
 			return true;
 		}
 		return false;
 	}
 
-	onTerminalModalProceed(): void {
+	private async fetchTerminalOptionsForModal(airportSearchText: string): Promise<void> {
+		try {
+			const baseSearchText = this.getCustomAirportBaseQuery(airportSearchText, this.modalMissingField || undefined) || airportSearchText;
+			const terminalSearchText = `${baseSearchText} terminal`.trim();
+			const concourseSearchText = `${baseSearchText} concourse`.trim();
+			const sessionToken = this.getOrCreateCustomAirportSessionToken(this.modalMissingField || 'pickup_airport');
+
+			const [airportOptions, terminalOptions, concourseOptions] = await Promise.all([
+				this.searchGooglePredictions(baseSearchText, sessionToken),
+				this.searchGooglePredictions(terminalSearchText, sessionToken),
+				this.searchGooglePredictions(concourseSearchText, sessionToken)
+			]);
+
+			const terminalPredictions = [...terminalOptions, ...concourseOptions]
+				.filter((option) =>
+					this.isAirportPrediction(option)
+					&& String(option?.description || '').toLowerCase().includes('terminal')
+				)
+				.map((option) => ({ ...option, isTerminal: true }));
+
+			const airportPredictions = airportOptions
+				.filter((option) => this.isAirportPrediction(option) && String(option?.description || '').toLowerCase().includes('terminal'))
+				.map((option) => ({ ...option, isTerminal: true }));
+
+			const rawTerminals = [...terminalPredictions, ...airportPredictions, ...terminalOptions, ...concourseOptions];
+			const allTerminals = rawTerminals.length ? this.dedupeCustomAirportOptions(rawTerminals) : [];
+			this.modalTerminalOptions = allTerminals;
+		} catch (err) {
+			console.error('Error fetching terminal options for modal:', err);
+			this.modalTerminalOptions = [];
+		} finally {
+			this.isModalTerminalLoading = false;
+		}
+	}
+
+	openModalTerminalDropdown(): void {
+		this.isModalDropdownOpen = true;
+		if (!this.modalTerminalOptions || !this.modalTerminalOptions.length) {
+			void this.fetchTerminalOptionsForModal(this.modalInputSearchText || this.modalSelectedAirportName);
+		}
+	}
+
+	onModalTerminalInput(value: string): void {
+		this.modalInputSearchText = value;
+		this.modalSelectedTerminalOption = null;
+		this.isModalDropdownOpen = true;
+
+		if (this.modalSearchDebounceTimeout) {
+			clearTimeout(this.modalSearchDebounceTimeout);
+		}
+		this.modalSearchDebounceTimeout = setTimeout(() => {
+			const searchText = String(value || '').trim();
+			const query = searchText ? `${this.modalSelectedAirportName} ${searchText}` : this.modalSelectedAirportName;
+			void this.fetchTerminalOptionsForModal(query);
+		}, 300);
+	}
+
+	selectModalTerminalOption(option: any): void {
+		this.modalSelectedTerminalOption = option;
+		this.modalInputSearchText = this.getCustomOptionLabel(option);
+		this.isModalDropdownOpen = false;
+	}
+
+	clearModalTerminalInput(): void {
+		this.modalInputSearchText = '';
+		this.modalSelectedTerminalOption = null;
+		this.isModalDropdownOpen = true;
+		void this.fetchTerminalOptionsForModal(this.modalSelectedAirportName);
+	}
+
+	async onTerminalModalProceed(): Promise<void> {
 		try {
 			$('#selectTerminalModal').modal('hide');
 		} catch (e) {}
-		this.currentTerminalMissingField = null;
+		this.isModalDropdownOpen = false;
+
+		if (this.modalSelectedTerminalOption && this.modalMissingField) {
+			const targetField = this.modalMissingField;
+			this.modalMissingField = null;
+			await this.selectCustomAirportOption(targetField, this.modalSelectedTerminalOption, true);
+		} else if (this.modalMissingField) {
+			const optionControlName = this.modalMissingField.endsWith('_option') ? this.modalMissingField : `${this.modalMissingField}_option`;
+			const inputRef = this.getSameLocationFieldInput(optionControlName);
+			this.modalMissingField = null;
+			if (inputRef?.nativeElement) {
+				setTimeout(() => {
+					inputRef.nativeElement.focus();
+				}, 200);
+			}
+		}
 	}
 
 	validateAddressSuggestions(): void {
@@ -2114,24 +2226,61 @@ export class BookingComponent implements OnInit, OnDestroy {
 		);
 	}
 
-	private getCustomAirportBaseQuery(searchText: string): string {
-		const normalizedSearchText = String(searchText || '')
-			.replace(/\s+/g, ' ')
-			.trim();
+	getAirportCodeOrCleanQuery(searchText: string, fieldName?: string): string {
+		const rawText = String(searchText || '').trim();
+		if (!rawText) return '';
 
-		if (!normalizedSearchText) {
-			return '';
+		// 1. Check selected airport ID in form
+		const targetControlName = fieldName ? (fieldName.replace('_option', '')) : (this.modalMissingField ? this.modalMissingField : null);
+		const airportId = targetControlName ? this.BookingForm?.get(targetControlName)?.value : null;
+
+		const airports: any[] = this.BigData?.airportsData || [];
+		if (airportId && airports.length) {
+			const record = airports.find(item => String(item.id) === String(airportId));
+			if (record && record.code && record.code.trim().length >= 3) {
+				return record.code.trim().toUpperCase();
+			}
 		}
 
-		const terminalPrefixes = ['t', 'te', 'ter', 'term', 'termi', 'termin', 'termina', 'terminal'];
-		const parts = normalizedSearchText.split(' ').filter(Boolean);
-		const lastToken = String(parts[parts.length - 1] || '').toLowerCase();
-
-		if (terminalPrefixes.includes(lastToken)) {
-			return parts.slice(0, -1).join(' ').trim();
+		// 2. Extract 3-letter IATA code if present e.g. "(ORD)" or "ORD" or "(JFK)"
+		const iataMatch = rawText.match(/\((?:airport\s*-\s*)?([A-Za-z]{3})\)/i) || rawText.match(/\b([A-Za-z]{3})\b/);
+		if (iataMatch && iataMatch[1]) {
+			const candidateCode = iataMatch[1].toUpperCase();
+			if (airports.length) {
+				const matchedByCode = airports.find(item => String(item.code || '').toUpperCase() === candidateCode);
+				if (matchedByCode && matchedByCode.code) {
+					return matchedByCode.code.trim().toUpperCase();
+				}
+			} else {
+				return candidateCode;
+			}
 		}
 
-		return normalizedSearchText.replace(/\bterminal\b.*$/i, '').replace(/\s+/g, ' ').trim();
+		// 3. Match airport in airportsData by name/code
+		if (airports.length) {
+			const normSearch = rawText.toLowerCase();
+			const matchedByName = airports.find(item => {
+				const code = String(item.code || '').toLowerCase();
+				const name = String(item.name || '').toLowerCase();
+				const formattedName = String(item.formatted_name || '').toLowerCase();
+				return (code && normSearch.includes(code)) || (name && normSearch.includes(name)) || (formattedName && normSearch.includes(formattedName));
+			});
+			if (matchedByName && matchedByName.code && matchedByName.code.trim().length >= 3) {
+				return matchedByName.code.trim().toUpperCase();
+			}
+			if (matchedByName && matchedByName.name) {
+				return matchedByName.name;
+			}
+		}
+
+		// 4. Fallback: Take portion before hyphen / comma and clean out street address, state, zip
+		let cleaned = rawText.split(/\s*[-–]\s*/)[0].split(',')[0].trim();
+		cleaned = cleaned.replace(/\bterminal\b.*$/i, '').replace(/\s+/g, ' ').trim();
+		return cleaned || rawText;
+	}
+
+	private getCustomAirportBaseQuery(searchText: string, fieldName?: string): string {
+		return this.getAirportCodeOrCleanQuery(searchText, fieldName);
 	}
 
 	private getCustomAirportPredictionType(option: any): string {
@@ -2466,7 +2615,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 		this.closeCustomAddressDropdown(fieldName);
 	}
 
-	async selectCustomAirportOption(fieldName: string, option: any): Promise<void> {
+	async selectCustomAirportOption(fieldName: string, option: any, skipTerminalCheck: boolean = false): Promise<void> {
 		this.clearCustomAirportDropdownBlurTimer();
 		this.clearSameLocationErrors();
 		const place = await this.fetchPlaceDetails(option?.placeId);
@@ -2485,9 +2634,11 @@ export class BookingComponent implements OnInit, OnDestroy {
 		this.resetCustomAirportSessionToken(fieldName);
 		this.closeCustomAirportDropdown(fieldName);
 
-		const optionControlName = fieldName.endsWith('_option') ? fieldName : `${fieldName}_option`;
-		const displayVal = String(this.BookingForm.get(optionControlName)?.value || '').trim();
-		this.checkAndShowTerminalPopup(optionControlName, displayVal);
+		if (!skipTerminalCheck) {
+			const optionControlName = fieldName.endsWith('_option') ? fieldName : `${fieldName}_option`;
+			const displayVal = String(this.BookingForm.get(optionControlName)?.value || '').trim();
+			void this.checkAndShowTerminalPopup(optionControlName, displayVal);
+		}
 	}
 
 

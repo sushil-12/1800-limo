@@ -1847,9 +1847,6 @@ export class BookingComponent implements OnInit, OnDestroy {
 	modalTerminalOptions: Array<any> = [];
 	modalSelectedTerminalOption: any | null = null;
 	isModalTerminalLoading: boolean = false;
-	isModalDropdownOpen: boolean = false;
-	modalInputSearchText: string = '';
-	private modalSearchDebounceTimeout: any = undefined;
 
 	getFieldDisplayName(fieldName: string): string {
 		if (fieldName.includes('pickup') && !fieldName.includes('return')) return 'Pickup Address';
@@ -1863,105 +1860,126 @@ export class BookingComponent implements OnInit, OnDestroy {
 		if (!displayValue) return false;
 		const id = airportId || String(this.BookingForm.get(controlName.replace('_option', ''))?.value || '').trim();
 		if (id === '3283') return false; // Skip FBO
+		if (displayValue.toLowerCase().includes('terminal')) return false;
 
-		if (!displayValue.toLowerCase().includes('terminal')) {
-			const baseField = controlName.endsWith('_option') ? controlName.replace('_option', '') : controlName;
-			this.modalMissingField = baseField;
-			this.modalFieldLabel = this.getFieldDisplayName(controlName);
-			this.modalSelectedAirportName = displayValue;
-			this.modalInputSearchText = '';
-			this.modalTerminalOptions = [];
-			this.modalSelectedTerminalOption = null;
-			this.isModalTerminalLoading = true;
-			this.isModalDropdownOpen = true;
+		const baseField = controlName.endsWith('_option') ? controlName.replace('_option', '') : controlName;
+		// Needed up front so fetchTerminalOptionsRaw's base-query lookup and the session
+		// token are scoped to this field while we check for terminals.
+		this.modalMissingField = baseField;
 
-			try {
-				$('#selectTerminalModal').modal('show');
-			} catch (e) {
-				console.error('Error opening terminal modal:', e);
-			}
-
-			void this.fetchTerminalOptionsForModal(displayValue);
-			return true;
+		const terminalOptions = await this.fetchTerminalOptionsRaw(displayValue);
+		if (!terminalOptions.length) {
+			// This airport has no terminals to pick between - don't interrupt the user with
+			// an empty "select a terminal" popup they'd just have to dismiss.
+			this.modalMissingField = null;
+			return false;
 		}
-		return false;
+
+		this.modalFieldLabel = this.getFieldDisplayName(controlName);
+		this.modalSelectedAirportName = displayValue;
+		this.modalTerminalOptions = terminalOptions;
+		this.modalSelectedTerminalOption = null;
+		this.isModalTerminalLoading = false;
+
+		try {
+			$('#selectTerminalModal').modal('show');
+		} catch (e) {
+			console.error('Error opening terminal modal:', e);
+		}
+
+		return true;
 	}
 
-	private async fetchTerminalOptionsForModal(airportSearchText: string): Promise<void> {
+	/** Coordinates of the airport currently being checked/searched for terminals, used to
+	 * anchor the Google query so a bare code/word like "SEA" doesn't get read as the English
+	 * word "sea" and match unrelated streets (e.g. "Sea Street, Quincy, MA"). */
+	private getAirportCoordsForField(baseField: string | null): { latitude: number; longitude: number } | undefined {
+		if (!baseField) return undefined;
+		const latitude = Number(this.BookingForm.get(`${baseField}_latitude`)?.value);
+		const longitude = Number(this.BookingForm.get(`${baseField}_longitude`)?.value);
+		return Number.isFinite(latitude) && Number.isFinite(longitude) && (latitude !== 0 || longitude !== 0)
+			? { latitude, longitude }
+			: undefined;
+	}
+
+	/** A terminal/concourse candidate can never be a street or a bare geocode match - Google
+	 * still returns those for a short/ambiguous query even with a location bias applied, so
+	 * this is a hard filter on top of the keyword check below. */
+	private isPlaceLikePrediction(option: any): boolean {
+		const types: string[] = Array.isArray(option?.types) ? option.types : [];
+		return !types.includes('route') && !(types.length === 1 && types[0] === 'geocode');
+	}
+
+	private async fetchTerminalOptionsRaw(airportSearchText: string): Promise<Array<any>> {
 		try {
 			const baseSearchText = this.getCustomAirportBaseQuery(airportSearchText, this.modalMissingField || undefined) || airportSearchText;
 			const terminalSearchText = `${baseSearchText} terminal`.trim();
 			const concourseSearchText = `${baseSearchText} concourse`.trim();
 			const sessionToken = this.getOrCreateCustomAirportSessionToken(this.modalMissingField || 'pickup_airport');
+			const coords = this.getAirportCoordsForField(this.modalMissingField);
+			// Hard-restrict (not just bias) to a ~20km circle around the airport itself - a
+			// same-named landmark elsewhere in the world (e.g. Isle of Man's "Sea Terminal"
+			// matching a Seattle "SEA terminal" query) must not be able to outrank distance.
+			const locationArea = coords ? { ...coords, radiusMeters: 20000, restrict: true } : undefined;
 
 			const [airportOptions, terminalOptions, concourseOptions] = await Promise.all([
-				this.searchGooglePredictions(baseSearchText, sessionToken),
-				this.searchGooglePredictions(terminalSearchText, sessionToken),
-				this.searchGooglePredictions(concourseSearchText, sessionToken)
+				this.searchGooglePredictions(baseSearchText, sessionToken, ['airport'], locationArea),
+				this.searchGooglePredictions(terminalSearchText, sessionToken, undefined, locationArea),
+				this.searchGooglePredictions(concourseSearchText, sessionToken, undefined, locationArea)
 			]);
 
 			const terminalPredictions = [...terminalOptions, ...concourseOptions]
 				.filter((option) =>
-					this.isAirportPrediction(option)
+					this.isPlaceLikePrediction(option)
+					&& this.isAirportPrediction(option)
 					&& String(option?.description || '').toLowerCase().includes('terminal')
 				)
 				.map((option) => ({ ...option, isTerminal: true }));
 
 			const airportPredictions = airportOptions
-				.filter((option) => this.isAirportPrediction(option) && String(option?.description || '').toLowerCase().includes('terminal'))
+				.filter((option) =>
+					this.isPlaceLikePrediction(option)
+					&& this.isAirportPrediction(option)
+					&& String(option?.description || '').toLowerCase().includes('terminal')
+				)
 				.map((option) => ({ ...option, isTerminal: true }));
 
-			const rawTerminals = [...terminalPredictions, ...airportPredictions, ...terminalOptions, ...concourseOptions];
-			const allTerminals = rawTerminals.length ? this.dedupeCustomAirportOptions(rawTerminals) : [];
-			this.modalTerminalOptions = allTerminals;
+			// Deliberately no raw/unfiltered fallback here: this list also decides whether the
+			// "select a terminal" popup opens at all, so anything that isn't a genuine
+			// terminal/concourse match (an unrelated street, a city, a parking lot) must not
+			// leak in and confuse the customer into thinking it's a real terminal choice.
+			const terminals = [...terminalPredictions, ...airportPredictions];
+			return terminals.length ? this.dedupeCustomAirportOptions(terminals) : [];
 		} catch (err) {
-			console.error('Error fetching terminal options for modal:', err);
-			this.modalTerminalOptions = [];
-		} finally {
-			this.isModalTerminalLoading = false;
+			console.error('Error fetching terminal options:', err);
+			return [];
 		}
-	}
-
-	openModalTerminalDropdown(): void {
-		this.isModalDropdownOpen = true;
-		if (!this.modalTerminalOptions || !this.modalTerminalOptions.length) {
-			void this.fetchTerminalOptionsForModal(this.modalInputSearchText || this.modalSelectedAirportName);
-		}
-	}
-
-	onModalTerminalInput(value: string): void {
-		this.modalInputSearchText = value;
-		this.modalSelectedTerminalOption = null;
-		this.isModalDropdownOpen = true;
-
-		if (this.modalSearchDebounceTimeout) {
-			clearTimeout(this.modalSearchDebounceTimeout);
-		}
-		this.modalSearchDebounceTimeout = setTimeout(() => {
-			const searchText = String(value || '').trim();
-			const query = searchText ? `${this.modalSelectedAirportName} ${searchText}` : this.modalSelectedAirportName;
-			void this.fetchTerminalOptionsForModal(query);
-		}, 300);
 	}
 
 	selectModalTerminalOption(option: any): void {
 		this.modalSelectedTerminalOption = option;
-		this.modalInputSearchText = this.getCustomOptionLabel(option);
-		this.isModalDropdownOpen = false;
 	}
 
-	clearModalTerminalInput(): void {
-		this.modalInputSearchText = '';
-		this.modalSelectedTerminalOption = null;
-		this.isModalDropdownOpen = true;
-		void this.fetchTerminalOptionsForModal(this.modalSelectedAirportName);
+	/** Short chip label ("Terminal 5") instead of the full place text ("ORD Terminal 5,
+	 * Chicago, IL, USA") so the options read like quick-pick buttons, not address rows. */
+	getModalTerminalOptionLabel(option: any): string {
+		const raw = this.getCustomOptionLabel(option);
+		const match = raw.match(/\b(Terminal|Concourse)\s*[A-Za-z0-9]+\b/i);
+		return match ? match[0] : raw;
+	}
+
+	isModalTerminalOptionSelected(option: any): boolean {
+		if (!this.modalSelectedTerminalOption) return false;
+		if (this.modalSelectedTerminalOption.placeId || option?.placeId) {
+			return this.modalSelectedTerminalOption.placeId === option?.placeId;
+		}
+		return this.getCustomOptionLabel(this.modalSelectedTerminalOption) === this.getCustomOptionLabel(option);
 	}
 
 	async onTerminalModalProceed(): Promise<void> {
 		try {
 			$('#selectTerminalModal').modal('hide');
 		} catch (e) {}
-		this.isModalDropdownOpen = false;
 
 		if (this.modalSelectedTerminalOption && this.modalMissingField) {
 			const targetField = this.modalMissingField;
@@ -2179,11 +2197,26 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return !!option?.isTerminal;
 	}
 
-	private searchGooglePredictions(searchText: string, sessionToken?: string): Promise<Array<any>> {
+	private searchGooglePredictions(
+		searchText: string,
+		sessionToken?: string,
+		includedPrimaryTypes?: string[],
+		locationArea?: { latitude: number; longitude: number; radiusMeters?: number; restrict?: boolean }
+	): Promise<Array<any>> {
 		const apiKey = this.getGoogleMapsApiKey();
 		if (!apiKey || !String(searchText || '').trim()) {
 			return Promise.resolve([]);
 		}
+
+		const hasValidArea = !!locationArea
+			&& Number.isFinite(locationArea.latitude)
+			&& Number.isFinite(locationArea.longitude);
+		const circle = hasValidArea ? {
+			circle: {
+				center: { latitude: locationArea.latitude, longitude: locationArea.longitude },
+				radius: locationArea.radiusMeters ?? 30000
+			}
+		} : null;
 
 		return fetch('https://places.googleapis.com/v1/places:autocomplete', {
 			method: 'POST',
@@ -2196,7 +2229,13 @@ export class BookingComponent implements OnInit, OnDestroy {
 				input: searchText,
 				includeQueryPredictions: false,
 				languageCode: 'en-US',
-				...(sessionToken ? { sessionToken } : {})
+				...(sessionToken ? { sessionToken } : {}),
+				...(includedPrimaryTypes?.length ? { includedPrimaryTypes } : {}),
+				// `locationRestriction` hard-excludes anything outside the circle (needed for the
+				// terminal-existence check - a plain `locationBias` only nudges ranking and still
+				// let a same-named landmark on the other side of the world through, e.g. "Sea
+				// Terminal" in the Isle of Man matching a Seattle "SEA terminal" query).
+				...(circle ? (locationArea!.restrict ? { locationRestriction: circle } : { locationBias: circle }) : {})
 			})
 		})
 			.then((response) => response.ok ? response.json() : Promise.resolve({ suggestions: [] }))
@@ -2376,6 +2415,22 @@ export class BookingComponent implements OnInit, OnDestroy {
 			}
 		}
 
+		// Terminals that didn't match any airport above (e.g. the airport itself wasn't in
+		// `airports` - the base query missed it while the "<query> terminal" query still found
+		// terminal/concourse results for it) are still relevant to the search and shouldn't be
+		// silently discarded.
+		const orphanTerminals = normalizedTerminals.filter((terminal: any) => {
+			const terminalKey = String(terminal?.placeId || `${terminal?.name}__${terminal?.description}`).toLowerCase();
+			return !!terminalKey && !matchedTerminalIds.has(terminalKey);
+		});
+
+		if (orphanTerminals.length) {
+			merged.push(...orphanTerminals.map((terminal: any) => ({
+				...terminal,
+				isTerminal: true,
+			})));
+		}
+
 		return merged;
 	}
 
@@ -2438,7 +2493,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 		const terminalSearchText = `${baseSearchText} terminal`.trim();
 		const sessionToken = this.getOrCreateCustomAirportSessionToken(fieldName);
 		const [airportOptions, terminalOptions] = await Promise.all([
-			this.searchGooglePredictions(baseSearchText, sessionToken),
+			this.searchGooglePredictions(baseSearchText, sessionToken, ['airport']),
 			this.searchGooglePredictions(terminalSearchText, sessionToken)
 		]);
 

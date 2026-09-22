@@ -4611,46 +4611,25 @@
 					Selected Airport: <em>{{ modalSelectedAirportName }}</em>
 				</p>
 
-				<div class="text-left my-2 position-relative quote-ui-dropdown-host" style="padding-bottom: 0px;">
-					<mat-form-field appearance="outline" class="airport-autocomplete-field quote-ui-field quote-ui-field--airport w-100 mb-0">
-						<mat-label>Terminal Address</mat-label>
-						<input #modalTerminalInput type="text" matInput
-							placeholder="Search or select terminal (e.g. Terminal 1, Terminal 4...)"
-							[value]="modalInputSearchText"
-							(input)="onModalTerminalInput($any($event.target).value)"
-							(focus)="openModalTerminalDropdown()"
-							(click)="openModalTerminalDropdown()"
-							autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-						<button matSuffix type="button" class="address-clear-btn"
-							*ngIf="modalInputSearchText"
-							(click)="clearModalTerminalInput()" aria-label="Clear terminal input">
-							<svg width="21" height="20" fill="none" viewBox="0 0 21 20">
-								<path fill="#1f1f1f" fill-rule="evenodd"
-									d="M10.8 0a10 10 0 100 20 10 10 0 100-20m2.59 6L10.8 8.59 8.21 6 6.8 7.41 9.39 10 6.8 12.59 8.21 14l2.59-2.59L13.39 14l1.41-1.41L12.21 10l2.59-2.59zM2.8 10a8.01 8.01 0 0016 0 8.01 8.01 0 00-16 0"
-									clip-rule="evenodd"></path>
-							</svg>
-						</button>
-					</mat-form-field>
-
-					<div *ngIf="isModalDropdownOpen" class="quote-ui-dropdown-panel"
-						style="position: relative; left: 0; right: 0; width: 100%; max-height: 200px; margin-top: 4px; margin-bottom: 10px;">
-						<button type="button" class="quote-ui-dropdown-option"
-							*ngFor="let option of modalTerminalOptions"
-							(mousedown)="$event.preventDefault()"
+				<div class="text-left my-2" style="padding-bottom: 0px;">
+					<div *ngIf="isModalTerminalLoading" class="quote-ui-dropdown-empty">Loading Suggestions...</div>
+					<div *ngIf="!isModalTerminalLoading && (!modalTerminalOptions || !modalTerminalOptions.length)"
+						class="quote-ui-dropdown-empty">No terminal options found</div>
+					<div *ngIf="!isModalTerminalLoading && modalTerminalOptions?.length"
+						class="d-flex flex-wrap justify-content-center" style="gap: 10px;">
+						<button type="button" *ngFor="let option of modalTerminalOptions"
+							class="bk-btn px-3 py-2"
+							[ngClass]="isModalTerminalOptionSelected(option) ? 'bk-btn--primary' : 'bk-btn--secondary'"
+							style="border-radius: 20px; font-weight: 600;"
 							(click)="selectModalTerminalOption(option)">
-							<span class="quote-ui-dropdown-option__content">
-								<span class="quote-ui-dropdown-option__label">{{ getCustomOptionLabel(option) }}</span>
-								<span class="quote-ui-dropdown-option__secondary">{{ getCustomOptionSecondary(option) }}</span>
-							</span>
+							{{ getModalTerminalOptionLabel(option) }}
 						</button>
-						<div *ngIf="isModalTerminalLoading" class="quote-ui-dropdown-empty">Loading Suggestions...</div>
-						<div *ngIf="!isModalTerminalLoading && (!modalTerminalOptions || !modalTerminalOptions.length)"
-							class="quote-ui-dropdown-empty">No Result found</div>
 					</div>
 				</div>
 			</div>
 			<div class="modal-footer justify-content-center border-0 pt-0">
-				<button type="button" class="bk-btn bk-btn--primary px-4" (click)="onTerminalModalProceed()">
+				<button type="button" class="bk-btn bk-btn--primary px-4" [disabled]="!modalSelectedTerminalOption"
+					(click)="onTerminalModalProceed()">
 					Proceed
 				</button>
 			</div>

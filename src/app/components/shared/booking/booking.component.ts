@@ -3625,8 +3625,100 @@ export class BookingComponent implements OnInit, OnDestroy {
 		}
 	}
 
+	private countryCache = new Map<string, string>();
+
+	private async getCountryForCoordinates(lat: number, lng: number): Promise<string> {
+		if (!lat || !lng || !Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) {
+			return '';
+		}
+		const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+		if (this.countryCache.has(cacheKey)) {
+			return this.countryCache.get(cacheKey)!;
+		}
+
+		try {
+			await this.mapsApiReady();
+			const geocoder = new google.maps.Geocoder();
+			return await new Promise<string>((resolve) => {
+				geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+					if (status === 'OK' && results && results.length > 0) {
+						for (const result of results) {
+							if (result.address_components) {
+								for (const component of result.address_components) {
+									if (component.types && component.types.includes('country')) {
+										const countryCode = component.short_name || component.long_name || '';
+										if (countryCode) {
+											this.countryCache.set(cacheKey, countryCode);
+											resolve(countryCode);
+											return;
+										}
+									}
+								}
+							}
+						}
+					}
+					resolve('');
+				});
+			});
+		} catch (e) {
+			console.error('Error fetching country for coordinates:', e);
+			return '';
+		}
+	}
+
+	private async getCountryForLocation(lat: number, lng: number, addressText?: string): Promise<string> {
+		const countryFromCoords = await this.getCountryForCoordinates(lat, lng);
+		if (countryFromCoords) {
+			return countryFromCoords;
+		}
+
+		if (!addressText || typeof addressText !== 'string' || !addressText.trim()) {
+			return '';
+		}
+
+		const cacheKey = `addr:${addressText.trim().toLowerCase()}`;
+		if (this.countryCache.has(cacheKey)) {
+			return this.countryCache.get(cacheKey)!;
+		}
+
+		try {
+			await this.mapsApiReady();
+			const geocoder = new google.maps.Geocoder();
+			return await new Promise<string>((resolve) => {
+				geocoder.geocode({ address: addressText }, (results, status) => {
+					if (status === 'OK' && results && results.length > 0) {
+						for (const result of results) {
+							if (result.address_components) {
+								for (const component of result.address_components) {
+									if (component.types && component.types.includes('country')) {
+										const countryCode = component.short_name || component.long_name || '';
+										if (countryCode) {
+											this.countryCache.set(cacheKey, countryCode);
+											resolve(countryCode);
+											return;
+										}
+									}
+								}
+							}
+						}
+					}
+					resolve('');
+				});
+			});
+		} catch (e) {
+			console.error('Error fetching country for address text:', e);
+			return '';
+		}
+	}
+
 	async _MapController(is_return: boolean = false): Promise<{ distance: number; time: number } | null> {
 		try {
+			if (is_return) {
+				this.hasInvalidReturnRoutePoint = false;
+			} else {
+				this.hasInvalidRoutePoint = false;
+			}
+
 			let waypoints: google.maps.DirectionsWaypoint[] = []
 			let origin: google.maps.LatLng
 			let destination: google.maps.LatLng
@@ -3699,6 +3791,25 @@ export class BookingComponent implements OnInit, OnDestroy {
 				}
 			}
 
+			const pickupAddress = is_return ? (this.Form.return_pickup?.value || '') : (this.Form.pickup?.value || '');
+			const dropoffAddress = is_return ? (this.Form.return_dropoff?.value || '') : (this.Form.dropoff?.value || '');
+
+			const pickupCountry = await this.getCountryForLocation(origin.lat(), origin.lng(), pickupAddress);
+			const dropoffCountry = await this.getCountryForLocation(destination.lat(), destination.lng(), dropoffAddress);
+
+			if (pickupCountry && dropoffCountry && pickupCountry.toUpperCase() !== dropoffCountry.toUpperCase()) {
+				if (is_return) {
+					this.hasInvalidReturnRoutePoint = true;
+				} else {
+					this.hasInvalidRoutePoint = true;
+				}
+				this.$errors.openDialog({
+					errors: {
+						error: 'Please select a valid location point.'
+					}
+				});
+				return { distance: 0, time: 0 };
+			}
 
 			const request: google.maps.DirectionsRequest = {
 				origin,
@@ -4010,7 +4121,17 @@ export class BookingComponent implements OnInit, OnDestroy {
 					});
 				} else {
 					console.error('Directions request failed due to', status);
-					resolve(null);
+					if (is_return) {
+						this.hasInvalidReturnRoutePoint = true;
+					} else {
+						this.hasInvalidRoutePoint = true;
+					}
+					this.$errors.openDialog({
+						errors: {
+							error: 'Please select a valid location point.'
+						}
+					});
+					resolve({ distance: 0, time: 0 });
 				}
 			});
 		});

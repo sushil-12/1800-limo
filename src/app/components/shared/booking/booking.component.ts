@@ -2572,9 +2572,15 @@ export class BookingComponent implements OnInit, OnDestroy {
 		const baseSearchText = this.getCustomAirportBaseQuery(searchText) || searchText;
 		const terminalSearchText = `${baseSearchText} terminal`.trim();
 		const sessionToken = this.getOrCreateCustomAirportSessionToken(fieldName);
-		const [airportOptions, terminalOptions] = await Promise.all([
+		const [airportOptions, terminalOptions, plainOptions] = await Promise.all([
 			this.searchGooglePredictions(baseSearchText, sessionToken, ['airport']),
-			this.searchGooglePredictions(terminalSearchText, sessionToken)
+			this.searchGooglePredictions(terminalSearchText, sessionToken),
+			// The two queries above are both airport-flavored (type-restricted, or biased by
+			// appending "terminal") so neither can ever surface a plain city/address - run the
+			// user's raw text unrestricted too, so a city typed here (e.g. switching this leg
+			// from an airport back to a city) has something to select. `selectCustomAirportOption`
+			// demotes the leg back to `city` for whichever of these the user actually picks.
+			this.searchGooglePredictions(searchText, sessionToken)
 		]);
 
 		const airportPredictions = airportOptions
@@ -2588,19 +2594,18 @@ export class BookingComponent implements OnInit, OnDestroy {
 			)
 			.map((option) => ({ ...option, isTerminal: true }));
 
-		const options = terminalPredictions.length
+		const airportAndTerminalOptions = terminalPredictions.length
 			? this.mergeCustomAirportAndTerminalPredictions(airportPredictions, terminalPredictions, baseSearchText)
 			: this.dedupeCustomAirportOptions(airportPredictions);
 
-		// Nothing airport-like matched - rather than leave the dropdown empty (Google did
-		// return results for the query, they just aren't airports), fall back to the raw
-		// predictions so a plain street address is still selectable. `selectCustomAirportOption`
-		// re-checks each pick and demotes the leg back to `city` for anything that isn't
-		// really an airport, so this can't leave a street address stuck in airport fields.
-		const fallbackOptions = options.length ? options : this.dedupeCustomAirportOptions(airportOptions);
+		const cityPredictions = this.dedupeCustomAirportOptions(plainOptions)
+			.filter((option) => !this.isAirportPrediction(option))
+			.map((option) => ({ ...option, isTerminal: false }));
+
+		const options = this.dedupeCustomAirportOptions([...airportAndTerminalOptions, ...cityPredictions]);
 
 		if (this.isLatestCustomSearchVersion('airport', fieldName, requestVersion)) {
-			this.setCustomOptions('airport', fieldName, fallbackOptions.length ? fallbackOptions : (selectedOption ? [selectedOption] : []));
+			this.setCustomOptions('airport', fieldName, options.length ? options : (selectedOption ? [selectedOption] : []));
 			this.setCustomSearchLoading('airport', fieldName, false);
 		}
 	}

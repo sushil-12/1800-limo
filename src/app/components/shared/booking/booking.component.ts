@@ -1962,7 +1962,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 		});
 
 		try {
-			$('#selectTerminalModal').modal('show');
+			$('#selectTerminalModal').modal({ backdrop: 'static', keyboard: false });
 		} catch (e) {
 			console.error('Error opening terminal modal:', e);
 		}
@@ -2073,7 +2073,12 @@ export class BookingComponent implements OnInit, OnDestroy {
 			// terminal/concourse match (an unrelated street, a city, a parking lot) must not
 			// leak in and confuse the customer into thinking it's a real terminal choice.
 			const terminals = [...terminalPredictions, ...airportPredictions];
-			return terminals.length ? this.dedupeCustomAirportOptions(terminals) : [];
+			const deduped = this.dedupeCustomAirportOptions(terminals);
+			// dedupeCustomAirportOptions only collapses exact placeId/description duplicates -
+			// different places (e.g. two Google predictions for the same physical terminal) can
+			// still share the short chip label ("Terminal 5") shown in the popup, so collapse
+			// those too rather than showing the customer the same-looking button twice.
+			return deduped.length ? this.dedupeByTerminalChipLabel(deduped) : [];
 		} catch (err) {
 			console.error('Error fetching terminal options:', err);
 			return [];
@@ -2090,6 +2095,18 @@ export class BookingComponent implements OnInit, OnDestroy {
 		const raw = this.getCustomOptionLabel(option);
 		const match = raw.match(/\b(Terminal|Concourse)\s*[A-Za-z0-9]+\b/i);
 		return match ? match[0] : raw;
+	}
+
+	/** Collapses terminal options that would render the same chip label in the popup (e.g. two
+	 * distinct Google predictions that both shorten to "Terminal 5"), keeping the first match. */
+	private dedupeByTerminalChipLabel(options: Array<any>): Array<any> {
+		const seenLabels = new Set<string>();
+		return options.filter((option) => {
+			const label = this.getModalTerminalOptionLabel(option).trim().toLowerCase();
+			if (!label || seenLabels.has(label)) return false;
+			seenLabels.add(label);
+			return true;
+		});
 	}
 
 	isModalTerminalOptionSelected(option: any): boolean {
@@ -7727,6 +7744,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 
 	/** Check if the new booking pickup datetime (or return leg) is within 24 hours from system_time (current datetime). */
 	isBookingWithin24Hours(): boolean {
+		if (this.isAdminMode) return false;
 		if (!this.BookingForm) return false;
 		const now = moment();
 		const timeFormats = ['YYYY-MM-DD hh:mm A', 'YYYY-MM-DD HH:mm', 'YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD h:mm A', 'YYYY-MM-DD h:mm a', 'YYYY-MM-DD hh:mm a'];

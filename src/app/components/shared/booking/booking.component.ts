@@ -1914,6 +1914,12 @@ export class BookingComponent implements OnInit, OnDestroy {
 	private isAirportEndpointField(controlName: string): boolean {
 		const field = controlName.endsWith('_option') ? controlName.slice(0, -'_option'.length) : controlName;
 		const isReturn = field.startsWith('return_');
+		// Return leg fields (and any stale prefill left in them, e.g. from a repeat booking
+		// that started life as a round trip) are irrelevant once the booking isn't a round
+		// trip - a one-way booking has no return leg to prompt a terminal choice for.
+		if (isReturn && this.BookingForm?.get('service_type')?.value !== 'round_trip') {
+			return false;
+		}
 		const transferType = String(
 			(isReturn ? this.BookingForm?.get('return_transfer_type')?.value : this.BookingForm?.get('transfer_type')?.value) || ''
 		);

@@ -1890,6 +1890,80 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return true;
 	}
 
+	private terminalPrefillCheckQueue: string[] = [];
+	private isProcessingTerminalPrefillQueue = false;
+
+	/** Prefill paths (repeat/return/round booking, quotebot "book now") write airport legs
+	 * straight into the form instead of going through selectCustomAirportOption - the only
+	 * other place checkAndShowTerminalPopup normally runs from - so without this, a
+	 * prefilled airport leg would skip terminal validation until the customer re-touched
+	 * the field. Called once after all four legs have been written to the form. */
+	queuePrefillTerminalChecks(): void {
+		const controlNames = ['pickup_airport_option', 'dropoff_airport_option'];
+		// The return_* fields are just an internal mirror of pickup/dropoff (see the
+		// pickup_airport/dropoff_airport valueChanges handlers) kept in sync for round-trip
+		// symmetry - on a one-way booking they're never rendered and hold the same airport
+		// as pickup/dropoff, so checking them too risks a second "select terminal" popup for
+		// the very airport the customer just resolved, right as that mirror catches up.
+		if (this.Form.service_type.value === 'round_trip') {
+			controlNames.push('return_pickup_airport_option', 'return_dropoff_airport_option');
+		}
+		controlNames.forEach((controlName) => this.terminalPrefillCheckQueue.push(controlName));
+		void this.processTerminalPrefillQueue();
+	}
+
+	private async processTerminalPrefillQueue(): Promise<void> {
+		if (this.isProcessingTerminalPrefillQueue) return;
+		this.isProcessingTerminalPrefillQueue = true;
+		try {
+			while (this.terminalPrefillCheckQueue.length) {
+				const controlName = this.terminalPrefillCheckQueue.shift()!;
+				const displayValue = String(this.BookingForm.get(controlName)?.value || '').trim();
+				const opened = await this.checkAndShowTerminalPopup(controlName, displayValue);
+				if (opened) {
+					// The modal is a single shared instance - only one leg can occupy it at a
+					// time, so wait for the customer to resolve this one before checking the next.
+					await this.waitForTerminalModalClose();
+				}
+			}
+		} finally {
+			this.isProcessingTerminalPrefillQueue = false;
+		}
+	}
+
+	private pendingTerminalModalResolve: (() => void) | null = null;
+
+	/** Waits for the *actual* end of the customer's pick - not just the modal's hide
+	 * animation. onTerminalModalProceed hides the modal, then still has to await
+	 * selectCustomAirportOption (a place-details network call) before the picked terminal's
+	 * name lands back on the form; hidden.bs.modal fires as soon as the CSS transition ends,
+	 * which can race ahead of that. Resolving early here caused the very airport a leg
+	 * mirrors from (e.g. a round-trip return leg that mirrors the outbound one) to still look
+	 * un-terminalled when checked next, reopening the same popup a second time. */
+	private waitForTerminalModalClose(): Promise<void> {
+		return new Promise((resolve) => {
+			this.pendingTerminalModalResolve = resolve;
+			try {
+				$('#selectTerminalModal').one('hidden.bs.modal', () => {
+					// Only a safety net for "dismissed without picking" (backdrop/ESC, no
+					// Proceed click) - onTerminalModalProceed clears modalMissingField
+					// synchronously before its await, so by the time this fires after a real
+					// Proceed, modalMissingField is already null and this is a no-op.
+					if (this.modalMissingField) {
+						this.resolvePendingTerminalModal();
+					}
+				});
+			} catch {
+				this.resolvePendingTerminalModal();
+			}
+		});
+	}
+
+	private resolvePendingTerminalModal(): void {
+		this.pendingTerminalModalResolve?.();
+		this.pendingTerminalModalResolve = null;
+	}
+
 	/** Coordinates of the airport currently being checked/searched for terminals, used to
 	 * anchor the Google query so a bare code/word like "SEA" doesn't get read as the English
 	 * word "sea" and match unrelated streets (e.g. "Sea Street, Quincy, MA"). */
@@ -1981,19 +2055,25 @@ export class BookingComponent implements OnInit, OnDestroy {
 			$('#selectTerminalModal').modal('hide');
 		} catch (e) {}
 
-		if (this.modalSelectedTerminalOption && this.modalMissingField) {
-			const targetField = this.modalMissingField;
-			this.modalMissingField = null;
-			await this.selectCustomAirportOption(targetField, this.modalSelectedTerminalOption, true);
-		} else if (this.modalMissingField) {
-			const optionControlName = this.modalMissingField.endsWith('_option') ? this.modalMissingField : `${this.modalMissingField}_option`;
-			const inputRef = this.getSameLocationFieldInput(optionControlName);
-			this.modalMissingField = null;
-			if (inputRef?.nativeElement) {
-				setTimeout(() => {
-					inputRef.nativeElement.focus();
-				}, 200);
+		try {
+			if (this.modalSelectedTerminalOption && this.modalMissingField) {
+				const targetField = this.modalMissingField;
+				this.modalMissingField = null;
+				await this.selectCustomAirportOption(targetField, this.modalSelectedTerminalOption, true);
+			} else if (this.modalMissingField) {
+				const optionControlName = this.modalMissingField.endsWith('_option') ? this.modalMissingField : `${this.modalMissingField}_option`;
+				const inputRef = this.getSameLocationFieldInput(optionControlName);
+				this.modalMissingField = null;
+				if (inputRef?.nativeElement) {
+					setTimeout(() => {
+						inputRef.nativeElement.focus();
+					}, 200);
+				}
 			}
+		} finally {
+			// Lets a queued prefill check for the next leg proceed now that this leg's pick
+			// (and any mirrored fields it updates) has actually landed on the form.
+			this.resolvePendingTerminalModal();
 		}
 	}
 
@@ -3481,6 +3561,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 			if (this.updateType == 'repeat' || this.updateType == 'return' || this.updateType == 'round') {
 				this.SetFormValue('pickup_date', this.bookingResponse?.pickup_date)
 				this.resetPastPickupDateTimeToNow()
+				this.queuePrefillTerminalChecks();
 			}
 
 			// Instant error display for prefilled values (day bookings arrive as 24/48/… hours)
@@ -7583,9 +7664,9 @@ export class BookingComponent implements OnInit, OnDestroy {
 		}, 100);
 	}
 
-	/** Check 24-hour warning and show modal if booking is scheduled within 24 hours. */
+	/** Check 24-hour warning and show modal if booking is scheduled within 24 hours. Not shown for admin. */
 	checkAndShow24HourWarning(): boolean {
-		if (this.isBookingWithin24Hours()) {
+		if (!this.isAdminMode && this.isBookingWithin24Hours()) {
 			$('#within24HoursModal').modal('show');
 			return true;
 		}
@@ -7899,7 +7980,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 		// Master vehicles have no affiliate — keep affiliate_id empty (set by
 		// onQuoteVehicleSelected/setValueByBookNow) instead of stamping the
 		// subscriber's own account_id on the booking.
-		if (this.isBookingWithin24Hours() && !this.hasConfirmed24HourWarning) {
+		if (!this.isAdminMode && this.isBookingWithin24Hours() && !this.hasConfirmed24HourWarning) {
 			this.pendingSubmitPreview = preview;
 			$('#within24HoursModal').modal('show');
 			return;
@@ -10818,6 +10899,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 		this.SetFormValue('return_dropoff_airport_latitude', QB?.return_dropoff_airport_lat)
 		this.SetFormValue('return_dropoff_airport_longitude', QB?.return_dropoff_airport_long)
 		this.SetFormValue('return_dropoff_airport', matchedReturnDropoffAirport?.id ?? QB?.return_dropoff_airport)
+		this.queuePrefillTerminalChecks();
 		this.prefillExtraStops(QB?.extra_stops);
 		this.prefillExtraStops(QB?.return_extra_stops, true);
 		this.BookingForm.updateValueAndValidity();

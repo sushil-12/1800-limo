@@ -1848,6 +1848,58 @@ export class BookingComponent implements OnInit, OnDestroy {
 	modalSelectedTerminalOption: any | null = null;
 	isModalTerminalLoading: boolean = false;
 
+	/** Last popup open, so a second dialog within a few seconds can be flagged as the pair. */
+	private lastPopupDebug: { popup: string; source: string; at: number } | null = null;
+
+	/**
+	 * Filter the browser console with `DUAL_POPUP`.
+	 * A line tagged `[DUAL_POPUP][BOTH]` means the terminal modal and the
+	 * "valid location point" error opened on top of each other.
+	 */
+	private logDualPopup(
+		popup: 'selectTerminalModal' | 'locationErrorModal',
+		source: string,
+		detail: Record<string, unknown> = {}
+	): void {
+		const now = Date.now();
+		const previous = this.lastPopupDebug;
+		const terminalVisible = this.isBootstrapModalOpen('selectTerminalModal');
+		const errorVisible = this.isBootstrapModalOpen('globalErrorModal');
+		const otherRecently = !!previous && previous.popup !== popup && (now - previous.at) < 4000;
+		const both = otherRecently
+			|| (popup === 'selectTerminalModal' && errorVisible)
+			|| (popup === 'locationErrorModal' && terminalVisible);
+		const tag = both ? '[DUAL_POPUP][BOTH]' : '[DUAL_POPUP]';
+
+		console.warn(tag, `${popup} opened from ${source}`, {
+			popup,
+			source,
+			bothPopups: both,
+			terminalModalOpen: terminalVisible,
+			locationErrorModalOpen: errorVisible,
+			previousPopup: previous,
+			msSincePreviousPopup: previous ? now - previous.at : null,
+			service_type: this.BookingForm?.get('service_type')?.value,
+			transfer_type: this.BookingForm?.get('transfer_type')?.value,
+			return_transfer_type: this.BookingForm?.get('return_transfer_type')?.value,
+			hasInvalidRoutePoint: this.hasInvalidRoutePoint,
+			hasInvalidReturnRoutePoint: this.hasInvalidReturnRoutePoint,
+			...detail,
+			stack: new Error(`[DUAL_POPUP] ${source}`).stack
+		});
+
+		this.lastPopupDebug = { popup, source, at: now };
+	}
+
+	private isBootstrapModalOpen(modalId: string): boolean {
+		try {
+			const modal = $(`#${modalId}`);
+			return modal.hasClass('show') || modal.is(':visible');
+		} catch {
+			return false;
+		}
+	}
+
 	getFieldDisplayName(fieldName: string): string {
 		if (fieldName.includes('pickup') && !fieldName.includes('return')) return 'Pickup Address';
 		if (fieldName.includes('dropoff') && !fieldName.includes('return')) return 'Dropoff Address';
@@ -1856,8 +1908,27 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return 'Airport Address';
 	}
 
+	/** True only when this airport field is the active end of its leg. A city-to-city
+	 * repeat still has street text in pickup_address, and that must not be treated
+	 * as an airport that needs a terminal. */
+	private isAirportEndpointField(controlName: string): boolean {
+		const field = controlName.endsWith('_option') ? controlName.slice(0, -'_option'.length) : controlName;
+		const isReturn = field.startsWith('return_');
+		const transferType = String(
+			(isReturn ? this.BookingForm?.get('return_transfer_type')?.value : this.BookingForm?.get('transfer_type')?.value) || ''
+		);
+		if (field.endsWith('pickup_airport')) {
+			return transferType.startsWith('airport_');
+		}
+		if (field.endsWith('dropoff_airport')) {
+			return transferType.endsWith('_airport');
+		}
+		return false;
+	}
+
 	async checkAndShowTerminalPopup(controlName: string, displayValue: string, airportId?: string): Promise<boolean> {
 		if (!displayValue) return false;
+		if (!this.isAirportEndpointField(controlName)) return false;
 		const id = airportId || String(this.BookingForm.get(controlName.replace('_option', ''))?.value || '').trim();
 		if (id === '3283') return false; // Skip FBO
 		if (displayValue.toLowerCase().includes('terminal')) return false;
@@ -1881,6 +1952,15 @@ export class BookingComponent implements OnInit, OnDestroy {
 		this.modalSelectedTerminalOption = null;
 		this.isModalTerminalLoading = false;
 
+		this.logDualPopup('selectTerminalModal', 'checkAndShowTerminalPopup', {
+			controlName,
+			displayValue,
+			airportId: id,
+			modalMissingField: this.modalMissingField,
+			terminalCount: terminalOptions.length,
+			terminalLabels: terminalOptions.slice(0, 8).map((option) => String(option?.description || option?.label || ''))
+		});
+
 		try {
 			$('#selectTerminalModal').modal('show');
 		} catch (e) {
@@ -1900,6 +1980,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 	 * the field. Called once after all four legs have been written to the form. */
 	queuePrefillTerminalChecks(): void {
 		['pickup_airport_option', 'dropoff_airport_option', 'return_pickup_airport_option', 'return_dropoff_airport_option']
+			.filter((controlName) => this.isAirportEndpointField(controlName))
 			.forEach((controlName) => this.terminalPrefillCheckQueue.push(controlName));
 		void this.processTerminalPrefillQueue();
 	}
@@ -3840,6 +3921,19 @@ export class BookingComponent implements OnInit, OnDestroy {
 				}
 			}
 
+			// LatLng('', '') and unset form values collapse to (0, 0). Directions then fails
+			// and the location-error dialog opens on top of the terminal modal during
+			// prefill, before the customer has chosen a point. Wait until both ends exist.
+			if (!this.isUsableRoutePoint(origin) || !this.isUsableRoutePoint(destination)) {
+				console.warn('[DUAL_POPUP] skipped location error — route coordinates are not ready', {
+					is_return,
+					origin: { lat: origin?.lat(), lng: origin?.lng() },
+					destination: { lat: destination?.lat(), lng: destination?.lng() },
+					transfer_type: is_return ? this.Form.return_transfer_type.value : this.Form.transfer_type.value
+				});
+				return null;
+			}
+
 			const pickupAddress = is_return ? (this.Form.return_pickup?.value || '') : (this.Form.pickup?.value || '');
 			const dropoffAddress = is_return ? (this.Form.return_dropoff?.value || '') : (this.Form.dropoff?.value || '');
 
@@ -3852,6 +3946,15 @@ export class BookingComponent implements OnInit, OnDestroy {
 				} else {
 					this.hasInvalidRoutePoint = true;
 				}
+				this.logDualPopup('locationErrorModal', '_MapController:countryMismatch', {
+					is_return,
+					pickupCountry,
+					dropoffCountry,
+					pickupAddress,
+					dropoffAddress,
+					origin: { lat: origin.lat(), lng: origin.lng() },
+					destination: { lat: destination.lat(), lng: destination.lng() }
+				});
 				this.$errors.openDialog({
 					errors: {
 						error: 'Please select a valid location point.'
@@ -3896,10 +3999,20 @@ export class BookingComponent implements OnInit, OnDestroy {
 		const pickupLng = this.parseRouteCoordinate(this.BookingForm.get(pickupLngControl)?.value);
 		const dropoffLat = this.parseRouteCoordinate(this.BookingForm.get(dropoffLatControl)?.value);
 		const dropoffLng = this.parseRouteCoordinate(this.BookingForm.get(dropoffLngControl)?.value);
-		const isValid = [pickupLat, pickupLng, dropoffLat, dropoffLng].every((value) => value !== null && Number.isFinite(value));
+		const isUsablePair = (lat: number | null, lng: number | null) =>
+			lat !== null && lng !== null && Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0);
 
+		return isUsablePair(pickupLat, pickupLng) && isUsablePair(dropoffLat, dropoffLng);
+	}
 
-		return isValid;
+	/** (0, 0) is what `new google.maps.LatLng` produces from an empty form value. */
+	private isUsableRoutePoint(point: google.maps.LatLng | null | undefined): boolean {
+		if (!point || typeof point.lat !== 'function' || typeof point.lng !== 'function') {
+			return false;
+		}
+		const lat = point.lat();
+		const lng = point.lng();
+		return Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0);
 	}
 
 	private parseRouteCoordinate(value: any): number | null {
@@ -4170,11 +4283,29 @@ export class BookingComponent implements OnInit, OnDestroy {
 					});
 				} else {
 					console.error('Directions request failed due to', status);
+					const originPoint = request.origin instanceof google.maps.LatLng ? request.origin : null;
+					const destinationPoint = request.destination instanceof google.maps.LatLng ? request.destination : null;
+					if (!this.isUsableRoutePoint(originPoint) || !this.isUsableRoutePoint(destinationPoint)) {
+						console.warn('[DUAL_POPUP] skipped location error — directions failed before coordinates were ready', {
+							is_return,
+							status,
+							origin: originPoint ? { lat: originPoint.lat(), lng: originPoint.lng() } : request.origin,
+							destination: destinationPoint ? { lat: destinationPoint.lat(), lng: destinationPoint.lng() } : request.destination
+						});
+						resolve({ distance: 0, time: 0 });
+						return;
+					}
 					if (is_return) {
 						this.hasInvalidReturnRoutePoint = true;
 					} else {
 						this.hasInvalidRoutePoint = true;
 					}
+					this.logDualPopup('locationErrorModal', 'drawMap:directionsFailed', {
+						is_return,
+						status,
+						origin: originPoint ? { lat: originPoint.lat(), lng: originPoint.lng() } : request.origin,
+						destination: destinationPoint ? { lat: destinationPoint.lat(), lng: destinationPoint.lng() } : request.destination
+					});
 					this.$errors.openDialog({
 						errors: {
 							error: 'Please select a valid location point.'
@@ -7937,6 +8068,11 @@ export class BookingComponent implements OnInit, OnDestroy {
 				hasInvalidRoutePoint: this.hasInvalidRoutePoint,
 				hasInvalidReturnRoutePoint: this.hasInvalidReturnRoutePoint
 			});
+			this.logDualPopup('locationErrorModal', 'submitForm:invalidRoutePoint', {
+				preview,
+				hasInvalidRoutePoint: this.hasInvalidRoutePoint,
+				hasInvalidReturnRoutePoint: this.hasInvalidReturnRoutePoint
+			});
 			this.$errors.openDialog({
 				errors: {
 					error: 'Please select a valid location point.'
@@ -8486,6 +8622,16 @@ export class BookingComponent implements OnInit, OnDestroy {
 
 		return new Promise((resolve) => {
 			if (invalidRoute) {
+				this.logDualPopup('locationErrorModal', 'fetchDistanceAndTime:zeroDistanceLeg', {
+					is_return,
+					allowsSameLocations,
+					legs: (route?.legs || []).map((item: any) => ({
+						distanceMeters: item?.distance?.value,
+						durationSeconds: item?.duration?.value,
+						start: item?.start_address,
+						end: item?.end_address
+					}))
+				});
 				this.$errors.openDialog({
 					errors: {
 						error: 'Please select a valid location point.'
@@ -10517,6 +10663,13 @@ export class BookingComponent implements OnInit, OnDestroy {
 		airportId: any,
 		savedAirportLine: any
 	): string {
+		// pickup_address / dropoff_address hold the street on a city leg. Only an
+		// airport id means that saved line is an airport display worth keeping.
+		const hasAirportId = airportId !== null && airportId !== undefined && String(airportId).trim() !== '' && String(airportId) !== '0';
+		if (!hasAirportId) {
+			return '';
+		}
+
 		const savedDisplay = String(savedAirportLine || '').trim();
 		if (savedDisplay) {
 			return savedDisplay;

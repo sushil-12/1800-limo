@@ -740,12 +740,12 @@ export class BookingTripPreviewComponent implements OnInit {
 
       // ── pickup ──
       pickup: src.return_pickup || src.return_pickup_address || '',
-      pickup_latitude: src.return_pickup_latitude,
-      pickup_longitude: src.return_pickup_longitude,
+      pickup_latitude: src.return_pickup_latitude ?? src.return_pickup_lat ?? src.return_pickup_address_lat ?? src.pickup_latitude,
+      pickup_longitude: src.return_pickup_longitude ?? src.return_pickup_long ?? src.return_pickup_address_long ?? src.pickup_longitude,
       pickup_address: src.return_fbo_address || '',
       pickup_airport_name: src.return_pickup_airport_name || '',
-      pickup_airport_latitude: src.return_pickup_airport_latitude,
-      pickup_airport_longitude: src.return_pickup_airport_longitude,
+      pickup_airport_latitude: src.return_pickup_airport_latitude ?? src.return_pickup_latitude_airport ?? src.return_pickup_airport_lat,
+      pickup_airport_longitude: src.return_pickup_airport_longitude ?? src.return_pickup_longitude_airport ?? src.return_pickup_airport_long,
       pickup_airline_name: src.return_pickup_airline_name || '',
       pickup_flight: src.return_pickup_flight || '',
       cruise_port: src.return_cruise_port || '',
@@ -756,12 +756,12 @@ export class BookingTripPreviewComponent implements OnInit {
 
       // ── dropoff ──
       dropoff: src.return_dropoff || src.return_dropoff_address || '',
-      dropoff_latitude: src.return_dropoff_latitude,
-      dropoff_longitude: src.return_dropoff_longitude,
+      dropoff_latitude: src.return_dropoff_latitude ?? src.return_dropoff_lat ?? src.return_dropoff_address_lat ?? src.dropoff_latitude,
+      dropoff_longitude: src.return_dropoff_longitude ?? src.return_dropoff_long ?? src.return_dropoff_address_long ?? src.dropoff_longitude,
       dropoff_address: src.return_dropoff_fbo_address || '',
       dropoff_airport_name: src.return_dropoff_airport_name || '',
-      dropoff_airport_latitude: src.return_dropoff_airport_latitude,
-      dropoff_airport_longitude: src.return_dropoff_airport_longitude,
+      dropoff_airport_latitude: src.return_dropoff_airport_latitude ?? src.return_dropoff_latitude_airport ?? src.return_dropoff_airport_lat,
+      dropoff_airport_longitude: src.return_dropoff_airport_longitude ?? src.return_dropoff_longitude_airport ?? src.return_dropoff_airport_long,
       dropoff_airline_name: src.return_dropoff_airline_name || '',
       dropoff_flight: src.return_dropoff_flight || '',
 
@@ -843,38 +843,71 @@ export class BookingTripPreviewComponent implements OnInit {
     return flatStops;
   }
 
+  private parseLatLng(lat: any, lng: any): google.maps.LatLng | null {
+    const parsedLat = Number(lat);
+    const parsedLng = Number(lng);
+    if (lat !== null && lat !== undefined && lat !== '' &&
+        lng !== null && lng !== undefined && lng !== '' &&
+        Number.isFinite(parsedLat) && Number.isFinite(parsedLng) &&
+        (parsedLat !== 0 || parsedLng !== 0)) {
+      return new google.maps.LatLng(parsedLat, parsedLng);
+    }
+    return null;
+  }
+
   MapController() {
-    console.log('Map has been initialised.')
-    let origin: google.maps.LatLng;
-    let destination: google.maps.LatLng;
+    console.log('[BookingTripPreview] MapController initialised:', this.bookingPreview);
+    if (!this.bookingPreview) return;
+
+    const transferType = String(this.bookingPreview.transfer_type || '');
+    let origin: google.maps.LatLng | null = null;
+    let destination: google.maps.LatLng | null = null;
     const waypoints: google.maps.DirectionsWaypoint[] = [];
 
-    // Base values
-    origin = new google.maps.LatLng(this.bookingPreview.pickup_latitude, this.bookingPreview.pickup_longitude);
-    destination = new google.maps.LatLng(this.bookingPreview.dropoff_latitude, this.bookingPreview.dropoff_longitude);
-
-
-    // Override based on transfer_type
-    if (this.bookingPreview.transfer_type?.includes('airport_')) {
-      origin = new google.maps.LatLng(this.bookingPreview.pickup_airport_latitude, this.bookingPreview.pickup_airport_longitude);
+    // Resolve Origin (Airport override if transfer_type contains 'airport_')
+    if (transferType.includes('airport_')) {
+      origin = this.parseLatLng(
+        this.bookingPreview.pickup_airport_latitude ?? this.bookingPreview.pickup_latitude_airport,
+        this.bookingPreview.pickup_airport_longitude ?? this.bookingPreview.pickup_longitude_airport
+      );
+    }
+    if (!origin) {
+      origin = this.parseLatLng(
+        this.bookingPreview.pickup_latitude,
+        this.bookingPreview.pickup_longitude
+      );
     }
 
-    if (this.bookingPreview.transfer_type?.includes('_airport')) {
-      destination = new google.maps.LatLng(this.bookingPreview.dropoff_airport_latitude, this.bookingPreview.dropoff_airport_longitude);
+    // Resolve Destination (Airport override if transfer_type contains '_airport')
+    if (transferType.includes('_airport')) {
+      destination = this.parseLatLng(
+        this.bookingPreview.dropoff_airport_latitude ?? this.bookingPreview.dropoff_latitude_airport,
+        this.bookingPreview.dropoff_airport_longitude ?? this.bookingPreview.dropoff_longitude_airport
+      );
     }
+    if (!destination) {
+      destination = this.parseLatLng(
+        this.bookingPreview.dropoff_latitude,
+        this.bookingPreview.dropoff_longitude
+      );
+    }
+
+    if (!origin || !destination) {
+      console.warn('[BookingTripPreview] MapController: Invalid origin or destination coordinates', { origin, destination, bookingPreview: this.bookingPreview });
+      return;
+    }
+
+    // Center map around origin
+    this.mapCenter = { lat: origin.lat(), lng: origin.lng() };
 
     // Handle Extra Stops
     if (this.bookingPreview?.extra_stops?.length > 0) {
-      console.log("Processing extra stops", this.bookingPreview.extra_stops);
       for (let i = 0; i < this.bookingPreview.extra_stops.length; i++) {
         const stop = this.bookingPreview.extra_stops[i];
-        if (stop.latitude && stop.longitude) {
-          console.log("Adding waypoint:", stop);
+        const stopLatLng = this.parseLatLng(stop.latitude ?? stop.lat, stop.longitude ?? stop.lng);
+        if (stopLatLng) {
           waypoints.push({
-            location: new google.maps.LatLng(
-              Number(stop.latitude),
-              Number(stop.longitude)
-            ),
+            location: stopLatLng,
             stopover: true
           });
         }
@@ -883,7 +916,7 @@ export class BookingTripPreviewComponent implements OnInit {
 
     // Clear previous markers
     if (this.markers) {
-      this.markers.forEach(m => m.setMap(null));
+      this.markers.forEach((m: any) => m.setMap(null));
     }
     this.markers = [];
 
@@ -897,12 +930,10 @@ export class BookingTripPreviewComponent implements OnInit {
         origin,
         destination,
         waypoints,
-        optimizeWaypoints: false, // DO NOT optimize so order is preserved for A,B,C labels
+        optimizeWaypoints: false,
         travelMode: google.maps.TravelMode.DRIVING
-      })
-    }, 100)
-
-
+      });
+    }, 100);
   }
 
   // MapController() {

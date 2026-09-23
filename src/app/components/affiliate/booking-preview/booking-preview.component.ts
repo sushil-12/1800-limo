@@ -873,18 +873,30 @@ export class BookingPreviewComponent implements OnInit {
     let destination: google.maps.LatLng;
     const waypoints: google.maps.DirectionsWaypoint[] = [];
 
-    // Base values
-    origin = new google.maps.LatLng(this.bookingPreview.pickup_latitude, this.bookingPreview.pickup_longitude);
-    destination = new google.maps.LatLng(this.bookingPreview.dropoff_latitude, this.bookingPreview.dropoff_longitude);
+    // Base values — fall back to airport coordinates when the regular pickup/dropoff
+    // coordinates are not set (e.g. airport transfers only populate the airport fields)
+    const pickupLat = this.bookingPreview.pickup_latitude ?? this.bookingPreview.pickup_airport_latitude;
+    const pickupLng = this.bookingPreview.pickup_longitude ?? this.bookingPreview.pickup_airport_longitude;
+    const dropoffLat = this.bookingPreview.dropoff_latitude ?? this.bookingPreview.dropoff_airport_latitude;
+    const dropoffLng = this.bookingPreview.dropoff_longitude ?? this.bookingPreview.dropoff_airport_longitude;
+
+    origin = new google.maps.LatLng(pickupLat, pickupLng);
+    destination = new google.maps.LatLng(dropoffLat, dropoffLng);
 
 
     // Override based on transfer_type
     if (this.bookingPreview.transfer_type?.includes('airport_')) {
-      origin = new google.maps.LatLng(this.bookingPreview.pickup_latitude, this.bookingPreview.pickup_longitude);
+      origin = new google.maps.LatLng(
+        this.bookingPreview.pickup_airport_latitude ?? pickupLat,
+        this.bookingPreview.pickup_airport_longitude ?? pickupLng
+      );
     }
 
     if (this.bookingPreview.transfer_type?.includes('_airport')) {
-      destination = new google.maps.LatLng(this.bookingPreview.dropoff_latitude, this.bookingPreview.dropoff_longitude);
+      destination = new google.maps.LatLng(
+        this.bookingPreview.dropoff_airport_latitude ?? dropoffLat,
+        this.bookingPreview.dropoff_airport_longitude ?? dropoffLng
+      );
     }
 
     // Handle Extra Stops

@@ -2073,12 +2073,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 			// terminal/concourse match (an unrelated street, a city, a parking lot) must not
 			// leak in and confuse the customer into thinking it's a real terminal choice.
 			const terminals = [...terminalPredictions, ...airportPredictions];
-			const deduped = this.dedupeCustomAirportOptions(terminals);
-			// dedupeCustomAirportOptions only collapses exact placeId/description duplicates -
-			// different places (e.g. two Google predictions for the same physical terminal) can
-			// still share the short chip label ("Terminal 5") shown in the popup, so collapse
-			// those too rather than showing the customer the same-looking button twice.
-			return deduped.length ? this.dedupeByTerminalChipLabel(deduped) : [];
+			return terminals.length ? this.dedupeCustomAirportOptions(terminals) : [];
 		} catch (err) {
 			console.error('Error fetching terminal options:', err);
 			return [];
@@ -2090,23 +2085,37 @@ export class BookingComponent implements OnInit, OnDestroy {
 	}
 
 	/** Short chip label ("Terminal 5") instead of the full place text ("ORD Terminal 5,
-	 * Chicago, IL, USA") so the options read like quick-pick buttons, not address rows. */
+	 * Chicago, IL, USA") so the options read like quick-pick buttons, not address rows.
+	 * Different places (different placeId) can still shorten to the same "Terminal X" text
+	 * (e.g. "Terminal 4" and "Terminal 4 Parking, Queens, NY" both match "Terminal 4") - when
+	 * that happens within the current option list, a distinguishing snippet from the rest of
+	 * the address is appended so the two buttons don't look like duplicates of the same choice. */
 	getModalTerminalOptionLabel(option: any): string {
 		const raw = this.getCustomOptionLabel(option);
 		const match = raw.match(/\b(Terminal|Concourse)\s*[A-Za-z0-9]+\b/i);
-		return match ? match[0] : raw;
+		const shortLabel = match ? match[0] : raw;
+
+		if (!match || !this.isModalTerminalLabelAmbiguous(shortLabel)) {
+			return shortLabel;
+		}
+
+		const distinguisher = this.getModalTerminalOptionDistinguisher(raw, match);
+		return distinguisher ? `${shortLabel} (${distinguisher})` : shortLabel;
 	}
 
-	/** Collapses terminal options that would render the same chip label in the popup (e.g. two
-	 * distinct Google predictions that both shorten to "Terminal 5"), keeping the first match. */
-	private dedupeByTerminalChipLabel(options: Array<any>): Array<any> {
-		const seenLabels = new Set<string>();
-		return options.filter((option) => {
-			const label = this.getModalTerminalOptionLabel(option).trim().toLowerCase();
-			if (!label || seenLabels.has(label)) return false;
-			seenLabels.add(label);
-			return true;
+	private isModalTerminalLabelAmbiguous(shortLabel: string): boolean {
+		const matches = this.modalTerminalOptions.filter((option) => {
+			const raw = this.getCustomOptionLabel(option);
+			const optionMatch = raw.match(/\b(Terminal|Concourse)\s*[A-Za-z0-9]+\b/i);
+			return (optionMatch ? optionMatch[0] : raw).toLowerCase() === shortLabel.toLowerCase();
 		});
+		return matches.length > 1;
+	}
+
+	private getModalTerminalOptionDistinguisher(raw: string, match: RegExpMatchArray): string {
+		const remainder = raw.slice((match.index || 0) + match[0].length);
+		const segments = remainder.split(',').map((segment) => segment.trim()).filter(Boolean);
+		return segments.slice(0, 2).join(', ');
 	}
 
 	isModalTerminalOptionSelected(option: any): boolean {

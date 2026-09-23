@@ -3800,6 +3800,13 @@ export class BookingComponent implements OnInit, OnDestroy {
 				this.hasInvalidRoutePoint = false;
 			}
 
+			// Both pickup and drop-off need coordinates before a route (and the country
+			// check that guards it) means anything — otherwise the missing side falls
+			// back to (0, 0) and gets treated as a real, mismatched country.
+			if (!this.hasValidRouteCoordinates(is_return)) {
+				return null;
+			}
+
 			let waypoints: google.maps.DirectionsWaypoint[] = []
 			let origin: google.maps.LatLng
 			let destination: google.maps.LatLng
@@ -3886,7 +3893,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 				}
 				this.$errors.openDialog({
 					errors: {
-						error: 'Please select a valid location point.'
+						error: 'Please select a valid address.'
 					}
 				});
 				return { distance: 0, time: 0 };
@@ -8518,12 +8525,9 @@ export class BookingComponent implements OnInit, OnDestroy {
 
 		return new Promise((resolve) => {
 			if (invalidRoute) {
-				this.$errors.openDialog({
-					errors: {
-						error: 'Please select a valid location point.'
-					}
-				})
-				// Resolve with zeroed totals so the caller never hangs, but keep the
+				// Same pickup/drop-off location is reported by getSameLocationError() with
+				// its own dedicated message at submit time — don't pop a duplicate dialog
+				// here. Resolve with zeroed totals so the caller never hangs, but keep the
 				// invalid-route flag set so submitForm() can block the booking.
 				resolve({
 					distance: 0,

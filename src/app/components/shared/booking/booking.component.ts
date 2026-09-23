@@ -2646,7 +2646,11 @@ export class BookingComponent implements OnInit, OnDestroy {
 			.filter((option) => !this.isAirportPrediction(option))
 			.map((option) => ({ ...option, isTerminal: false }));
 
-		const options = this.dedupeCustomAirportOptions([...airportAndTerminalOptions, ...cityPredictions]);
+		// City predictions go first - the airport-restricted queries above can turn up a long
+		// tail of loosely-matching airports/terminals (e.g. every airport with "Oak" somewhere
+		// in its name) that would otherwise push the plain city matches below the fold of the
+		// scrollable dropdown, making them look missing entirely.
+		const options = this.dedupeCustomAirportOptions([...cityPredictions, ...airportAndTerminalOptions]);
 
 		if (this.isLatestCustomSearchVersion('airport', fieldName, requestVersion)) {
 			this.setCustomOptions('airport', fieldName, options.length ? options : (selectedOption ? [selectedOption] : []));

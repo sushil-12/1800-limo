@@ -84,7 +84,7 @@ export class AffiliateStep2Component implements OnInit {
 	private addressSearchVersion = 0;
 
 	// License OCR scan (limortservice) - reads the uploaded ID photo and prefills the business address.
-	private readonly scanLicenseUrl = "http://10.20.10.135:3000/api/scan-license";
+	private readonly scanLicenseUrl = "https://limortservice.1800limo.com/api/scan-license";
 	private readonly scanLicenseHeaders = new HttpHeaders({
 		"x-secret": "limoapi_admin_secret_2024_xyz789",
 		"x-api-key": "limoapi_notifications_secret_2024_xyz789",

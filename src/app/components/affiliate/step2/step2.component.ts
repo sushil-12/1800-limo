@@ -148,7 +148,7 @@ export class Step2Component implements OnInit, AfterViewInit {
 	public tutorialVideoUrl = "https://1800limo.s3.us-east-2.amazonaws.com/tutorials/How+to+complete+step+2+to+register+as+affiliate.mp4";
 
 	// License OCR scan (limortservice) - reads the uploaded ID photo and prefills the business address.
-	private readonly scanLicenseUrl = "http://10.20.10.135:3000/api/scan-license";
+	private readonly scanLicenseUrl = "https://limortservice.1800limo.com/api/scan-license";
 	private readonly scanLicenseHeaders = new HttpHeaders({
 		"x-secret": "limoapi_admin_secret_2024_xyz789",
 		"x-api-key": "limoapi_notifications_secret_2024_xyz789",

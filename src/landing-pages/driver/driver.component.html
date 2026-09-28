@@ -1,0 +1,232 @@
+<!--
+	Tailwind classes use the `tw-` prefix (see tailwind.config.js) so they never clash
+	with the global Bootstrap utilities. Keep everything inside the `.tw-scope` wrapper.
+	Avoid the <section> tag here: styles.scss forces a background colour on it.
+	Inputs need `!tw-text-*` sizes: style.css forces 0.9rem !important on mobile (causes iOS zoom).
+-->
+<div class="tw-scope tw-bg-white tw-font-poppins tw-text-black tw-antialiased">
+
+	<!-- Hero -->
+	<div class="tw-mx-auto tw-w-full tw-max-w-7xl tw-px-4 tw-pt-12 sm:tw-px-6 sm:tw-pt-10 md:tw-px-10 lg:tw-px-10 lg:tw-pt-12">
+		<!-- Text left, image right from xl; image drops below the buttons on smaller screens -->
+		<div class="xl:tw-grid xl:tw-grid-cols-2 xl:tw-items-center xl:tw-gap-12">
+		<div class="tw-max-w-4xl">
+			<h1 class="tw-m-0 tw-font-poppins tw-text-[2rem] tw-font-bold tw-leading-[1.15] tw-tracking-[-0.01em] tw-text-black tw-text-balance min-[400px]:tw-text-4xl sm:tw-text-5xl md:tw-text-6xl lg:tw-text-[3.25rem]">
+				Drive On Your Terms.
+				<br class="tw-hidden min-[400px]:tw-inline">
+				Get Booked. Get Paid.
+			</h1>
+
+			<p class="tw-mb-0 tw-mt-6 tw-max-w-[567px] tw-font-poppins tw-text-base tw-leading-normal tw-text-[#9E9DA2] sm:tw-mt-8 sm:tw-text-lg md:tw-text-xl lg:tw-mt-10 lg:tw-text-xl lg:tw-leading-[30px]">
+				Join 1800-LIMO.COM - a veteran-owned global ground transportation platform with 30+ years
+				of livery experience. Set your own schedule, accept the rides you want, keep your tips, and
+				get paid by direct deposit.
+			</p>
+
+			<div class="tw-mt-8 tw-flex tw-flex-col tw-gap-4 min-[400px]:tw-flex-row sm:tw-mt-10 sm:tw-gap-5 lg:tw-mt-14 lg:tw-gap-6">
+				<a [href]="playStoreUrl" target="_blank" rel="noopener"
+					class="tw-flex tw-h-14 tw-w-full tw-items-center tw-justify-center tw-gap-3 tw-rounded-md tw-bg-black tw-px-6 tw-text-white tw-no-underline tw-transition hover:tw-bg-neutral-800 hover:tw-text-white hover:tw-no-underline focus-visible:tw-outline focus-visible:tw-outline-2 focus-visible:tw-outline-offset-2 focus-visible:tw-outline-black min-[400px]:tw-w-auto sm:tw-h-16 sm:tw-min-w-[220px] lg:tw-min-w-[260px]">
+					<svg class="tw-h-6 tw-w-6 tw-shrink-0 sm:tw-h-7 sm:tw-w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+						stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 2.5v19l17-9.5-17-9.5Z" />
+						<path d="M4 2.5 14.5 12 4 21.5" />
+						<path d="m15.8 8.6-3.3 3.4 3.3 3.4" />
+					</svg>
+					<span class="tw-font-poppins tw-text-base tw-font-bold tw-uppercase tw-tracking-wide sm:tw-text-lg">Get the App</span>
+				</a>
+
+				<a [href]="appStoreUrl" target="_blank" rel="noopener"
+					class="tw-flex tw-h-14 tw-w-full tw-items-center tw-justify-center tw-gap-3 tw-rounded-md tw-bg-black tw-px-6 tw-text-white tw-no-underline tw-transition hover:tw-bg-neutral-800 hover:tw-text-white hover:tw-no-underline focus-visible:tw-outline focus-visible:tw-outline-2 focus-visible:tw-outline-offset-2 focus-visible:tw-outline-black min-[400px]:tw-w-auto sm:tw-h-16 sm:tw-min-w-[220px] lg:tw-min-w-[260px]">
+					<span class="tw-flex tw-h-8 tw-w-8 tw-shrink-0 tw-items-center tw-justify-center tw-rounded-full tw-bg-white tw-text-black sm:tw-h-9 sm:tw-w-9">
+						<i class="fa-brands fa-app-store tw-text-base sm:tw-text-lg" aria-hidden="true"></i>
+					</span>
+					<span class="tw-font-poppins tw-text-base tw-font-bold tw-uppercase tw-tracking-wide sm:tw-text-lg">App Store</span>
+				</a>
+			</div>
+		</div>
+
+		<div class="tw-mt-10 sm:tw-mt-12 xl:tw-mt-0">
+			<img src="assets/images/driver-landing/hero-chauffeur.webp" width="1239" height="809"
+				alt="Chauffeur in uniform beside a black car at the airport as a plane takes off at sunset"
+				fetchpriority="high" decoding="async"
+				class="tw-block tw-h-auto tw-w-full tw-rounded-2xl tw-object-cover tw-shadow-[0_24px_48px_-24px_rgba(17,24,39,0.45)]">
+		</div>
+		</div>
+
+		<!-- Apply CTA -->
+		<div class="tw-mt-14 tw-rounded-xl tw-bg-brand-orange tw-px-5 tw-py-8 sm:tw-mt-20 sm:tw-px-8 sm:tw-py-10 lg:tw-mt-12 lg:tw-px-14 lg:tw-py-12 xl:tw-px-16">
+			<form class="tw-m-0 tw-flex tw-flex-col tw-gap-6 xl:tw-flex-row xl:tw-items-center xl:tw-justify-between xl:tw-gap-10"
+				(ngSubmit)="applyToDrive()" novalidate>
+				<p class="tw-m-0 tw-font-poppins tw-text-center tw-text-lg tw-font-semibold tw-leading-snug tw-text-white tw-text-balance sm:tw-text-xl lg:tw-text-xl xl:tw-max-w-[25rem] xl:tw-text-left">
+					Ready to start driving? Enter your mobile number to get the app link.
+				</p>
+
+				<div class="tw-flex tw-w-full tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-gap-4 xl:tw-max-w-2xl xl:tw-flex-1">
+					<div class="tw-flex-1">
+						<label for="driver-mobile" class="tw-sr-only">Mobile number</label>
+						<input id="driver-mobile" name="mobile" type="tel" inputmode="tel" autocomplete="tel"
+							[(ngModel)]="mobile" (ngModelChange)="error = ''"
+							placeholder="Enter your mobile number"
+							class="tw-m-0 tw-h-14 tw-w-full tw-rounded-md tw-border-0 tw-bg-white tw-px-5 tw-font-poppins !tw-text-base tw-font-normal tw-text-black tw-shadow-none tw-outline-none placeholder:!tw-text-base placeholder:!tw-font-normal placeholder:tw-text-[#C4C4C4] focus:tw-ring-2 focus:tw-ring-black sm:tw-h-16 sm:tw-px-7 sm:!tw-text-lg sm:placeholder:!tw-text-lg">
+					</div>
+					<button type="submit"
+						class="tw-m-0 tw-h-14 tw-shrink-0 tw-cursor-pointer tw-rounded-md tw-border-0 tw-bg-black tw-px-8 tw-font-poppins tw-text-base tw-font-bold tw-uppercase tw-tracking-wide tw-text-white tw-transition hover:tw-bg-neutral-800 focus-visible:tw-outline focus-visible:tw-outline-2 focus-visible:tw-outline-offset-2 focus-visible:tw-outline-white sm:tw-h-16 sm:tw-text-lg">
+						Apply to Drive
+					</button>
+				</div>
+			</form>
+			<p *ngIf="error" class="tw-mb-0 tw-mt-3 tw-font-poppins tw-text-center tw-text-sm tw-font-medium tw-text-white xl:tw-text-right">{{ error }}</p>
+		</div>
+	</div>
+
+	<!-- App showcase: phone first, then its callouts one by one (left, right, left, right) -->
+	<div #showcase class="tw-mx-auto tw-w-full tw-max-w-7xl tw-px-4 tw-pt-12 sm:tw-px-6 sm:tw-pt-16 md:tw-px-10 lg:tw-px-12 lg:tw-pt-20">
+		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
+			How <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">1800-LIMO.COM</span> Works
+		</h2>
+		<p class="tw-mx-auto tw-mb-0 tw-mt-4 tw-max-w-3xl tw-text-balance tw-text-center tw-font-poppins tw-text-base tw-font-normal tw-leading-normal tw-text-[#2E2E3A] sm:tw-mt-5 sm:tw-text-lg lg:tw-text-xl">
+			Download the app, complete your profile, submit your documents, and start accepting ride requests on your own schedule - no office visits required.
+		</p>
+
+		<div class="tw-relative tw-mt-8 tw-flex tw-flex-col tw-items-center sm:tw-mt-10 lg:tw-mx-auto lg:tw-mt-4 lg:tw-block lg:tw-aspect-[3270/3132] lg:tw-max-w-[620px] xl:tw-max-w-[660px]">
+			<!-- Phone (screens cross-fade) -->
+			<div class="tw-relative tw-aspect-[760/1373] tw-w-full tw-max-w-[260px] tw-transition tw-duration-700 tw-ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:tw-transition-none sm:tw-max-w-[300px] lg:tw-absolute lg:tw-left-[26.09%] lg:tw-top-[7.34%] lg:tw-w-[46.64%] lg:tw-max-w-none"
+				[ngClass]="showcaseStarted ? 'tw-translate-y-0 tw-opacity-100' : 'tw-translate-y-6 tw-opacity-0'">
+				<img *ngFor="let screen of showcaseScreens; let i = index"
+					[src]="screen.image" [alt]="screen.imageAlt" [attr.aria-hidden]="i !== activeScreen"
+					loading="lazy" decoding="async"
+					class="tw-absolute tw-inset-0 tw-h-full tw-w-full tw-object-contain tw-transition tw-duration-500 tw-ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:tw-transition-none"
+					[ngClass]="i === activeScreen ? 'tw-scale-100 tw-opacity-100' : 'tw-scale-[0.97] tw-opacity-0'">
+			</div>
+
+			<!-- Dashed connectors + hotspot dots (desktop only) -->
+			<ng-container *ngFor="let callout of showcaseScreens[activeScreen].callouts; let i = index; trackBy: trackByIndex">
+				<div aria-hidden="true"
+					class="tw-pointer-events-none tw-absolute tw-hidden tw-h-0 tw-border-0 tw-border-t-2 tw-border-dashed tw-border-[#C5CAD3] tw-transition tw-duration-300 tw-ease-out motion-reduce:tw-transition-none lg:tw-block"
+					[ngClass]="[callout.side === 'left' ? 'tw-origin-right' : 'tw-origin-left', i < revealedCallouts ? 'tw-scale-x-100' : 'tw-scale-x-0']"
+					[style.top.%]="callout.y"
+					[style.left.%]="connectorLeft(showcaseScreens[activeScreen], callout)"
+					[style.width.%]="connectorWidth(showcaseScreens[activeScreen], callout)"></div>
+				<span aria-hidden="true"
+					class="tw-pointer-events-none tw-absolute tw-hidden tw-h-2.5 tw-w-2.5 -tw-translate-x-1/2 -tw-translate-y-1/2 tw-rounded-full tw-bg-[#F08A2C] tw-ring-4 tw-ring-[#F08A2C]/20 tw-transition tw-duration-300 tw-ease-out motion-reduce:tw-transition-none lg:tw-block"
+					[ngClass]="i < revealedCallouts ? 'tw-scale-100' : 'tw-scale-0'"
+					[style.top.%]="callout.y"
+					[style.left.%]="callout.side === 'left'
+						? connectorLeft(showcaseScreens[activeScreen], callout) + connectorWidth(showcaseScreens[activeScreen], callout)
+						: connectorLeft(showcaseScreens[activeScreen], callout)"></span>
+			</ng-container>
+
+			<!-- Callout cards: a grid under the phone on small screens, around the phone on desktop.
+			     Desktop cards have a fixed width and are anchored at their connector edge, so they grow outward. -->
+			<div class="tw-mt-8 tw-grid tw-w-full tw-max-w-2xl tw-grid-cols-1 tw-gap-3 sm:tw-mt-10 sm:tw-grid-cols-2 sm:tw-gap-4 lg:tw-contents">
+				<div *ngFor="let callout of showcaseScreens[activeScreen].callouts; let i = index; trackBy: trackByIndex"
+					class="tw-flex tw-items-start tw-gap-3 tw-rounded-2xl tw-border tw-border-solid tw-border-[#EEF0F3] tw-bg-white tw-p-4 tw-shadow-[0_14px_34px_-14px_rgba(17,24,39,0.28)] tw-transition tw-duration-500 tw-ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:tw-transition-none lg:tw-absolute lg:tw-w-[220px] lg:tw-gap-2.5 lg:tw-p-3.5 xl:tw-w-[240px] xl:tw-gap-3 xl:tw-p-4"
+					[ngClass]="calloutStateClass(callout, i)"
+					[style.top.%]="callout.y - 3.45"
+					[style.left.%]="callout.side === 'left' ? null : 72.72"
+					[style.right.%]="callout.side === 'left' ? 74.43 : null">
+					<span class="tw-flex tw-h-9 tw-w-9 tw-shrink-0 tw-items-center tw-justify-center tw-rounded-lg lg:tw-h-8 lg:tw-w-8 xl:tw-h-9 xl:tw-w-9"
+						[ngClass]="callout.iconClass" aria-hidden="true">
+						<span *ngIf="callout.iconText" class="tw-font-poppins tw-text-base tw-font-extrabold tw-leading-none lg:tw-text-sm xl:tw-text-base">{{ callout.iconText }}</span>
+						<svg *ngIf="callout.icon" class="tw-h-[18px] tw-w-[18px] lg:tw-h-4 lg:tw-w-4 xl:tw-h-[18px] xl:tw-w-[18px]" viewBox="0 0 24 24"
+							fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path *ngFor="let d of callout.icon" [attr.d]="d" />
+						</svg>
+					</span>
+					<div class="tw-min-w-0">
+						<p class="tw-m-0 tw-font-poppins tw-text-[15px] tw-font-semibold tw-leading-snug tw-text-[#111827] lg:tw-text-[14px] xl:tw-text-[15px]">{{ callout.title }}</p>
+						<p class="tw-m-0 tw-mt-1 tw-font-poppins tw-text-[13.5px] tw-font-normal tw-leading-snug tw-text-[#6B7280] lg:tw-text-[12.5px] xl:tw-text-[13px]">{{ callout.text }}</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Screen picker -->
+		<div class="tw-mt-8 tw-flex tw-flex-wrap tw-justify-center tw-gap-2 sm:tw-mt-10 lg:tw-mt-10" role="group" aria-label="App screens">
+			<button *ngFor="let screen of showcaseScreens; let i = index" type="button"
+				class="tw-m-0 tw-cursor-pointer tw-rounded-full tw-border-0 tw-px-5 tw-py-2 tw-font-poppins tw-text-sm tw-font-semibold tw-transition-colors tw-duration-300 focus-visible:tw-outline focus-visible:tw-outline-2 focus-visible:tw-outline-offset-2 focus-visible:tw-outline-black"
+				[ngClass]="i === activeScreen ? 'tw-bg-black tw-text-white' : 'tw-bg-[#F3F4F6] tw-text-[#374151] hover:tw-bg-[#E5E7EB]'"
+				[attr.aria-pressed]="i === activeScreen"
+				(click)="selectScreen(i)">
+				{{ screen.label }}
+			</button>
+		</div>
+	</div>
+
+	<!-- Benefits -->
+	<div class="tw-mx-auto tw-w-full tw-max-w-7xl tw-px-4 tw-pt-12 sm:tw-px-6 sm:tw-pt-16 md:tw-px-10 lg:tw-px-12 lg:tw-pt-20">
+		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
+			<span class="tw-font-poppins tw-font-bold tw-text-brand-orange">1800-LIMO.COM</span> Benefits
+		</h2>
+
+		<div class="tw-mt-10 tw-flex tw-flex-col tw-gap-14 sm:tw-mt-14 sm:tw-gap-16 md:tw-mt-16 lg:tw-mt-20 lg:tw-gap-24">
+			<div *ngFor="let benefit of benefits; let i = index; let odd = odd"
+				class="tw-flex tw-flex-col tw-items-center tw-gap-6 sm:tw-gap-8 md:tw-flex-row md:tw-gap-10 lg:tw-gap-16"
+				[ngClass]="{ 'md:tw-flex-row-reverse': odd }">
+				<div class="tw-w-full md:tw-w-1/2">
+					<div class="tw-flex tw-items-center tw-gap-3 sm:tw-gap-4 lg:tw-gap-5">
+						<span class="tw-shrink-0 tw-font-poppins tw-text-6xl tw-font-medium tw-leading-none tw-text-brand-orange sm:tw-text-7xl lg:tw-text-[4.5rem]"
+							aria-hidden="true">{{ (i + 1).toString().padStart(2, '0') }}.</span>
+						<h3 class="tw-m-0 tw-text-balance tw-font-poppins tw-text-xl tw-font-medium tw-leading-tight tw-text-black sm:tw-text-2xl lg:tw-text-[1.75rem] lg:tw-leading-[1.2]">
+							{{ benefit.title }}
+						</h3>
+					</div>
+					<p class="tw-mb-0 tw-mt-4 tw-max-w-xl tw-font-poppins tw-text-base tw-font-normal tw-leading-normal tw-text-[#9E9DA2] sm:tw-mt-5 sm:tw-text-lg lg:tw-mt-6">
+						{{ benefit.description }}
+					</p>
+				</div>
+
+				<div class="tw-flex tw-w-full tw-justify-center md:tw-w-1/2">
+					<img [src]="benefit.image" [alt]="benefit.imageAlt" loading="lazy"
+						class="tw-h-auto tw-w-full tw-max-w-[220px] tw-object-contain sm:tw-max-w-[260px] lg:tw-max-w-[280px]">
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Who Can Apply -->
+	<div class="tw-mx-auto tw-w-full tw-max-w-7xl tw-px-4 tw-pt-12 sm:tw-px-6 sm:tw-pt-16 md:tw-px-10 lg:tw-px-12 lg:tw-pt-20">
+		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
+			Who Can <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">Apply</span>
+		</h2>
+		<p class="tw-mx-auto tw-mb-0 tw-mt-4 tw-max-w-2xl tw-text-balance tw-text-center tw-font-poppins tw-text-base tw-font-normal tw-leading-normal tw-text-[#2E2E3A] sm:tw-mt-5 sm:tw-text-lg lg:tw-text-xl">
+			1800-LIMO.COM works with independent professional drivers, chauffeurs, and fleet operators across the country.
+		</p>
+
+		<div class="tw-mt-8 tw-grid tw-grid-cols-1 tw-gap-5 sm:tw-mt-10 sm:tw-grid-cols-2 sm:tw-gap-6 lg:tw-grid-cols-3 lg:tw-gap-6 xl:tw-gap-10">
+			<div *ngFor="let type of applicantTypes; let last = last"
+				class="tw-rounded-2xl tw-bg-[#F8F8F8] tw-p-6 sm:tw-p-7"
+				[ngClass]="{ 'sm:tw-col-span-2 lg:tw-col-span-1': last }">
+				<h3 class="tw-m-0 tw-font-poppins tw-text-lg tw-font-bold tw-leading-snug tw-text-[#2A2A3C] sm:tw-text-xl lg:tw-text-[1.375rem]">
+					{{ type.title }}
+				</h3>
+				<ul class="tw-m-0 tw-mt-4 tw-flex tw-list-none tw-flex-col tw-gap-1.5 tw-p-0">
+					<li *ngFor="let requirement of type.requirements"
+						class="tw-m-0 tw-flex tw-gap-2.5 tw-font-poppins tw-text-base tw-font-normal tw-leading-snug tw-text-[#2E2E3A]">
+						<span aria-hidden="true">•</span>
+						<span>{{ requirement }}</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+
+	<!-- FAQ -->
+	<div class="tw-mx-auto tw-w-full tw-max-w-6xl tw-px-4 tw-py-12 sm:tw-px-6 sm:tw-py-16 md:tw-px-10 lg:tw-px-12 lg:tw-py-20">
+		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
+			Frequently Asked <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">Questions</span>
+		</h2>
+
+		<dl class="tw-m-0 tw-mt-8 tw-flex tw-flex-col tw-gap-8 sm:tw-mt-10 sm:tw-gap-10 lg:tw-mt-12">
+			<div *ngFor="let faq of faqs">
+				<dt class="tw-m-0 tw-font-poppins tw-text-lg tw-font-bold tw-leading-snug tw-text-[#2A2A3C] lg:tw-text-xl">
+					{{ faq.question }}
+				</dt>
+				<dd class="tw-m-0 tw-mt-2 tw-font-poppins tw-text-base tw-font-normal tw-leading-relaxed tw-text-[#9E9DA2] sm:tw-text-lg">
+					{{ faq.answer }}
+				</dd>
+			</div>
+		</dl>
+	</div>
+
+</div>

@@ -1,3 +1,4 @@
+import { DriverComponent } from '../landing-pages/driver/driver.component';
 import { QuotebotTemplateComponent } from './components/quotebot/quotebot-template/quotebot-template.component';
 import { WebsiteTemplateComponent } from './components/website/website-template/website-template.component';
 import { ClientTCComponent } from './components/website/client-t-c/client-t-c.component';
@@ -113,6 +114,10 @@ const routes: Routes = [
 			title: 'Home'
 		},
 		children: [
+			{
+				path: 'drive-with-us',
+				component: DriverComponent
+			},
 			{
 				path: 'home',
 				component: HomeComponent

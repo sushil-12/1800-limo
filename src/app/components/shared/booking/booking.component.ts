@@ -3400,7 +3400,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 			this.isUserManualReturnSelection = false;
 			this.firstLoadAffiliateId = response.data.affiliate_id
 			this.number_of_hours = response?.data?.number_of_hours === 0 ? 2 : response?.data?.number_of_hours
-			this.isTravelShare = (this.isTravelAgentMode || response?.data?.account_type == 'travel_planner') && this.updateType != 'repeat' && this.updateType != 'return' && this.updateType != 'round' ? true : false
+			this.isTravelShare = ((this.isTravelAgentMode || response?.data?.account_type == 'travel_planner') && this.updateType != 'repeat' && this.updateType != 'return' && this.updateType != 'round') || (this.userRole == 'travel_agent' && this.updateType == 'repeat')
 			this.isFarmoutBooking = (response?.data?.reservation_type == 'farmout' && this.updateType != 'repeat' && this.updateType != 'return' && this.updateType != 'round') ? true : false
 			this.isCreatedByAdmin = response?.data?.created_by == 1 ? true : false
 
@@ -7512,6 +7512,16 @@ export class BookingComponent implements OnInit, OnDestroy {
 		const labelOffset = 90;
 		return controlEl.getBoundingClientRect().top + window.scrollY - labelOffset;
 	}
+	/** Travel agent commission applies to new travel_planner bookings, and to a travel
+	 * agent's own repeat (the duplicate is a fresh booking by them). Return/round and
+	 * admin-created bookings stay excluded. */
+	get shouldApplyTravelAgentShare(): boolean {
+		if (this.BookingForm.value?.account_type != 'travel_planner') return false
+		const types = [this.updateType, this.Form?.updateType?.value]
+		if (this.userRole == 'travel_agent' && types.includes('repeat')) return true
+		return !this.isCreatedByAdmin && !types.some(t => ['repeat', 'return', 'round'].includes(t))
+	}
+
 	createReservationShareArray() {
 		const multiplyHours = this.number_of_hours >= 24 ? this.number_of_hours/24 : this.number_of_hours; 
 		if (this.RatesForm) {
@@ -7546,7 +7556,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 				affiliateShare: grandTotal - base_rate * 0.25
 			}
 			// travelAgentShare : 
-			if (this.BookingForm.value?.account_type == 'travel_planner' && !this.isCreatedByAdmin && !['repeat', 'return', 'round'].includes(this.updateType) && !['repeat', 'return', 'round'].includes(this.Form?.updateType?.value)) {
+			if (this.shouldApplyTravelAgentShare) {
 				this.adminSharePercent = 15
 				shareArray['adminShare'] = (base_rate * this.adminSharePercent) / 100
 				shareArray['deducted_admin_share'] = shareArray['adminShare'] - shareArray['stripeFee']
@@ -7595,7 +7605,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 				affiliateShare: returnGrandTotal - adminShare
 			}
 			// travelAgentShare : 
-			if (this.BookingForm.value?.account_type == 'travel_planner' && !this.isCreatedByAdmin && !['repeat', 'return', 'round'].includes(this.updateType) && !['repeat', 'return', 'round'].includes(this.Form?.updateType?.value)) {
+			if (this.shouldApplyTravelAgentShare) {
 				returnShareArray['adminShare'] = (base_rate * this.adminSharePercent) / 100
 				returnShareArray['deducted_admin_share'] = returnShareArray['adminShare'] - returnShareArray['stripeFee']
 				returnShareArray['travelAgentShare'] = base_rate * 0.10

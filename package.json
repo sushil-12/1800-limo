@@ -62,6 +62,7 @@
     "@types/node": "^16.18.39",
     "@types/quill": "^2.0.14",
     "@types/socket.io-client": "^1.4.36",
+    "autoprefixer": "^10.6.1",
     "jasmine-core": "~4.6.0",
     "jasmine-spec-reporter": "~7.0.0",
     "karma": "~6.4.2",
@@ -69,6 +70,8 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^3.4.19",
     "ts-node": "~10.9.1",
     "typescript": "~5.2.0"
   }

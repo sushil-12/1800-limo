@@ -534,13 +534,13 @@ export class BookingPreviewComponent implements OnInit {
             this.bookingPreview?.created_by_role === 'travel_agent' ||
             this.bookingPreview?.created_by_role === 'travel_planner';
 
+          // Affiliates see it on unsettled bookings, farm-outs included (they carry
+          // the farm-out income row); paid / paid-cash bookings hide it.
           this.showRateDistribution =
             userRole === 'admin' ||
             (userRole === 'affiliate' &&
               !!this.bookingPreview &&
-              this.bookingPreview.reservation_type !== 'farmout' &&
-              this.bookingPreview?.payment_status != 'paid' &&
-              this.bookingPreview?.payment_status != 'transfer_failed');
+              !['paid', 'paid_cash', 'transfer_failed'].includes(this.bookingPreview?.payment_status));
 
           console.log('--- showRateDistribution Logic ---');
           console.log('userRole:', userRole);
@@ -668,9 +668,7 @@ export class BookingPreviewComponent implements OnInit {
       this.bookingPreview?.created_by_role === 'travel_agent' ||
       this.bookingPreview?.created_by_role === 'travel_planner';
 
-    this.showRateDistribution =
-      userRole === 'admin' ||
-      (userRole === 'affiliate' && this.bookingPreview?.reservation_type !== 'farmout');
+    this.showRateDistribution = userRole === 'admin' || userRole === 'affiliate';
 
     try {
       const grandTotal = this.bookingPreview?.share_array?.grandTotal

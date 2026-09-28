@@ -356,7 +356,7 @@
 							</div>
 						</div>
 
-						<div class="mx-2 mb-1" *ngIf="bookingPreview?.share_array?.adminShare != '0' ">
+						<div class="mx-2 mb-1" *ngIf="userRole !== 'affiliate' && bookingPreview?.share_array?.adminShare != '0'">
 							<div class="row m-0">
 								<div class="col-md-4 key"><span
 										style="font-weight: 500 !important; color: #1e7500">Admin Share</span></div>
@@ -371,7 +371,7 @@
 							</div>
 						</div>
 
-						<div class="mx-2 mb-1" *ngIf="bookingPreview?.share_array?.travelAgentShare">
+						<div class="mx-2 mb-1" *ngIf="userRole !== 'affiliate' && bookingPreview?.share_array?.travelAgentShare">
 							<div class="row m-0">
 								<div class="col-md-4 key"><span style="font-weight: 500 !important;">Travel Advisor
 										Share</span></div>
@@ -384,7 +384,7 @@
 							</div>
 						</div>
 
-						<div class="mx-2 mb-1">
+						<div class="mx-2 mb-1" *ngIf="userRole !== 'affiliate'">
 							<div class="row m-0">
 								<div class="col-md-4 key"><span style="font-weight: 500 !important;">Stripe fees</span>
 								</div>

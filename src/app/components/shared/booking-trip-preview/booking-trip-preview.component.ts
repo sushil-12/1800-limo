@@ -629,12 +629,13 @@ export class BookingTripPreviewComponent implements OnInit {
       b?.created_by_role === 'travel_agent' ||
       b?.created_by_role === 'travel_planner';
 
+    // Inside the booking form the affiliate is still pricing the trip, so the card
+    // always shows; on saved bookings it is hidden once the booking is settled.
+    const isSettled = ['paid', 'paid_cash', 'transfer_failed'].includes(b?.payment_status);
     this.showRateDistribution =
       this.userRole === 'admin' ||
-      (!isTravelAgentBooking &&
-      (this.userRole === 'affiliate' &&
-        b.payment_status != 'paid' &&
-          b.payment_status != 'transfer_failed'));
+      (this.userRole === 'affiliate' && !isTravelAgentBooking &&
+        (this.previewMode !== 'view' || !isSettled));
 
     try {
       const grandTotal = b?.share_array?.grandTotal

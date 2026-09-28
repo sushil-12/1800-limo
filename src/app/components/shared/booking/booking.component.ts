@@ -3400,7 +3400,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 			this.isUserManualReturnSelection = false;
 			this.firstLoadAffiliateId = response.data.affiliate_id
 			this.number_of_hours = response?.data?.number_of_hours === 0 ? 2 : response?.data?.number_of_hours
-			this.isTravelShare = ((this.isTravelAgentMode || response?.data?.account_type == 'travel_planner') && this.updateType != 'repeat' && this.updateType != 'return' && this.updateType != 'round') || (this.userRole == 'travel_agent' && this.updateType == 'repeat')
+			this.isTravelShare = ((this.isTravelAgentMode || response?.data?.account_type == 'travel_planner') && this.updateType != 'repeat' && this.updateType != 'return' && this.updateType != 'round') || (this.userRole == 'travel_agent' && ['repeat', 'return', 'round'].includes(this.updateType))
 			this.isFarmoutBooking = (response?.data?.reservation_type == 'farmout' && this.updateType != 'repeat' && this.updateType != 'return' && this.updateType != 'round') ? true : false
 			this.isCreatedByAdmin = response?.data?.created_by == 1 ? true : false
 
@@ -7513,13 +7513,14 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return controlEl.getBoundingClientRect().top + window.scrollY - labelOffset;
 	}
 	/** Travel agent commission applies to new travel_planner bookings, and to a travel
-	 * agent's own repeat (the duplicate is a fresh booking by them). Return/round and
-	 * admin-created bookings stay excluded. */
+	 * agent's own repeat/return/round duplicate (a fresh booking by them). Those
+	 * duplicates made by admin, and admin-created bookings, stay excluded. */
 	get shouldApplyTravelAgentShare(): boolean {
 		if (this.BookingForm.value?.account_type != 'travel_planner') return false
 		const types = [this.updateType, this.Form?.updateType?.value]
-		if (this.userRole == 'travel_agent' && types.includes('repeat')) return true
-		return !this.isCreatedByAdmin && !types.some(t => ['repeat', 'return', 'round'].includes(t))
+		const isDuplicate = types.some(t => ['repeat', 'return', 'round'].includes(t))
+		if (this.userRole == 'travel_agent' && isDuplicate) return true
+		return !this.isCreatedByAdmin && !isDuplicate
 	}
 
 	createReservationShareArray() {

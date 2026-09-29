@@ -243,15 +243,13 @@
 						</ng-template>
 					</div> -->
 				</div>
-				<div class="col-md-6" id="emailText">
-					<mat-form-field appearance="outline" [class.read-only]="affiliateEmailReadonly == true">
-						<mat-label>Affiliate E-mail
+				<div class="col-md-6">
+					<mat-form-field appearance="outline">
+						<mat-label>Affiliate E-mail 
 							<span class="asterisk">*</span>
 						</mat-label>
-						<input [class.errorColor]="
-									affiliateEmailStatus == 'no'
-								" matInput placeholder="E-mail" formControlName="Email" [readonly]="affiliateEmailReadonly" tabIndex="1"
-							id="email_verified" (focus)="$event.target.select()"
+						<input matInput placeholder="E-mail" formControlName="Email" tabIndex="1"
+							(focus)="$event.target.select()"
 							(blur)="confirmEmailControl.updateValueAndValidity()" />
 					</mat-form-field>
 					<div *ngIf="
@@ -386,16 +384,13 @@
 							<div *ngIf="f.dispatchEmail.errors.pattern">Email format should be valid</div>
 						</div>
 					</div> -->
-				<div class="col-md-6" id="emailText">
-					<mat-form-field appearance="outline" [class.read-only]="dispatchEmailReadonly == true"
-						[ngClass]="{ 'border-red': f.dispatchEmail?.value == '' }">
+				<div class="col-md-6">
+					<mat-form-field appearance="outline" [ngClass]="{ 'border-red': f.dispatchEmail?.value == '' }">
 						<mat-label>24 Hr Dispatch E-mail
 							<span class="asterisk">*</span>
 						</mat-label>
-						<input [class.errorColor]="
-							dispatchEmailStatus == 'no'
-								" matInput placeholder="24 Hr Dispatch E-mail" formControlName="dispatchEmail"
-							[readonly]="dispatchEmailReadonly" tabIndex="1" (focus)="$event.target.select()"
+						<input matInput placeholder="24 Hr Dispatch E-mail" formControlName="dispatchEmail"
+							tabIndex="1" (focus)="$event.target.select()"
 							(blur)="confirmDispatchEmailControl.updateValueAndValidity()" />
 					</mat-form-field>
 					<div *ngIf="

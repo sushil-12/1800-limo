@@ -97,14 +97,8 @@ export class Step1Component implements OnInit, AfterViewInit {
 	public scanFoundNothing: boolean = false;
 
 	public addAffiliateAccountForm: FormGroup;
-	public updateAffiliateEmailForm: FormGroup;
-	public updateDispatchEmailForm: FormGroup;
 	public submittedForm: boolean;
-	public submittedAffiliateEmailForm: boolean;
-	public submittedDispatcheEmailForm: boolean;
 	public disableSubmitButton: boolean = false;
-	public disableSubmitAffiliateEmailButton: boolean = false;
-	public disableSubmitDispatchEmailButton: boolean = false;
 	public response: any;
 	public response2: any;
 	public languages: any;
@@ -124,19 +118,7 @@ export class Step1Component implements OnInit, AfterViewInit {
 	public CompanyCellNumberObject: any;
 	public FaxObject: any;
 	public DispatchObject: any;
-	public affiliateEmailStatus: string;
-	public dispatchEmailStatus: string;
-	public affiliateEmailReadonly: boolean = true;
-	public dispatchEmailReadonly: boolean = true;
-	public affiliateEmailProgressBar: boolean = false;
-	public dispatchEmailProgressBar: boolean = false;
 	public showOwnerInfoProgressBar: boolean = false;
-	public displayMsg: string;
-	public updatedAffiliateEmail: string;
-	public updatedDispatchEmail: string;
-	public emailErrorMsgs: string;
-	public affiliateEmailButton: string;
-	public dispatchEmailButton: string;
 	public snackbarMsg: string;
 	public affiliateInstructionHeading: string;
 	public affiliateInstruction: string;
@@ -150,11 +132,14 @@ export class Step1Component implements OnInit, AfterViewInit {
 	public isBadgeCity: boolean = false;
 
 	/*
-	 * "Confirm E-mail" fields shown next to an unverified owner / dispatch e-mail.
+	 * "Confirm E-mail" fields shown next to the owner / dispatch e-mail.
 	 * Kept outside addAffiliateAccountForm so they are never sent to the API.
 	 */
 	public confirmEmailControl = new FormControl("", this.confirmEmailValidator("Email", () => this.showConfirmEmail));
 	public confirmDispatchEmailControl = new FormControl("", this.confirmEmailValidator("dispatchEmail", () => this.showConfirmDispatchEmail));
+	/** E-mails as last saved; a saved address was already confirmed, so its confirm field stays hidden. */
+	private savedEmail: string = "";
+	private savedDispatchEmail: string = "";
 
 
 
@@ -291,28 +276,9 @@ export class Step1Component implements OnInit, AfterViewInit {
 							// 	.catch((err) => {
 							// 		throw err; // Re-throwing the error if needed
 							// 	});
-							//Show edit button / confirm field on affiliate email field
-							this.updatedAffiliateEmail = data.Email;
-							this.affiliateEmailStatus = data.is_email_verified;
-							if (this.affiliateEmailStatus == "yes") {
-								this.affiliateEmailButton = "edit";
-								this.affiliateEmailReadonly = true;
-							} else {
-								this.affiliateEmailButton = "confirm";
-								this.affiliateEmailReadonly = false;
-							}
-
-							//Show edit button / confirm field on dispatch email field
-							this.updatedDispatchEmail = data.dispatchEmail;
-							this.dispatchEmailStatus =
-								data.dispatch_is_email_verified;
-							if (this.dispatchEmailStatus == "yes") {
-								this.dispatchEmailButton = "edit";
-								this.dispatchEmailReadonly = true;
-							} else {
-								this.dispatchEmailButton = "confirm";
-								this.dispatchEmailReadonly = false;
-							}
+							//saved e-mails are already confirmed; only a changed address needs retyping
+							this.savedEmail = data.Email || "";
+							this.savedDispatchEmail = data.dispatchEmail || "";
 
 							//set country flag in phone number fields
 							this.setPhoneCountry(
@@ -440,49 +406,6 @@ export class Step1Component implements OnInit, AfterViewInit {
 							//
 							this.spinner.hide(); //hide spinner
 						});
-
-					//update affiliate email form validation
-					this.updateAffiliateEmailForm = this.formBuilder.group({
-						// phoneOtp: [
-						// 	"",
-						// 	[
-						// 		Validators.required,
-						// 		Validators.pattern("^[0-9+]*$"),
-						// 		Validators.minLength(6),
-						// 		Validators.maxLength(6),
-						// 	],
-						// ],
-						emailOtp: [
-							"",
-							[
-								Validators.required,
-								Validators.pattern("^[0-9+]*$"),
-								Validators.minLength(6),
-								Validators.maxLength(6),
-							],
-						],
-					});
-					//update dispatch email form validation
-					this.updateDispatchEmailForm = this.formBuilder.group({
-						// phoneOtp: [
-						// 	"",
-						// 	[
-						// 		Validators.required,
-						// 		Validators.pattern("^[0-9+]*$"),
-						// 		Validators.minLength(6),
-						// 		Validators.maxLength(6),
-						// 	],
-						// ],
-						emailOtp: [
-							"",
-							[
-								Validators.required,
-								Validators.pattern("^[0-9+]*$"),
-								Validators.minLength(6),
-								Validators.maxLength(6),
-							],
-						],
-					});
 				} else {
 					// A brand new affiliate answers the card questions first —
 					// no type is preselected, so nothing below them is rendered.
@@ -799,14 +722,20 @@ export class Step1Component implements OnInit, AfterViewInit {
 		return this.affiliateTypeChosen && this.showCompanyInformation;
 	}
 
-	/** Confirm field sits next to the owner e-mail while it is unverified. */
+	/** Confirm the owner e-mail only while it is new or differs from the saved one. */
 	get showConfirmEmail(): boolean {
-		return !!this.affiliateId && this.affiliateEmailButton === "confirm";
+		return this.emailNeedsConfirm("Email", this.savedEmail);
 	}
 
-	/** Same for the dispatch e-mail, which only exists with the company section. */
+	/** Same for the dispatch e-mail, which only applies with company information. */
 	get showConfirmDispatchEmail(): boolean {
-		return !!this.affiliateId && this.dispatchEmailButton === "confirm" && this.showCompanySection;
+		return this.showCompanySection && this.emailNeedsConfirm("dispatchEmail", this.savedDispatchEmail);
+	}
+
+	/** True when there is no saved address yet, or the field no longer matches it. */
+	private emailNeedsConfirm(controlName: "Email" | "dispatchEmail", saved: string): boolean {
+		const current = (this.addAffiliateAccountForm?.get(controlName)?.value || "").trim().toLowerCase();
+		return !saved || current !== saved.trim().toLowerCase();
 	}
 
 	/** Required + must match the given e-mail control, but only while the field is shown. */
@@ -1238,152 +1167,6 @@ export class Step1Component implements OnInit, AfterViewInit {
 		].updateValueAndValidity();
 	}
 
-	affiliateEmailButtonClick(action) {
-		if (action === "edit") {
-			$("#emailText").addClass("emailText");
-			this.affiliateEmailReadonly = false;
-			this.affiliateEmailStatus = "in-process";
-			this.affiliateEmailButton = "update";
-		} else if (action == "save") {
-			if (
-				this.addAffiliateAccountForm.value.Email ===
-				this.updatedAffiliateEmail
-			) {
-				this.displayMsg =
-					"New entered Email is similar to previous one.";
-			} else {
-				this.displayMsg = "";
-				this.affiliateEmailButton = "edit";
-				this.affiliateEmailReadonly = true;
-				this.affiliateEmailProgressBar = true; //show progressbar
-				this.affiliateService
-					.editAffiliateEmail(
-						this.addAffiliateAccountForm.value.Email
-					)
-					.pipe(
-						catchError((err) => {
-							this.affiliateEmailProgressBar = false; //hide progressbar
-							return throwError(err);
-						})
-					)
-					.subscribe(({ data }: any) => {
-						this.affiliateEmailProgressBar = false; //hide progressbar
-						this.snackbarMsg = "OTP sent Successfully";
-						this.openSnackbar();
-					});
-			}
-			$("#editAffiliateEmailModal").modal("show");
-		}
-	}
-	get fAffiliateEmail() {
-		return this.updateAffiliateEmailForm.controls;
-	}
-	updateAffiliateEmail() {
-		console.log(this.updateAffiliateEmailForm);
-		this.submittedAffiliateEmailForm = true;
-		// stop here if form is invalid
-		if (this.updateAffiliateEmailForm.invalid) {
-			return;
-		}
-		this.affiliateEmailProgressBar = true; //show progressbar
-		this.disableSubmitAffiliateEmailButton = true; //disable submit button
-
-		this.affiliateService
-			.updateAffiliateEmail(this.updateAffiliateEmailForm.value)
-			.pipe(
-				catchError((err) => {
-					this.affiliateEmailProgressBar = false; //hide progressbar
-					this.disableSubmitAffiliateEmailButton = false; //enable submit button
-					return throwError(err);
-				})
-			)
-			.subscribe(({ message, success }: any) => {
-				this.affiliateEmailProgressBar = false; //hide progressbar
-				this.disableSubmitAffiliateEmailButton = false; //enable submit button
-				if (success == true) {
-					this.displayMsg = "Email changed successfully.";
-					this.updatedAffiliateEmail =
-						this.addAffiliateAccountForm.value.Email;
-					this.affiliateEmailStatus = "yes";
-				} else {
-					this.emailErrorMsgs = message;
-				}
-			});
-	}
-
-	dispatchEmailButtonClick(action) {
-		if (action === "edit") {
-			$("#email_Text").addClass("emailText");
-			this.dispatchEmailReadonly = false;
-			this.dispatchEmailStatus = "in-process";
-			this.dispatchEmailButton = "update";
-		} else if (action == "save") {
-			if (
-				this.addAffiliateAccountForm.value.dispatchEmail ===
-				this.updatedDispatchEmail
-			) {
-				this.displayMsg =
-					"New entered Email is similar to previous one.";
-			} else {
-				this.displayMsg = "";
-				this.dispatchEmailButton = "edit";
-				this.dispatchEmailReadonly = true;
-				this.dispatchEmailProgressBar = true; //show progressbar
-				this.affiliateService
-					.editDispatchEmail(
-						this.addAffiliateAccountForm.value.dispatchEmail
-					)
-					.pipe(
-						catchError((err) => {
-							this.dispatchEmailProgressBar = false; //hide progressbar
-							return throwError(err);
-						})
-					)
-					.subscribe(({ data }: any) => {
-						this.dispatchEmailProgressBar = false; //hide progressbar
-						this.snackbarMsg = "OTP sent Successfully";
-						this.openSnackbar();
-					});
-			}
-			$("#editDispatchEmailModal").modal("show");
-		}
-	}
-	get fDispatchEmail() {
-		return this.updateDispatchEmailForm.controls;
-	}
-	updateDispatchEmail() {
-		console.log(this.updateDispatchEmailForm);
-		this.submittedDispatcheEmailForm = true;
-		// stop here if form is invalid
-		if (this.updateDispatchEmailForm.invalid) {
-			return;
-		}
-		this.dispatchEmailProgressBar = true; //show progressbar
-		this.disableSubmitDispatchEmailButton = true; //disable submit button
-
-		this.affiliateService
-			.updateDispatchEmail(this.updateDispatchEmailForm.value)
-			.pipe(
-				catchError((err) => {
-					this.dispatchEmailProgressBar = false; //hide progressbar
-					this.disableSubmitDispatchEmailButton = false; //enable submit button
-					return throwError(err);
-				})
-			)
-			.subscribe(({ message, success }: any) => {
-				this.dispatchEmailProgressBar = false; //hide progressbar
-				this.disableSubmitDispatchEmailButton = false; //enable submit button
-				if (success == true) {
-					this.displayMsg = "Email changed successfully.";
-					this.updatedDispatchEmail =
-						this.addAffiliateAccountForm.value.Email;
-					this.dispatchEmailStatus = "yes";
-				} else {
-					this.emailErrorMsgs = message;
-				}
-			});
-	}
-
 	openSnackbar() {
 		var x = document.getElementById("snackbar");
 		x.className = "show";
@@ -1479,10 +1262,10 @@ export class Step1Component implements OnInit, AfterViewInit {
 			{ control: "Dispatch", label: "24 hr dispatch cell", value: this.toPhoneDigits(fields.phone) },
 		];
 
-		// The owner e-mail is verified through an OTP flow — never overwrite a
-		// verified address; offer the card's e-mail as the dispatch e-mail instead.
+		// Never overwrite an owner e-mail that is already filled in; offer the
+		// card's e-mail as the dispatch e-mail instead.
 		if (fields.email) {
-			if (this.affiliateEmailStatus === "yes") {
+			if (this.addAffiliateAccountForm.get("Email")?.value) {
 				candidates.push({ control: "dispatchEmail", label: "24 hr dispatch e-mail", value: fields.email });
 			} else {
 				candidates.push({ control: "Email", label: "Owner / admin e-mail", value: fields.email });
@@ -1978,6 +1761,8 @@ export class Step1Component implements OnInit, AfterViewInit {
 				dispatchEmail: this.affiliateDetail.dispatchEmail,
 			});
 		}
+		this.confirmEmailControl.reset("");
+		this.confirmDispatchEmailControl.reset("");
 		// Keep the card questions in step with the freshly rebuilt form.
 		this.deriveAnswersFromType(this.affiliateDetail.AffiliateType);
 		this.dismissScanReview();

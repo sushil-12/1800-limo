@@ -35,7 +35,7 @@
 				Pick the rides you want and get paid within 3 business days.
 			</p>
 
-			<div class="tw-mt-8 tw-flex tw-flex-col tw-gap-3 min-[480px]:tw-flex-row sm:tw-mt-10 sm:tw-gap-5">
+			<div class="store-badges tw-mt-8 sm:tw-mt-10">
 				<ng-container *ngTemplateOutlet="storeBadges; context: { $implicit: 'light' }"></ng-container>
 			</div>
 
@@ -100,7 +100,7 @@
 	<!-- App showcase: phone first, then its callouts one by one (left, right, left, right) -->
 	<div #showcase class="lp-container tw-pt-12 sm:tw-pt-16 lg:tw-pt-20">
 		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
-			How <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">1800-LIMO.COM</span> Works
+			How <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">1-800-LIMO.COM</span> Works
 		</h2>
 		<p class="tw-mx-auto tw-mb-0 tw-mt-4 tw-max-w-3xl tw-text-balance tw-text-center tw-font-poppins tw-text-base tw-font-normal tw-leading-normal tw-text-[#2E2E3A] sm:tw-mt-5 sm:tw-text-lg lg:tw-text-xl">
 			Download the app, complete your profile, submit your documents, and start accepting ride requests on your own schedule - no office visits required.
@@ -206,9 +206,9 @@
 					</li>
 				</ul>
 				<div class="tw-mt-auto tw-flex tw-flex-wrap tw-gap-x-4 tw-gap-y-3 tw-pt-8">
-					<ng-container *ngIf="first; else portalCta">
+					<div *ngIf="first; else portalCta" class="store-badges">
 						<ng-container *ngTemplateOutlet="storeBadges; context: { $implicit: 'dark' }"></ng-container>
-					</ng-container>
+					</div>
 					<ng-template #portalCta>
 						<button type="button" class="lp-btn lp-btn--orange" (click)="scrollToPlans()">
 							See Plans
@@ -222,7 +222,7 @@
 	<!-- Benefits -->
 	<div class="lp-container tw-pt-12 sm:tw-pt-16 lg:tw-pt-20">
 		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
-			<span class="tw-font-poppins tw-font-bold tw-text-brand-orange">1800-LIMO.COM</span> Benefits
+			<span class="tw-font-poppins tw-font-bold tw-text-brand-orange">1-800-LIMO.COM</span> Benefits
 		</h2>
 
 		<div class="tw-mt-10 tw-flex tw-flex-col tw-gap-14 sm:tw-mt-14 sm:tw-gap-16 md:tw-mt-16 lg:tw-mt-20 lg:tw-gap-24">
@@ -256,7 +256,7 @@
 			Who Can <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">Apply</span>
 		</h2>
 		<p class="tw-mx-auto tw-mb-0 tw-mt-4 tw-max-w-2xl tw-text-balance tw-text-center tw-font-poppins tw-text-base tw-font-normal tw-leading-normal tw-text-[#2E2E3A] sm:tw-mt-5 sm:tw-text-lg lg:tw-text-xl">
-			1800-LIMO.COM works with independent professional drivers, chauffeurs, and fleet operators across the country.
+			1-800-LIMO.COM works with independent professional drivers, chauffeurs, and fleet operators across the country.
 		</p>
 
 		<div class="tw-mt-8 tw-grid tw-grid-cols-1 tw-gap-5 sm:tw-mt-10 sm:tw-grid-cols-2 sm:tw-gap-6 lg:tw-grid-cols-3 lg:tw-gap-6 xl:tw-gap-10">
@@ -283,7 +283,7 @@
 			Plans for <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">Operators</span>
 		</h2>
 		<p class="tw-mx-auto tw-mb-0 tw-mt-4 tw-max-w-3xl tw-text-balance tw-text-center tw-font-poppins tw-text-base tw-font-normal tw-leading-normal tw-text-[#2E2E3A] sm:tw-mt-5 sm:tw-text-lg lg:tw-text-xl">
-			Start free and receive bookings from 1800-LIMO.COM. Upgrade when you want our software to run your own daily bookings.
+			Start free and receive bookings from 1-800-LIMO.COM. Upgrade when you want our software to run your own daily bookings.
 		</p>
 
 		<div *ngIf="plans.length" class="tw-mt-8 tw-grid tw-grid-cols-1 tw-gap-5 sm:tw-mt-10 md:tw-grid-cols-2 lg:tw-grid-cols-3 lg:tw-gap-6 xl:tw-gap-8">
@@ -335,7 +335,7 @@
 			Plans couldn't load right now. Please refresh the page to try again.
 		</p>
 		<p class="tw-mx-auto tw-mb-0 tw-mt-8 sm:tw-mt-10 tw-max-w-2xl tw-text-balance tw-text-center tw-font-poppins tw-text-sm tw-text-[#9E9DA2]">
-			On every booking, 1800-LIMO.COM adds a 25% fee on top of your rate, paid by the client. You always receive the full rate you set.
+			On every booking, 1-800-LIMO.COM adds a 25% fee on top of your rate, paid by the client. You always receive the full rate you set.
 		</p>
 	</div>
 
@@ -399,8 +399,10 @@
 					Download the driver app, or pick a plan to run your fleet on the web.
 				</p>
 			</div>
-			<div class="tw-flex tw-w-full tw-flex-col tw-gap-3 min-[480px]:tw-w-auto min-[480px]:tw-flex-row min-[480px]:tw-flex-wrap min-[480px]:tw-justify-center sm:tw-gap-4 xl:tw-shrink-0">
-				<ng-container *ngTemplateOutlet="storeBadges; context: { $implicit: 'light' }"></ng-container>
+			<div class="tw-flex tw-w-full tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-flex-wrap sm:tw-justify-center sm:tw-gap-4 xl:tw-w-auto xl:tw-shrink-0 xl:tw-flex-nowrap">
+				<div class="store-badges tw-mx-auto xl:tw-mx-0 xl:!tw-w-[30rem] xl:tw-shrink-0">
+					<ng-container *ngTemplateOutlet="storeBadges; context: { $implicit: 'light' }"></ng-container>
+				</div>
 				<button type="button" class="lp-btn lp-btn--orange" (click)="scrollToPlans()">
 					See Plans
 				</button>

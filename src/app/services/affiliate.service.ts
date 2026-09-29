@@ -164,25 +164,6 @@ export class AffiliateService {
 		}
 	}
 
-	editAffiliateEmail(email) {
-		return this.httpClient.post(this.serverUrl + 'edit-email-verification', { "email": email });
-	}
-	updateAffiliateEmail(data) {
-		return this.httpClient.post(this.serverUrl + 'edit-email-verify-otps', data);
-	}
-	resendAffiliateEmailVerification(email) {
-		return this.httpClient.post(this.serverUrl + 'resend-email-verification', { "email": email });
-	}
-	editDispatchEmail(email) {
-		return this.httpClient.post(this.serverUrl + 'edit-dispatcher-email-verification', { "email": email });
-	}
-	updateDispatchEmail(data) {
-		return this.httpClient.post(this.serverUrl + 'edit-dispatcher-email-verify-otps', data);
-	}
-	resendDispatchEmailVerification(email) {
-		return this.httpClient.post(this.serverUrl + 'resend-dispatcher-email-verification', { "email": email });
-	}
-
 	getAffiliateAccount(id) {
 		return this.httpClient.get(this.serverUrl + 'get-affiliate-basic-info/' + id);
 	}

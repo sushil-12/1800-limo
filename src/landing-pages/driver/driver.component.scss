@@ -359,6 +359,39 @@ $brand-orange: #de9b3d;
 	}
 }
 
+// Keeps both badges on one line at any width: they share the row equally and their
+// contents scale with the row's width (cqi), capped at the regular badge size.
+// Size containment means the row can't size itself from its badges, so inside a
+// shrink-to-fit parent give it an explicit width (see the closing CTA).
+.tw-scope .store-badges {
+	display: flex;
+	gap: clamp(0.625rem, 3cqi, 1rem);
+	width: 100%;
+	max-width: 30rem;
+	container-type: inline-size;
+
+	.store-badge {
+		flex: 1 1 0;
+		gap: clamp(0.4rem, 2.5cqi, 0.8rem);
+		min-width: 0;
+		max-width: 14.5rem;
+		padding: 0 clamp(0.5rem, 3.5cqi, 1.5rem);
+	}
+
+	.store-badge__icon {
+		width: clamp(1.125rem, 6cqi, 2rem);
+		height: clamp(1.125rem, 6cqi, 2rem);
+	}
+
+	.store-badge__small {
+		font-size: clamp(0.5rem, 2.3cqi, 0.6875rem);
+	}
+
+	.store-badge__big {
+		font-size: clamp(0.625rem, 4.6cqi, 1.4rem);
+	}
+}
+
 // Inline text link. The underline is a background so it never breaks between words.
 .tw-scope .lp-link {
 	display: inline-flex;

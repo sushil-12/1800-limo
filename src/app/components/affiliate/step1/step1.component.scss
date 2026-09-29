@@ -398,81 +398,7 @@
 	}
 }
 
-/* --------------------------------------------------------------------------
-   Email verification + edit
-   -------------------------------------------------------------------------- */
-
-.edit-email {
-	text-transform: uppercase;
-	text-decoration: none;
-	margin-top: 25px;
-	border-radius: 0.5rem;
-	border: 1px solid var(--orange-color);
-	background-color: var(--orange-color);
-	color: #fff;
-	width: 100%;
-	line-height: 41px;
-}
-
-.edit-email svg {
-	margin-bottom: 10px;
-	margin-right: 10px;
-	height: 30px;
-}
-
-.edit-email svg path {
-	fill: #fff;
-}
-
-.edit-email:hover,
-.edit-email:focus {
-	border: 1px solid var(--orange-color);
-	background-color: transparent;
-	color: var(--orange-color);
-}
-
-.edit-email:hover svg path,
-.edit-email:focus svg path {
-	fill: var(--orange-color);
-}
-
-.email-verified {
-	height: 35px;
-	fill: #05b171;
-	position: absolute;
-	right: 5px;
-	bottom: 12px;
-}
-
-.email-not-verified {
-	height: 35px;
-	position: absolute;
-	right: 5px;
-	bottom: 12px;
-	fill: #ea4444;
-}
-
-.emailText {
-	color: red;
-}
-
-.emailErrorMsgs {
-	font-size: 90%;
-}
-
-.security-p {
-	font-size: 0.8rem;
-}
-
-.resent-otp {
-	cursor: pointer;
-	position: absolute;
-	left: 1rem;
-	top: 1rem;
-	color: var(--orange-color);
-}
-
-/* Step 1's OTP dialogs stack their header, unlike the shared centred one. */
+/* Step 1's dialogs stack their header, unlike the shared centred one. */
 .modal-header {
 	display: block;
 }
@@ -544,12 +470,6 @@
 /* Larger than the shared 19px — step 1's labels run bigger. */
 .asterisk {
 	font-size: 21px;
-}
-
-@media (max-width:600px){
-	.edit-email {
-		margin-top:22px !important;
-	}
 }
 
 

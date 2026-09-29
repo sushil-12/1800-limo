@@ -282,26 +282,6 @@ $primary-color: #5dbd8a;
   fill: var(--orange-color);
 }
 
-.email-verified {
-  height: 35px;
-  fill: #05b171;
-  position: absolute;
-  right: 5px;
-  bottom: 12px;
-}
-
-.emailText {
-  color: red;
-}
-
-.email-not-verified {
-  height: 35px;
-  position: absolute;
-  right: 5px;
-  bottom: 12px;
-  fill: #ea4444;
-}
-
 .asterisk {
   font-size: 1.3rem;
 }

@@ -40,14 +40,6 @@ export class AffiliateStep1Component implements OnInit, AfterViewInit {
 	public affiliateId: string;
 	public imageSrc: string;
 	public affiliateType: string;
-	updatedAffiliateEmail: any;
-	affiliateEmailStatus: any;
-	affiliateEmailButton: string;
-	affiliateEmailReadonly: boolean;
-	updatedDispatchEmail: any;
-	dispatchEmailStatus: any;
-	dispatchEmailButton: string;
-	dispatchEmailReadonly: boolean;
 	CellNumberObject: any;
 	BusinessFrontPhoto: any;
 	BusinessBackPhoto: any;
@@ -65,11 +57,14 @@ export class AffiliateStep1Component implements OnInit, AfterViewInit {
 	public modalImage: string;
 
 	/*
-	 * "Confirm E-mail" fields shown next to an unverified owner / dispatch e-mail.
+	 * "Confirm E-mail" fields shown next to the affiliate / dispatch e-mail.
 	 * Kept outside addAffiliateAccountForm so they are never sent to the API.
 	 */
 	public confirmEmailControl = new FormControl('', this.confirmEmailValidator('Email', () => this.showConfirmEmail));
 	public confirmDispatchEmailControl = new FormControl('', this.confirmEmailValidator('dispatchEmail', () => this.showConfirmDispatchEmail));
+	/** E-mails as last saved; a saved address was already confirmed, so its confirm field stays hidden. */
+	private savedEmail: string = '';
+	private savedDispatchEmail: string = '';
 	public notify_sms: boolean;
 	public notify_email: boolean;
 	badgeOptions: string[] = [];
@@ -178,23 +173,9 @@ export class AffiliateStep1Component implements OnInit, AfterViewInit {
 							});
 							this.affiliateTypeSwitch(this.response2.data.AffiliateType)
 
-							this.affiliateEmailStatus = this.response2.data.is_email_verified;
-							if (this.affiliateEmailStatus == "yes") {
-								this.affiliateEmailButton = "edit";
-								this.affiliateEmailReadonly = true;
-							} else {
-								this.affiliateEmailButton = "confirm";
-								this.affiliateEmailReadonly = false;
-							}
-
-							this.dispatchEmailStatus = this.response2.data.dispatch_is_email_verified;
-							if (this.dispatchEmailStatus == "yes") {
-								this.dispatchEmailButton = "edit";
-								this.dispatchEmailReadonly = true;
-							} else {
-								this.dispatchEmailButton = "confirm";
-								this.dispatchEmailReadonly = false;
-							}
+							//saved e-mails are already confirmed; only a changed address needs retyping
+							this.savedEmail = this.response2.data.Email || '';
+							this.savedDispatchEmail = this.response2.data.dispatchEmail || '';
 
 							sessionStorage.setItem("affiliateUserData", JSON.stringify(this.response2.data));
 							sessionStorage.setItem("affiliateType", this.response2.data.AffiliateType)
@@ -473,14 +454,20 @@ export class AffiliateStep1Component implements OnInit, AfterViewInit {
 		}
 	}
 
-	/** Confirm field sits next to the owner e-mail while it is unverified. */
+	/** Confirm the owner e-mail only while it is new or differs from the saved one. */
 	get showConfirmEmail(): boolean {
-		return !!this.affiliateId && this.affiliateEmailButton === 'confirm';
+		return this.emailNeedsConfirm('Email', this.savedEmail);
 	}
 
 	/** Same for the dispatch e-mail, which only applies with company information. */
 	get showConfirmDispatchEmail(): boolean {
-		return !!this.affiliateId && this.dispatchEmailButton === 'confirm' && this.showCompanyInformation;
+		return this.showCompanyInformation && this.emailNeedsConfirm('dispatchEmail', this.savedDispatchEmail);
+	}
+
+	/** True when there is no saved address yet, or the field no longer matches it. */
+	private emailNeedsConfirm(controlName: 'Email' | 'dispatchEmail', saved: string): boolean {
+		const current = (this.addAffiliateAccountForm?.get(controlName)?.value || '').trim().toLowerCase();
+		return !saved || current !== saved.trim().toLowerCase();
 	}
 
 	/** Required + must match the given e-mail control, but only while the field is shown. */
@@ -939,6 +926,8 @@ export class AffiliateStep1Component implements OnInit, AfterViewInit {
 			dispatchEmail: this.response2.data.dispatchEmail,
 			Gender: ''
 		});
+		this.confirmEmailControl.reset('');
+		this.confirmDispatchEmailControl.reset('');
 		this.BusinessFrontPhoto = "";
 		this.BusinessBackPhoto = "";
 		this.onLanguageChange("1", true);

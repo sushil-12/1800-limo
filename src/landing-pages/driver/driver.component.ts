@@ -211,9 +211,9 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
       ]
     },
     {
-      title: 'Gig Drivers (Rideshare)',
+      title: 'Gig / Taxi / NEMT Drivers (Rideshare)',
       requirements: [
-        'All chauffeur requirements above',
+        'All professional chauffeur requirements',
         '4.5-5 star Uber or Lyft rating',
         'Minimum 3 months Uber/Lyft experience',
         'Fingerprint documentation',
@@ -223,6 +223,7 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     {
       title: 'Fleet & Coach Operators',
       requirements: [
+        'All professional chauffeur requirements',
         'Applicable permits',
         'ICC number (if applicable)',
         'Proof of insurance',

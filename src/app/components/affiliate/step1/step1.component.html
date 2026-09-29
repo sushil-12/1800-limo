@@ -131,8 +131,7 @@
 						<mat-label>Owner / Admin E-mail
 							<span class="asterisk">*</span>
 						</mat-label>
-						<input matInput placeholder="Owner / Admin E-mail" formControlName="Email" tabIndex="1"
-							(blur)="onEmailEntered('Email')" />
+						<input matInput placeholder="Owner / Admin E-mail" formControlName="Email" tabIndex="1" />
 					</mat-form-field>
 					<div *ngIf="
 							(submittedForm && f.Email.errors) ||
@@ -147,14 +146,6 @@
 							Email format should be valid
 						</div>
 					</div>
-					<p class="verify-note" *ngIf="f.Email.value && !f.Email.errors">
-						<i class="bi bi-envelope-exclamation"></i>
-						<span>
-							We'll email a verification link to this address —
-							please open it and verify. You can carry on with the
-							next steps in the meantime.
-						</span>
-					</p>
 				</div>
 				<ng-template #showEditEmailButton>
 					<div class="col-md-6" id="emailText">
@@ -165,21 +156,7 @@
 							<input [class.errorColor]="
 									affiliateEmailStatus == 'no'
 								" matInput placeholder="Owner / Admin E-mail" formControlName="Email" [readonly]="affiliateEmailReadonly"
-								tabIndex="1" id="email_verified" (blur)="onEmailEntered('Email')" />
-							<svg *ngIf="affiliateEmailStatus == 'yes'" xmlns="http://www.w3.org/2000/svg"
-								class="email-verified" viewBox="0 0 48 48">
-								<path fill="none" d="M0 0h48v48h-48z" />
-								<path
-									d="M24 2l-18 8v12c0 11.11 7.67 21.47 18 24 10.33-2.53 18-12.89 18-24v-12l-18-8zm-4 32l-8-8 2.83-2.83 5.17 5.17 13.17-13.17 2.83 2.83-16 16z" />
-							</svg>
-							<svg *ngIf="affiliateEmailStatus == 'no'" xmlns="http://www.w3.org/2000/svg"
-								class="email-not-verified" viewBox="0 0 32 32">
-								<g data-name="26 - error">
-									<polygon points="16 24 16.5 24 16 23.999 16 24" />
-									<path
-										d="M29.658,25.354,18.871,3.774a3.21,3.21,0,0,0-5.742,0L2.342,25.354A3.209,3.209,0,0,0,5.212,30H26.788a3.209,3.209,0,0,0,2.87-4.646ZM16,25a1,1,0,1,1,1-1A1,1,0,0,1,16,25Zm1-5a1,1,0,0,1-2,0V12a1,1,0,0,1,2,0Z" />
-								</g>
-							</svg>
+								tabIndex="1" id="email_verified" (blur)="confirmEmailControl.updateValueAndValidity()" />
 						</mat-form-field>
 						<div *ngIf="
 								(submittedForm && f.Email.errors) ||
@@ -194,19 +171,6 @@
 								Email format should be valid
 							</div>
 						</div>
-						<p class="verify-note" *ngIf="affiliateEmailStatus != 'yes'">
-							<i class="bi bi-envelope-exclamation"></i>
-							<span>
-								This address isn't verified yet. Open the link in
-								the email we sent you — or hit
-								<strong>Resend Verification</strong> if you can't
-								find it.
-							</span>
-						</p>
-						<p class="verify-note verify-note--ok" *ngIf="affiliateEmailStatus == 'yes'">
-							<i class="bi bi-patch-check"></i>
-							<span>Verified.</span>
-						</p>
 					</div>
 					<div class="col-md-6">
 						<button *ngIf="affiliateEmailButton == 'edit'" type="button" class="edit-email"
@@ -232,18 +196,27 @@
 							</svg>
 							Update
 						</button>
-						<button *ngIf="
-								affiliateEmailButton == 'resend_verification'
-							" type="button" class="edit-email" (click)="affiliateEmailButtonClick('resend')"
-							[disabled]="disableAffiliateEmailResendButton" tabIndex="1">
-							<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 100 100"
-								viewBox="0 0 100 100">
-								<path
-									d="M85,31c-0.5,0-1-0.2-1.4-0.6c-0.8-0.8-0.8-2,0-2.8l2.6-2.6H61c-1.1,0-2,0.9-2,2v6h-4v-6c0-3.3,2.7-6,6-6h25.2l-2.6-2.6	c-0.8-0.8-0.8-2,0-2.8c0.8-0.8,2-0.8,2.8,0l6,6c0.8,0.8,0.8,2,0,2.8l-6,6C86,30.8,85.5,31,85,31z M91,33c-1.1,0-2,0.9-2,2v6c0,1.1-0.9,2-2,2h-2v4h2c3.3,0,6-2.7,6-6v-6C93,33.9,92.1,33,91,33z M7.2,39.8C7.1,40.2,7,40.6,7,41v40c0,0.4,0.1,0.8,0.2,1.2L31.7,61L7.2,39.8z M56.3,61l24.5,21.2c0.1-0.4,0.2-0.8,0.2-1.2V47h-8.5L56.3,61z M37.8,61l4.9,4.2c0.8,0.7,1.9,0.7,2.6,0l4.9-4.2l1.8-1.5L66.4,47H61c-3.3,0-6-2.7-6-6v-4H11c-0.3,0-0.6,0-0.8,0.1l25.9,22.4L37.8,61z M47.9,68.2c-1.1,1-2.5,1.5-3.9,1.5s-2.8-0.5-3.9-1.5l-5.3-4.6L10.2,84.9C10.4,85,10.7,85,11,85h66c0.3,0,0.6,0,0.8-0.1L53.2,63.6L47.9,68.2z M77,37H59v4c0,1.1,0.9,2,2,2h20v-2C81,38.8,79.2,37,77,37z"
-									fill="#e8833a" class="color000 svgShape"></path>
-							</svg>
-							Resend Verification
-						</button>
+						<ng-container *ngIf="showConfirmEmail">
+							<mat-form-field appearance="outline">
+								<mat-label>Confirm Owner / Admin E-mail
+									<span class="asterisk">*</span>
+								</mat-label>
+								<input matInput placeholder="Confirm Owner / Admin E-mail"
+									[formControl]="confirmEmailControl" tabIndex="1" autocomplete="off"
+									(paste)="$event.preventDefault()" />
+							</mat-form-field>
+							<div *ngIf="
+									(submittedForm && confirmEmailControl.errors) ||
+									(confirmEmailControl.touched && confirmEmailControl.errors)
+								" class="text-danger margin-bottom-thin my-mat-hint">
+								<div *ngIf="confirmEmailControl.errors.required">
+									This field is required
+								</div>
+								<div *ngIf="confirmEmailControl.errors.mismatch">
+									E-mails do not match
+								</div>
+							</div>
+						</ng-container>
 					</div>
 				</ng-template>
 				<div class="col-md-6">
@@ -524,7 +497,7 @@
 							<span class="asterisk">*</span>
 						</mat-label>
 						<input matInput placeholder="24 Hr Dispatch E-mail" formControlName="dispatchEmail"
-							tabIndex="1" (blur)="onEmailEntered('dispatchEmail')" />
+							tabIndex="1" />
 					</mat-form-field>
 					<div *ngIf="
 							(submittedForm && f.dispatchEmail.errors) ||
@@ -539,13 +512,6 @@
 							Email format should be valid
 						</div>
 					</div>
-					<p class="verify-note" *ngIf="f.dispatchEmail.value && !f.dispatchEmail.errors">
-						<i class="bi bi-envelope-exclamation"></i>
-						<span>
-							We'll email a verification link to this address —
-							please open it and verify.
-						</span>
-					</p>
 				</div>
 				<ng-template #showEditDispatchEmailButton>
 					<div class="col-md-6" id="email_Text">
@@ -557,21 +523,7 @@
 							<input [class.errorColor]="dispatchEmailStatus == 'no'" matInput
 								placeholder="24 Hr Dispatch E-mail" formControlName="dispatchEmail"
 								[readonly]="dispatchEmailReadonly" tabIndex="1"
-								(blur)="onEmailEntered('dispatchEmail')" />
-							<svg *ngIf="dispatchEmailStatus == 'yes'" xmlns="http://www.w3.org/2000/svg"
-								class="email-verified" viewBox="0 0 48 48">
-								<path fill="none" d="M0 0h48v48h-48z" />
-								<path
-									d="M24 2l-18 8v12c0 11.11 7.67 21.47 18 24 10.33-2.53 18-12.89 18-24v-12l-18-8zm-4 32l-8-8 2.83-2.83 5.17 5.17 13.17-13.17 2.83 2.83-16 16z" />
-							</svg>
-							<svg *ngIf="dispatchEmailStatus == 'no'" xmlns="http://www.w3.org/2000/svg"
-								class="email-not-verified" viewBox="0 0 32 32">
-								<g data-name="26 - error">
-									<polygon points="16 24 16.5 24 16 23.999 16 24" />
-									<path
-										d="M29.658,25.354,18.871,3.774a3.21,3.21,0,0,0-5.742,0L2.342,25.354A3.209,3.209,0,0,0,5.212,30H26.788a3.209,3.209,0,0,0,2.87-4.646ZM16,25a1,1,0,1,1,1-1A1,1,0,0,1,16,25Zm1-5a1,1,0,0,1-2,0V12a1,1,0,0,1,2,0Z" />
-								</g>
-							</svg>
+								(blur)="confirmDispatchEmailControl.updateValueAndValidity()" />
 						</mat-form-field>
 						<div *ngIf="
 								(submittedForm && f.dispatchEmail.errors) ||
@@ -586,19 +538,6 @@
 								Email format should be valid
 							</div>
 						</div>
-						<p class="verify-note" *ngIf="dispatchEmailStatus != 'yes'">
-							<i class="bi bi-envelope-exclamation"></i>
-							<span>
-								This address isn't verified yet. Open the link in
-								the email we sent you — or hit
-								<strong>Resend Verification</strong> if you can't
-								find it.
-							</span>
-						</p>
-						<p class="verify-note verify-note--ok" *ngIf="dispatchEmailStatus == 'yes'">
-							<i class="bi bi-patch-check"></i>
-							<span>Verified.</span>
-						</p>
 					</div>
 					<div class="col-md-6">
 						<button *ngIf="dispatchEmailButton == 'edit'" type="button" class="edit-email"
@@ -624,17 +563,27 @@
 							</svg>
 							Update
 						</button>
-						<button *ngIf="dispatchEmailButton == 'resend_verification'" type="button" class="edit-email"
-							(click)="dispatchEmailButtonClick('resend')" [disabled]="disableDispatchEmailResendButton"
-							tabIndex="1">
-							<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 100 100"
-								viewBox="0 0 100 100">
-								<path
-									d="M85,31c-0.5,0-1-0.2-1.4-0.6c-0.8-0.8-0.8-2,0-2.8l2.6-2.6H61c-1.1,0-2,0.9-2,2v6h-4v-6c0-3.3,2.7-6,6-6h25.2l-2.6-2.6	c-0.8-0.8-0.8-2,0-2.8c0.8-0.8,2-0.8,2.8,0l6,6c0.8,0.8,0.8,2,0,2.8l-6,6C86,30.8,85.5,31,85,31z M91,33c-1.1,0-2,0.9-2,2v6c0,1.1-0.9,2-2,2h-2v4h2c3.3,0,6-2.7,6-6v-6C93,33.9,92.1,33,91,33z M7.2,39.8C7.1,40.2,7,40.6,7,41v40c0,0.4,0.1,0.8,0.2,1.2L31.7,61L7.2,39.8z M56.3,61l24.5,21.2c0.1-0.4,0.2-0.8,0.2-1.2V47h-8.5L56.3,61z M37.8,61l4.9,4.2c0.8,0.7,1.9,0.7,2.6,0l4.9-4.2l1.8-1.5L66.4,47H61c-3.3,0-6-2.7-6-6v-4H11c-0.3,0-0.6,0-0.8,0.1l25.9,22.4L37.8,61z M47.9,68.2c-1.1,1-2.5,1.5-3.9,1.5s-2.8-0.5-3.9-1.5l-5.3-4.6L10.2,84.9C10.4,85,10.7,85,11,85h66c0.3,0,0.6,0,0.8-0.1L53.2,63.6L47.9,68.2z M77,37H59v4c0,1.1,0.9,2,2,2h20v-2C81,38.8,79.2,37,77,37z"
-									fill="#e8833a" class="color000 svgShape"></path>
-							</svg>
-							Resend Verification
-						</button>
+						<ng-container *ngIf="showConfirmDispatchEmail">
+							<mat-form-field appearance="outline">
+								<mat-label>Confirm 24 Hr Dispatch E-mail
+									<span class="asterisk">*</span>
+								</mat-label>
+								<input matInput placeholder="Confirm 24 Hr Dispatch E-mail"
+									[formControl]="confirmDispatchEmailControl" tabIndex="1" autocomplete="off"
+									(paste)="$event.preventDefault()" />
+							</mat-form-field>
+							<div *ngIf="
+									(submittedForm && confirmDispatchEmailControl.errors) ||
+									(confirmDispatchEmailControl.touched && confirmDispatchEmailControl.errors)
+								" class="text-danger margin-bottom-thin my-mat-hint">
+								<div *ngIf="confirmDispatchEmailControl.errors.required">
+									This field is required
+								</div>
+								<div *ngIf="confirmDispatchEmailControl.errors.mismatch">
+									E-mails do not match
+								</div>
+							</div>
+						</ng-container>
 					</div>
 				</ng-template>
 				<div class="col-md-6">
@@ -1080,42 +1029,6 @@
 			<div class="modal-footer">
 				<button type="button" class="custom-btn button2" data-dismiss="modal">
 					OK
-				</button>
-			</div>
-		</div>
-	</div>
-</div>
-
-<!-- Verification link sent modal (first time the e-mail is entered) -->
-<div class="modal fade" id="emailVerificationSentModal" tabindex="-1" role="dialog"
-	aria-labelledby="emailVerificationSentModal" aria-hidden="true">
-	<div class="modal-dialog modal-dialog-centered" role="document">
-		<div class="modal-content verify-sent">
-			<button type="button" class="close closeButton" data-dismiss="modal" aria-label="Close">
-				<span aria-hidden="true">&times;</span>
-			</button>
-			<div class="verify-sent__icon">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
-					<path
-						d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4.24-8 4.76-8-4.76V6l8 4.76L20 6z" />
-				</svg>
-			</div>
-			<h3 class="verify-sent__title">Verify your email</h3>
-			<p class="verify-sent__text">
-				We're sending a verification link to
-			</p>
-			<p class="verify-sent__email">
-				{{ verificationEmailSent }}
-			</p>
-			<p class="verify-sent__hint">
-				Please open that email and click the link to verify this address.
-				Can't find it? Check your spam folder — you can resend the link
-				from this page at any time.
-			</p>
-			<div class="verify-sent__actions">
-				<button type="button" class="custom-btn button2" (click)="closeEmailVerificationSentModal()"
-					tabindex="-1">
-					GOT IT
 				</button>
 			</div>
 		</div>

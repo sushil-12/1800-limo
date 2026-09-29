@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, Input, EventEmitter, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { AuthService } from '../../../services/auth.service';
 import { StateManagementService } from '../../../services/statemanagement.service';
-import { FormGroup, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, FormArray, FormControl, AbstractControl, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgxSpinnerService } from "ngx-spinner";
 import { catchError, map, startWith } from 'rxjs/operators';
@@ -63,6 +63,13 @@ export class AffiliateStep1Component implements OnInit, AfterViewInit {
 	currentUser: any;
 	modalAlertMessage: string;
 	public modalImage: string;
+
+	/*
+	 * "Confirm E-mail" fields shown next to an unverified owner / dispatch e-mail.
+	 * Kept outside addAffiliateAccountForm so they are never sent to the API.
+	 */
+	public confirmEmailControl = new FormControl('', this.confirmEmailValidator('Email', () => this.showConfirmEmail));
+	public confirmDispatchEmailControl = new FormControl('', this.confirmEmailValidator('dispatchEmail', () => this.showConfirmDispatchEmail));
 	public notify_sms: boolean;
 	public notify_email: boolean;
 	badgeOptions: string[] = [];
@@ -176,8 +183,7 @@ export class AffiliateStep1Component implements OnInit, AfterViewInit {
 								this.affiliateEmailButton = "edit";
 								this.affiliateEmailReadonly = true;
 							} else {
-								this.affiliateEmailButton =
-									"resend_verification";
+								this.affiliateEmailButton = "confirm";
 								this.affiliateEmailReadonly = false;
 							}
 
@@ -186,8 +192,7 @@ export class AffiliateStep1Component implements OnInit, AfterViewInit {
 								this.dispatchEmailButton = "edit";
 								this.dispatchEmailReadonly = true;
 							} else {
-								this.dispatchEmailButton =
-									"resend_verification";
+								this.dispatchEmailButton = "confirm";
 								this.dispatchEmailReadonly = false;
 							}
 
@@ -468,73 +473,31 @@ export class AffiliateStep1Component implements OnInit, AfterViewInit {
 		}
 	}
 
-	// affiliateEmailButtonClick(action)
-	// {
-	// 	if (action === "edit")
-	// 	{
-	// 		$("#emailText").addClass("emailText");
-	// 		this.affiliateEmailReadonly = false;
-	// 		this.affiliateEmailStatus = "in-process";
-	// 		this.affiliateEmailButton = "update";
-	// 	} else if (action == "save")
-	// 	{
-	// 		if (
-	// 			this.addAffiliateAccountForm.value.Email ===
-	// 			this.updatedAffiliateEmail
-	// 		)
-	// 		{
-	// 			this.displayMsg =
-	// 				"New entered Email is similar to previous one.";
-	// 		} else
-	// 		{
-	// 			this.displayMsg = "";
-	// 			this.affiliateEmailButton = "edit";
-	// 			this.affiliateEmailReadonly = true;
-	// 			this.affiliateEmailProgressBar = true; //show progressbar
-	// 			this.affiliateService
-	// 				.editAffiliateEmail(
-	// 					this.addAffiliateAccountForm.value.Email
-	// 				)
-	// 				.pipe(
-	// 					catchError((err) =>
-	// 					{
-	// 						this.affiliateEmailProgressBar = false; //hide progressbar
-	// 						return throwError(err);
-	// 					})
-	// 				)
-	// 				.subscribe(({ data }: any) =>
-	// 				{
-	// 					this.affiliateEmailProgressBar = false; //hide progressbar
-	// 					this.snackbarMsg = "OTP sent Successfully";
-	// 					this.openSnackbar();
-	// 				});
-	// 		}
-	// 		$("#editAffiliateEmailModal").modal("show");
-	// 	} else
-	// 	{
-	// 		this.disableAffiliateEmailResendButton = true;
-	// 		this.stateManagementService.setprogressBar(true);
-	// 		this.affiliateService
-	// 			.resendAffiliateEmailVerification(
-	// 				this.addAffiliateAccountForm.value.Email
-	// 			)
-	// 			.pipe(
-	// 				catchError((err) =>
-	// 				{
-	// 					this.disableAffiliateEmailResendButton = false;
-	// 					this.stateManagementService.setprogressBar(false);
-	// 					return throwError(err);
-	// 				})
-	// 			)
-	// 			.subscribe(({ data }: any) =>
-	// 			{
-	// 				this.disableAffiliateEmailResendButton = false;
-	// 				this.stateManagementService.setprogressBar(false);
-	// 				this.snackbarMsg = "Email Verification Sent.";
-	// 				this.openSnackbar();
-	// 			});
-	// 	}
-	// }
+	/** Confirm field sits next to the owner e-mail while it is unverified. */
+	get showConfirmEmail(): boolean {
+		return !!this.affiliateId && this.affiliateEmailButton === 'confirm';
+	}
+
+	/** Same for the dispatch e-mail, which only applies with company information. */
+	get showConfirmDispatchEmail(): boolean {
+		return !!this.affiliateId && this.dispatchEmailButton === 'confirm' && this.showCompanyInformation;
+	}
+
+	/** Required + must match the given e-mail control, but only while the field is shown. */
+	private confirmEmailValidator(source: 'Email' | 'dispatchEmail', visible: () => boolean): ValidatorFn {
+		return (control: AbstractControl) => {
+			if (!visible()) {
+				return null;
+			}
+			const confirm = (control.value || '').trim().toLowerCase();
+			if (!confirm) {
+				return { required: true };
+			}
+			const original = (this.addAffiliateAccountForm?.get(source)?.value || '').trim().toLowerCase();
+			return confirm === original ? null : { mismatch: true };
+		};
+	}
+
 	handleBadgeCity(value: any) {
 		console.log(value, this.filteredOptions)
 		this.filteredOptions = this.badgeOptions.filter((i: any) => i.name.toLowerCase().startsWith(value.toLowerCase()))
@@ -900,8 +863,16 @@ export class AffiliateStep1Component implements OnInit, AfterViewInit {
 		console.log('submit button hited', this.addAffiliateAccountForm);
 		// console.log(JSON.stringify(this.addVehicleRatesForm.value));
 		this.submittedForm = true;
+		// Re-check the confirm fields against the current e-mail values
+		this.confirmEmailControl.updateValueAndValidity();
+		this.confirmDispatchEmailControl.updateValueAndValidity();
+
 		// stop here if form is invalid
-		if (this.addAffiliateAccountForm.invalid) {
+		if (
+			this.addAffiliateAccountForm.invalid ||
+			this.confirmEmailControl.invalid ||
+			this.confirmDispatchEmailControl.invalid
+		) {
 			return;
 		}
 

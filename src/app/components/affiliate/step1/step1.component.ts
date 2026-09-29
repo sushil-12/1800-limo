@@ -4,7 +4,7 @@ import { AuthService } from "../../../services/auth.service";
 import { AffiliateService } from "../../../services/affiliate.service";
 import { AffiliateAiService } from "../../../services/affiliate-ai.service";
 import { StateManagementService } from "../../../services/statemanagement.service";
-import { FormGroup, FormBuilder, Validators, FormArray, FormControl } from "@angular/forms";
+import { FormGroup, FormBuilder, Validators, FormArray, FormControl, AbstractControl, ValidatorFn } from "@angular/forms";
 import { Router } from "@angular/router";
 import { NgxSpinnerService } from "ngx-spinner";
 import { catchError } from "rxjs/operators";
@@ -138,22 +138,23 @@ export class Step1Component implements OnInit, AfterViewInit {
 	public affiliateEmailButton: string;
 	public dispatchEmailButton: string;
 	public snackbarMsg: string;
-	public disableAffiliateEmailResendButton: boolean;
-	public disableDispatchEmailResendButton: boolean;
 	public affiliateInstructionHeading: string;
 	public affiliateInstruction: string;
 	public modalAlertMessage: string;
 	public selectedAffiliate: string;
 	public modalImage: string;
-	/** Address shown in the "check your inbox" popup. */
-	public verificationEmailSent: string;
-	/** Addresses we have already popped the verification notice for. */
-	private announcedVerificationEmails: Array<string> = [];
 	public startBusinessYears: Array<Object>;
 	public filterGender: Array<Object>;
 	errorMsg2: boolean;
 	public filteredGender: Array<any>;
 	public isBadgeCity: boolean = false;
+
+	/*
+	 * "Confirm E-mail" fields shown next to an unverified owner / dispatch e-mail.
+	 * Kept outside addAffiliateAccountForm so they are never sent to the API.
+	 */
+	public confirmEmailControl = new FormControl("", this.confirmEmailValidator("Email", () => this.showConfirmEmail));
+	public confirmDispatchEmailControl = new FormControl("", this.confirmEmailValidator("dispatchEmail", () => this.showConfirmDispatchEmail));
 
 
 
@@ -290,19 +291,18 @@ export class Step1Component implements OnInit, AfterViewInit {
 							// 	.catch((err) => {
 							// 		throw err; // Re-throwing the error if needed
 							// 	});
-							//Show edit/resend button on affiliate email field
+							//Show edit button / confirm field on affiliate email field
 							this.updatedAffiliateEmail = data.Email;
 							this.affiliateEmailStatus = data.is_email_verified;
 							if (this.affiliateEmailStatus == "yes") {
 								this.affiliateEmailButton = "edit";
 								this.affiliateEmailReadonly = true;
 							} else {
-								this.affiliateEmailButton =
-									"resend_verification";
+								this.affiliateEmailButton = "confirm";
 								this.affiliateEmailReadonly = false;
 							}
 
-							//Show edit/resend button on dispatch email field
+							//Show edit button / confirm field on dispatch email field
 							this.updatedDispatchEmail = data.dispatchEmail;
 							this.dispatchEmailStatus =
 								data.dispatch_is_email_verified;
@@ -310,8 +310,7 @@ export class Step1Component implements OnInit, AfterViewInit {
 								this.dispatchEmailButton = "edit";
 								this.dispatchEmailReadonly = true;
 							} else {
-								this.dispatchEmailButton =
-									"resend_verification";
+								this.dispatchEmailButton = "confirm";
 								this.dispatchEmailReadonly = false;
 							}
 
@@ -800,6 +799,31 @@ export class Step1Component implements OnInit, AfterViewInit {
 		return this.affiliateTypeChosen && this.showCompanyInformation;
 	}
 
+	/** Confirm field sits next to the owner e-mail while it is unverified. */
+	get showConfirmEmail(): boolean {
+		return !!this.affiliateId && this.affiliateEmailButton === "confirm";
+	}
+
+	/** Same for the dispatch e-mail, which only exists with the company section. */
+	get showConfirmDispatchEmail(): boolean {
+		return !!this.affiliateId && this.dispatchEmailButton === "confirm" && this.showCompanySection;
+	}
+
+	/** Required + must match the given e-mail control, but only while the field is shown. */
+	private confirmEmailValidator(source: "Email" | "dispatchEmail", visible: () => boolean): ValidatorFn {
+		return (control: AbstractControl) => {
+			if (!visible()) {
+				return null;
+			}
+			const confirm = (control.value || "").trim().toLowerCase();
+			if (!confirm) {
+				return { required: true };
+			}
+			const original = (this.addAffiliateAccountForm?.get(source)?.value || "").trim().toLowerCase();
+			return confirm === original ? null : { mismatch: true };
+		};
+	}
+
 	closeButton() {
 		this.closeTab.emit();
 	}
@@ -1249,26 +1273,6 @@ export class Step1Component implements OnInit, AfterViewInit {
 					});
 			}
 			$("#editAffiliateEmailModal").modal("show");
-		} else {
-			this.disableAffiliateEmailResendButton = true;
-			this.stateManagementService.setprogressBar(true);
-			this.affiliateService
-				.resendAffiliateEmailVerification(
-					this.addAffiliateAccountForm.value.Email
-				)
-				.pipe(
-					catchError((err) => {
-						this.disableAffiliateEmailResendButton = false;
-						this.stateManagementService.setprogressBar(false);
-						return throwError(err);
-					})
-				)
-				.subscribe(({ data }: any) => {
-					this.disableAffiliateEmailResendButton = false;
-					this.stateManagementService.setprogressBar(false);
-					this.snackbarMsg = "Email Verification Sent.";
-					this.openSnackbar();
-				});
 		}
 	}
 	get fAffiliateEmail() {
@@ -1342,26 +1346,6 @@ export class Step1Component implements OnInit, AfterViewInit {
 					});
 			}
 			$("#editDispatchEmailModal").modal("show");
-		} else {
-			this.disableDispatchEmailResendButton = true;
-			this.stateManagementService.setprogressBar(true);
-			this.affiliateService
-				.resendDispatchEmailVerification(
-					this.addAffiliateAccountForm.value.dispatchEmail
-				)
-				.pipe(
-					catchError((err) => {
-						this.disableDispatchEmailResendButton = false;
-						this.stateManagementService.setprogressBar(false);
-						return throwError(err);
-					})
-				)
-				.subscribe(({ data }: any) => {
-					this.disableDispatchEmailResendButton = false;
-					this.stateManagementService.setprogressBar(false);
-					this.snackbarMsg = "Email Verification Sent.";
-					this.openSnackbar();
-				});
 		}
 	}
 	get fDispatchEmail() {
@@ -1680,8 +1664,16 @@ export class Step1Component implements OnInit, AfterViewInit {
 				});
 			}
 		}
+		// Re-check the confirm fields against the current e-mail values
+		this.confirmEmailControl.updateValueAndValidity();
+		this.confirmDispatchEmailControl.updateValueAndValidity();
+
 		// stop here if form is invalid
-		if (this.addAffiliateAccountForm.invalid) {
+		if (
+			this.addAffiliateAccountForm.invalid ||
+			this.confirmEmailControl.invalid ||
+			this.confirmDispatchEmailControl.invalid
+		) {
 			return;
 		}
 
@@ -1763,43 +1755,6 @@ export class Step1Component implements OnInit, AfterViewInit {
 		}
 	}
 
-	/**
-	 * Fired when the owner / dispatch e-mail field loses focus. The first time a
-	 * valid address is entered we tell the user a verification link is on its way,
-	 * so the "not verified yet" line under the field makes sense to them.
-	 */
-	onEmailEntered(controlName: "Email" | "dispatchEmail") {
-		const control = this.addAffiliateAccountForm.get(controlName);
-		if (!control || control.invalid) {
-			return;
-		}
-
-		const email = (control.value || "").trim();
-		//already-verified addresses go through the OTP flow instead, nothing to announce
-		const status =
-			controlName === "Email"
-				? this.affiliateEmailStatus
-				: this.dispatchEmailStatus;
-		if (!email || status === "yes") {
-			return;
-		}
-
-		//one announcement per address, so tabbing back through the form stays quiet
-		if (this.announcedVerificationEmails.indexOf(email.toLowerCase()) > -1) {
-			return;
-		}
-		this.announcedVerificationEmails.push(email.toLowerCase());
-
-		this.verificationEmailSent = email;
-		// $("#emailVerificationSentModal").modal("show");
-	}
-
-	/**
-	 * "Got it" on the e-mail verification popup.
-	 */
-	closeEmailVerificationSentModal() {
-		$("#emailVerificationSentModal").modal("hide");
-	}
 	fetchImageBlob(url, key, id) {
 		this.stateManagementService.setprogressBar(true);
 

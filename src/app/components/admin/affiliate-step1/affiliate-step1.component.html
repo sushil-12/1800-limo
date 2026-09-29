@@ -251,27 +251,9 @@
 						<input [class.errorColor]="
 									affiliateEmailStatus == 'no'
 								" matInput placeholder="E-mail" formControlName="Email" [readonly]="affiliateEmailReadonly" tabIndex="1"
-							id="email_verified" (focus)="$event.target.select()" />
-						<svg *ngIf="affiliateEmailStatus == 'yes'" xmlns="http://www.w3.org/2000/svg"
-							class="email-verified" viewBox="0 0 48 48">
-							<path fill="none" d="M0 0h48v48h-48z" />
-							<path
-								d="M24 2l-18 8v12c0 11.11 7.67 21.47 18 24 10.33-2.53 18-12.89 18-24v-12l-18-8zm-4 32l-8-8 2.83-2.83 5.17 5.17 13.17-13.17 2.83 2.83-16 16z" />
-						</svg>
-						<svg *ngIf="affiliateEmailStatus == 'no'" xmlns="http://www.w3.org/2000/svg"
-							class="email-not-verified" viewBox="0 0 32 32">
-							<g data-name="26 - error">
-								<polygon points="16 24 16.5 24 16 23.999 16 24" />
-								<path
-									d="M29.658,25.354,18.871,3.774a3.21,3.21,0,0,0-5.742,0L2.342,25.354A3.209,3.209,0,0,0,5.212,30H26.788a3.209,3.209,0,0,0,2.87-4.646ZM16,25a1,1,0,1,1,1-1A1,1,0,0,1,16,25Zm1-5a1,1,0,0,1-2,0V12a1,1,0,0,1,2,0Z" />
-							</g>
-						</svg>
+							id="email_verified" (focus)="$event.target.select()"
+							(blur)="confirmEmailControl.updateValueAndValidity()" />
 					</mat-form-field>
-					<!-- <div *ngIf="affiliateEmailStatus == 'no'"class="text-danger margin-bottom-thin my-mat-hint">
-							<div>
-								Please verify email
-							</div>
-						</div> -->
 					<div *ngIf="
 								(submittedForm && f.Email.errors) ||
 								(f.Email.touched && f.Email.errors)
@@ -286,45 +268,26 @@
 						</div>
 					</div>
 				</div>
-				<!-- start -->
-				<!-- <div class="col-md-6">
-						<button *ngIf="affiliateEmailButton == 'edit'" type="button" class="edit-email"
-							(click)="affiliateEmailButtonClick('edit')" tabIndex="1">
-							<svg xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 5px"
-								enable-background="new 0 0 32 32" viewBox="0 0 32 32">
-								<path
-									d="M12.82373,12.95898l-1.86279,6.21191c-0.1582,0.52832-0.01367,1.10156,0.37646,1.49121c0.28516,0.28516,0.66846,0.43945,1.06055,0.43945c0.14404,0,0.28906-0.02051,0.43066-0.06348l6.2124-1.8623c0.23779-0.07129,0.45459-0.2002,0.62988-0.37598L31.06055,7.41016C31.3418,7.12891,31.5,6.74707,31.5,6.34961s-0.1582-0.7793-0.43945-1.06055l-4.3501-4.34961c-0.58594-0.58594-1.53516-0.58594-2.12109,0L13.2002,12.3291C13.02441,12.50488,12.89551,12.7207,12.82373,12.95898z M15.58887,14.18262L25.6499,4.12109l2.22852,2.22852L17.81738,16.41113l-3.18262,0.9541L15.58887,14.18262z" />
-								<path
-									d="M30,14.5c-0.82861,0-1.5,0.67188-1.5,1.5v10c0,1.37891-1.12158,2.5-2.5,2.5H6c-1.37842,0-2.5-1.12109-2.5-2.5V6c0-1.37891,1.12158-2.5,2.5-2.5h10c0.82861,0,1.5-0.67188,1.5-1.5S16.82861,0.5,16,0.5H6C2.96729,0.5,0.5,2.96777,0.5,6v20c0,3.03223,2.46729,5.5,5.5,5.5h20c3.03271,0,5.5-2.46777,5.5-5.5V16C31.5,15.17188,30.82861,14.5,30,14.5z" />
-							</svg>
-							Change Email
-						</button>
-						<button *ngIf="affiliateEmailButton == 'update'" type="button" class="edit-email"
-							(click)="affiliateEmailButtonClick('save')" tabIndex="-1">
-							<svg xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 5px"
-								enable-background="new 0 0 48 48" viewBox="0 0 48 48">
-								<path
-									d="M24,2.5C12.14,2.5,2.5,12.14,2.5,24S12.14,45.5,24,45.5S45.5,35.86,45.5,24S35.86,2.5,24,2.5z M24,42.5C13.8,42.5,5.5,34.2,5.5,24S13.8,5.5,24,5.5S42.5,13.8,42.5,24S34.2,42.5,24,42.5z" />
-								<path
-									d="M25.12,13c-0.05-0.05-0.1-0.1-0.16-0.14c-0.02-0.01-0.03-0.03-0.05-0.05c-0.11-0.08-0.22-0.15-0.35-0.2c-0.01-0.01-0.02-0.02-0.04-0.02c-0.02-0.01-0.03,0-0.05-0.01c-0.26-0.09-0.54-0.11-0.81-0.05c-0.02,0-0.04,0.01-0.06,0.01c-0.13,0.03-0.26,0.08-0.38,0.16c-0.01,0-0.01,0.01-0.02,0.01c-0.07,0.05-0.15,0.1-0.21,0.15c-0.03,0.03-0.05,0.06-0.08,0.09c-0.01,0.01-0.03,0.02-0.04,0.03l-8,9c-0.55,0.62-0.49,1.57,0.13,2.12c0.62,0.55,1.57,0.5,2.12-0.13l5.38-6.05V35c0,0.83,0.67,1.5,1.5,1.5s1.5-0.67,1.5-1.5V17.94L30.88,24c0.3,0.33,0.71,0.5,1.12,0.5c0.35,0,0.71-0.13,1-0.38c0.62-0.55,0.68-1.5,0.13-2.12L25.12,13z" />
-							</svg>
-							Update
-						</button>
-						<button *ngIf="
-								affiliateEmailButton == 'resend_verification'
-							" type="button" class="edit-email" (click)="affiliateEmailButtonClick('resend')"
-							[disabled]="disableAffiliateEmailResendButton" tabIndex="1">
-							<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 100 100"
-								viewBox="0 0 100 100">
-								<path
-									d="M85,31c-0.5,0-1-0.2-1.4-0.6c-0.8-0.8-0.8-2,0-2.8l2.6-2.6H61c-1.1,0-2,0.9-2,2v6h-4v-6c0-3.3,2.7-6,6-6h25.2l-2.6-2.6	c-0.8-0.8-0.8-2,0-2.8c0.8-0.8,2-0.8,2.8,0l6,6c0.8,0.8,0.8,2,0,2.8l-6,6C86,30.8,85.5,31,85,31z M91,33c-1.1,0-2,0.9-2,2v6c0,1.1-0.9,2-2,2h-2v4h2c3.3,0,6-2.7,6-6v-6C93,33.9,92.1,33,91,33z M7.2,39.8C7.1,40.2,7,40.6,7,41v40c0,0.4,0.1,0.8,0.2,1.2L31.7,61L7.2,39.8z M56.3,61l24.5,21.2c0.1-0.4,0.2-0.8,0.2-1.2V47h-8.5L56.3,61z M37.8,61l4.9,4.2c0.8,0.7,1.9,0.7,2.6,0l4.9-4.2l1.8-1.5L66.4,47H61c-3.3,0-6-2.7-6-6v-4H11c-0.3,0-0.6,0-0.8,0.1l25.9,22.4L37.8,61z M47.9,68.2c-1.1,1-2.5,1.5-3.9,1.5s-2.8-0.5-3.9-1.5l-5.3-4.6L10.2,84.9C10.4,85,10.7,85,11,85h66c0.3,0,0.6,0,0.8-0.1L53.2,63.6L47.9,68.2z M77,37H59v4c0,1.1,0.9,2,2,2h20v-2C81,38.8,79.2,37,77,37z"
-									fill="#e8833a" class="color000 svgShape"></path>
-							</svg>
-							Resend Verification
-						</button>
-					</div> -->
-
-				<!-- end -->
+				<div class="col-md-6" *ngIf="showConfirmEmail">
+					<mat-form-field appearance="outline">
+						<mat-label>Confirm Affiliate E-mail
+							<span class="asterisk">*</span>
+						</mat-label>
+						<input matInput placeholder="Confirm Affiliate E-mail" [formControl]="confirmEmailControl" tabIndex="1"
+							autocomplete="off" (paste)="$event.preventDefault()" />
+					</mat-form-field>
+					<div *ngIf="
+								(submittedForm && confirmEmailControl.errors) ||
+								(confirmEmailControl.touched && confirmEmailControl.errors)
+							" class="text-danger margin-bottom-thin my-mat-hint">
+						<div *ngIf="confirmEmailControl.errors.required">
+							This field is required
+						</div>
+						<div *ngIf="confirmEmailControl.errors.mismatch">
+							E-mails do not match
+						</div>
+					</div>
+				</div>
 				<!-- <div class="col-md-6">
 						<mat-form-field appearance="outline">
 							<mat-label>First Year Professional Driver (Example: 1998) <span class="asterisk">*</span>
@@ -432,33 +395,40 @@
 						<input [class.errorColor]="
 							dispatchEmailStatus == 'no'
 								" matInput placeholder="24 Hr Dispatch E-mail" formControlName="dispatchEmail"
-							[readonly]="dispatchEmailReadonly" tabIndex="1" (focus)="$event.target.select()" />
-						<svg *ngIf="dispatchEmailStatus == 'yes'" xmlns="http://www.w3.org/2000/svg"
-							class="email-verified" viewBox="0 0 48 48">
-							<path fill="none" d="M0 0h48v48h-48z" />
-							<path
-								d="M24 2l-18 8v12c0 11.11 7.67 21.47 18 24 10.33-2.53 18-12.89 18-24v-12l-18-8zm-4 32l-8-8 2.83-2.83 5.17 5.17 13.17-13.17 2.83 2.83-16 16z" />
-						</svg>
-						<svg *ngIf="dispatchEmailStatus == 'no'" xmlns="http://www.w3.org/2000/svg"
-							class="email-not-verified" viewBox="0 0 32 32">
-							<g data-name="26 - error">
-								<polygon points="16 24 16.5 24 16 23.999 16 24" />
-								<path
-									d="M29.658,25.354,18.871,3.774a3.21,3.21,0,0,0-5.742,0L2.342,25.354A3.209,3.209,0,0,0,5.212,30H26.788a3.209,3.209,0,0,0,2.87-4.646ZM16,25a1,1,0,1,1,1-1A1,1,0,0,1,16,25Zm1-5a1,1,0,0,1-2,0V12a1,1,0,0,1,2,0Z" />
-							</g>
-						</svg>
+							[readonly]="dispatchEmailReadonly" tabIndex="1" (focus)="$event.target.select()"
+							(blur)="confirmDispatchEmailControl.updateValueAndValidity()" />
 					</mat-form-field>
 					<div *ngIf="
-								(submittedForm && f.Email.errors) ||
-								(f.Email.touched && f.Email.errors)
+								(submittedForm && f.dispatchEmail.errors) ||
+								(f.dispatchEmail.touched && f.dispatchEmail.errors)
 							" class="text-danger margin-bottom-thin my-mat-hint">
-						<div *ngIf="f.Email.errors.required">
+						<div *ngIf="f.dispatchEmail.errors.required">
 							This field is required
 						</div>
 					</div>
 					<div *ngIf="f.dispatchEmail.errors" class="text-danger margin-bottom-thin my-mat-hint">
 						<div *ngIf="f.dispatchEmail.errors?.pattern">
 							Email format should be valid
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6" *ngIf="showConfirmDispatchEmail">
+					<mat-form-field appearance="outline">
+						<mat-label>Confirm 24 Hr Dispatch E-mail
+							<span class="asterisk">*</span>
+						</mat-label>
+						<input matInput placeholder="Confirm 24 Hr Dispatch E-mail" [formControl]="confirmDispatchEmailControl" tabIndex="1"
+							autocomplete="off" (paste)="$event.preventDefault()" />
+					</mat-form-field>
+					<div *ngIf="
+								(submittedForm && confirmDispatchEmailControl.errors) ||
+								(confirmDispatchEmailControl.touched && confirmDispatchEmailControl.errors)
+							" class="text-danger margin-bottom-thin my-mat-hint">
+						<div *ngIf="confirmDispatchEmailControl.errors.required">
+							This field is required
+						</div>
+						<div *ngIf="confirmDispatchEmailControl.errors.mismatch">
+							E-mails do not match
 						</div>
 					</div>
 				</div>

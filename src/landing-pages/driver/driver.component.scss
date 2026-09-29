@@ -435,36 +435,50 @@ $brand-orange: #f3933d;
 	}
 }
 
-// Keeps both badges on one line at any width: they share the row equally and their
-// contents scale with the row's width (cqi), capped at the regular badge size.
-// Size containment means the row can't size itself from its badges, so inside a
-// shrink-to-fit parent give it an explicit width (see the closing CTA).
+// Keeps both badges on one line at any width: they share the row equally. Badge contents
+// are sized in em from one size per screen width (not per row), so the hero, the Driver
+// App card and the closing CTA show identical badges on the same device.
+// Phones: the size scales with the viewport so the narrowest row (closing CTA, which has
+// the most padding) still fits both badges.
 .tw-scope .store-badges {
+	--badge-size: clamp(0.625rem, 5vw - 5.6px, 1.25rem);
+
 	display: flex;
-	gap: clamp(0.625rem, 3cqi, 1rem);
+	gap: 0.625rem;
 	width: 100%;
 	max-width: 30rem;
-	container-type: inline-size;
+
+	@media (min-width: 441px) {
+		--badge-size: clamp(0.625rem, 5vw - 8.1px, 1.25rem);
+	}
+	@media (min-width: 640px) {
+		--badge-size: 1.0625rem;
+		gap: 1rem;
+	}
+	@media (min-width: 1200px) {
+		--badge-size: 1.3rem;
+	}
 
 	.store-badge {
 		flex: 1 1 0;
-		gap: clamp(0.4rem, 2.5cqi, 0.8rem);
+		gap: 0.5em;
 		min-width: 0;
 		max-width: 14.5rem;
-		padding: 0 clamp(0.5rem, 3.5cqi, 1.5rem);
+		padding: 0 0.6em;
+		font-size: var(--badge-size);
 	}
 
 	.store-badge__icon {
-		width: clamp(1.125rem, 6cqi, 2rem);
-		height: clamp(1.125rem, 6cqi, 2rem);
+		width: 1.4em;
+		height: 1.4em;
 	}
 
 	.store-badge__small {
-		font-size: clamp(0.5rem, 2.3cqi, 0.6875rem);
+		font-size: 0.5em;
 	}
 
 	.store-badge__big {
-		font-size: clamp(0.625rem, 4.6cqi, 1.4rem);
+		font-size: 1em;
 	}
 }
 

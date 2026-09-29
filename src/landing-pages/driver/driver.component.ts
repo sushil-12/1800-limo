@@ -1,6 +1,9 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
-import { NgClass, NgFor, NgIf } from '@angular/common';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { NgClass, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { AuthService } from 'src/app/services/auth.service';
 
 interface Benefit {
   title: string;
@@ -41,6 +44,58 @@ interface ShowcaseScreen {
   callouts: ShowcaseCallout[];
 }
 
+interface PlatformChannel {
+  eyebrow: string;
+  title: string;
+  description: string;
+  points: string[];
+}
+
+/** A subscription product from `get-subscription-products`, trimmed for the pricing cards. */
+interface PlanCard {
+  id: number;
+  name: string;
+  price: number;
+  tagline: string;
+  features: { title: string; description: string }[];
+  /** The API object as-is: partner registration and payment read it from sessionStorage. */
+  raw: any;
+}
+
+interface HeroSlide {
+  image: string;
+  /** ~1200px wide copy for phones. */
+  imageSmall: string;
+  label: string;
+  /** CSS object-position that keeps the subject in frame when the card crops the photo. */
+  focus: string;
+}
+
+interface HeroStat {
+  value: string;
+  label: string;
+}
+
+/** Shown when a signed-in affiliate has more vehicles than the chosen plan covers. */
+interface PlanNotice {
+  message: string;
+  /** Plan to subscribe to if the affiliate accepts the extra-vehicle charge. */
+  proceedWith?: PlanCard;
+}
+
+/** Features listed per card before "Show all". */
+const PLAN_FEATURE_LIMIT = 5;
+
+/** Time each hero photo stays up; the zoom in the stylesheet runs a little longer so it never stalls. */
+const HERO_SLIDE_MS = 6500;
+/** Slides after the first wait this long so they don't compete with it for bandwidth. */
+const HERO_PRELOAD_DELAY = 1500;
+
+// Plan ids from get-subscription-products.
+const FREE_PLAN_ID = 1;
+const BASIC_PLAN_ID = 2;
+const FLEET_PLAN_ID = 3;
+
 const ICON_TONE = {
   purple: 'tw-bg-[#EFEDFE] tw-text-[#635BFF]',
   orange: 'tw-bg-[#FFF1E6] tw-text-[#F08A2C]',
@@ -59,15 +114,68 @@ const HIDE_DURATION = 450;
 @Component({
   selector: 'app-driver',
   standalone: true,
-  imports: [NgIf, NgFor, NgClass, FormsModule],
+  imports: [NgIf, NgFor, NgClass, NgTemplateOutlet, FormsModule, RouterLink],
   templateUrl: './driver.component.html',
   styleUrl: './driver.component.scss'
 })
-export class DriverComponent implements AfterViewInit, OnDestroy {
+export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('showcase') private showcaseRef?: ElementRef<HTMLElement>;
+
+  readonly heroSlides: HeroSlide[] = [
+    { image: 'assets/images/driver-landing/hero-booking.webp', imageSmall: 'assets/images/driver-landing/hero-booking-sm.webp', label: 'New booking, your rate', focus: '72% center' },
+    { image: 'assets/images/driver-landing/hero-airport.webp', imageSmall: 'assets/images/driver-landing/hero-airport-sm.webp', label: 'Airport meet & greet', focus: '78% center' },
+    { image: 'assets/images/driver-landing/hero-corporate.webp', imageSmall: 'assets/images/driver-landing/hero-corporate-sm.webp', label: 'Corporate travel', focus: '62% center' },
+    { image: 'assets/images/driver-landing/hero-events.webp', imageSmall: 'assets/images/driver-landing/hero-events-sm.webp', label: 'Weddings & events', focus: '82% center' },
+    { image: 'assets/images/driver-landing/hero-schedule.webp', imageSmall: 'assets/images/driver-landing/hero-schedule-sm.webp', label: 'On your schedule', focus: '78% center' }
+  ];
+
+  readonly heroStats: HeroStat[] = [
+    { value: '100%', label: 'of your rate and tips' },
+    { value: '900+', label: 'global affiliates' },
+    { value: '3 days', label: 'to get paid' },
+    { value: '24/7', label: 'dispatch & support' }
+  ];
+
+  activeHeroSlide = 0;
+  /** Renders the slides after the first once the first has had a head start. */
+  heroSlidesReady = false;
+  /** Hovering the hero holds the current photo. */
+  pauseHero = false;
+  private heroTimer?: ReturnType<typeof setInterval>;
 
   readonly playStoreUrl = 'https://play.google.com/store/apps/details?id=com.limo1800driver.app';
   readonly appStoreUrl = 'https://apps.apple.com/app/1800limo-chauffeur/id6748669445';
+
+  readonly channels: PlatformChannel[] = [
+    {
+      eyebrow: 'Driver App',
+      title: 'Drive and get paid from your phone',
+      description: 'For chauffeurs and gig drivers on the road. Everything you need between pickup and payout.',
+      points: [
+        'New booking alerts with full trip details',
+        'Turn-by-turn navigation and live ETA',
+        'Accept or reject rides in one tap',
+        'Direct deposit within 3 business days'
+      ]
+    },
+    {
+      eyebrow: 'Web Portal',
+      title: 'Run your limo business from any browser',
+      description: 'For owner-operators and fleets. Manage your own clients and take 1800-LIMO.COM bookings in one place.',
+      points: [
+        'Create and manage your own daily bookings',
+        'Add vehicles, drivers and your own rates',
+        'Farm in and farm out worldwide, earn 10% commission',
+        'Invoices, split payments and accounting reports'
+      ]
+    }
+  ];
+
+  plans: PlanCard[] = [];
+  plansFailed = false;
+  /** Plan ids whose full feature list is expanded. */
+  expandedPlans = new Set<number>();
+  planNotice: PlanNotice | null = null;
 
   readonly benefits: Benefit[] = [
     {
@@ -78,7 +186,7 @@ export class DriverComponent implements AfterViewInit, OnDestroy {
     },
     {
       title: 'Transparent Pay, Keep Your Tips',
-      description: 'Keep 100% of your tips. 1800-LIMO.COM adds a 25% platform premium - taxes, tolls, and expenses are paid directly to you by the client.',
+      description: 'You set your rate and keep 100% of your tips. Our 25% booking fee is added on top of your rate and paid by the client, and taxes, tolls, and expenses are paid to you by the client too.',
       image: 'assets/images/driver-landing/money.png',
       imageAlt: 'Money bag with stacks of cash and gold coins'
     },
@@ -136,6 +244,14 @@ export class DriverComponent implements AfterViewInit, OnDestroy {
     {
       question: 'When and how do I get paid?',
       answer: 'Earnings are deposited directly to your account within 3 business days from the date client funds are received. Tips are 100% yours. Taxes, tolls, and other expenses are collected directly from the client.'
+    },
+    {
+      question: 'Does 1800-LIMO.COM take a cut of my rate?',
+      answer: 'No. We quote your all-inclusive rate to the client and add our 25% booking fee on top of it. The client pays the fee, so you receive the full rate you set.'
+    },
+    {
+      question: 'Do I need a paid plan to drive?',
+      answer: 'No. Joining is free, and the Free plan lists your vehicles and drivers so you receive bookings from 1800-LIMO.COM. The Basic and Fleet Operator plans add our web software for running your own daily bookings, farm-ins and farm-outs.'
     },
     {
       question: 'Is this available outside the US?',
@@ -208,11 +324,37 @@ export class DriverComponent implements AfterViewInit, OnDestroy {
   mobile = '';
   error = '';
 
+  private plansSub?: Subscription;
+
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.plansSub = this.authService.getSubsPlans().subscribe({
+      next: (response: any) => {
+        this.plans = (response?.data ?? []).map((plan: any): PlanCard => ({
+          id: plan.id,
+          name: plan.product_name,
+          price: Number(plan.product_price) || 0,
+          tagline: (plan.product_text ?? '').trim(),
+          features: Object.entries<any>(plan.product_description?.features ?? {})
+            .map(([key, value]) => ({ title: this.featureLabel(key), description: value?.description ?? '' })),
+          raw: plan
+        }));
+        this.plansFailed = this.plans.length === 0;
+      },
+      error: () => (this.plansFailed = true)
+    });
+  }
+
   ngAfterViewInit(): void {
     const el = this.showcaseRef?.nativeElement;
     if (!el || typeof window === 'undefined') return;
 
     this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    this.startHero();
 
     if (!('IntersectionObserver' in window)) {
       setTimeout(() => this.onShowcaseVisible(true));
@@ -228,6 +370,102 @@ export class DriverComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.showcaseObserver?.disconnect();
     this.clearShowcaseTimers();
+    this.plansSub?.unsubscribe();
+    clearInterval(this.heroTimer);
+  }
+
+  showHeroSlide(index: number): void {
+    this.heroSlidesReady = true;
+    this.activeHeroSlide = index;
+    // Restart the interval so a picked photo gets its full time.
+    this.startHeroTimer();
+  }
+
+  private startHero(): void {
+    setTimeout(() => (this.heroSlidesReady = true), HERO_PRELOAD_DELAY);
+    // Reduced motion: the first photo stays; the dots still switch photos.
+    if (!this.reducedMotion) this.startHeroTimer();
+  }
+
+  private startHeroTimer(): void {
+    clearInterval(this.heroTimer);
+    if (this.reducedMotion) return;
+    this.heroTimer = setInterval(() => {
+      if (this.pauseHero || document.hidden) return;
+      this.activeHeroSlide = (this.activeHeroSlide + 1) % this.heroSlides.length;
+    }, HERO_SLIDE_MS);
+  }
+
+  readonly planFeatureLimit = PLAN_FEATURE_LIMIT;
+
+  visibleFeatures(plan: PlanCard): PlanCard['features'] {
+    return this.expandedPlans.has(plan.id) ? plan.features : plan.features.slice(0, PLAN_FEATURE_LIMIT);
+  }
+
+  toggleFeatures(plan: PlanCard): void {
+    if (!this.expandedPlans.delete(plan.id)) this.expandedPlans.add(plan.id);
+  }
+
+  /**
+   * Mirrors SubscriptionPlansComponent.submitPlan: free plan -> driver login; signed-in affiliates
+   * go to payment once their vehicle count fits the plan; everyone else registers as a partner.
+   */
+  choosePlan(plan: PlanCard): void {
+    if (plan.id === FREE_PLAN_ID) {
+      sessionStorage.setItem('clicked_login_role', 'driver');
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    if (!localStorage.getItem('currentUser')) {
+      this.startCheckout(plan, '/partner-registration');
+      return;
+    }
+
+    const vehicles = Number(localStorage.getItem('affiliateVehicles')) || 0;
+    if (plan.id === BASIC_PLAN_ID && vehicles > 1) {
+      this.planNotice = {
+        message: 'You currently have multiple vehicles associated with your account. To continue, please select the Fleet Operator plan or remove the additional vehicles from your account.'
+      };
+    } else if (plan.id === FLEET_PLAN_ID && vehicles > 2) {
+      this.planNotice = {
+        message: 'You currently have more than 2 vehicles associated with your account. A charge of $25 will apply for each additional vehicle. If you agree, please proceed. Otherwise, remove the extra vehicles from your account.',
+        proceedWith: plan
+      };
+    } else {
+      this.startCheckout(plan, '/payment-details');
+    }
+  }
+
+  proceedWithNotice(): void {
+    const plan = this.planNotice?.proceedWith;
+    this.planNotice = null;
+    if (plan) this.startCheckout(plan, '/payment-details');
+  }
+
+  openVehicleSettings(): void {
+    this.planNotice = null;
+    this.router.navigate(['/affiliate/step5']);
+  }
+
+  @HostListener('document:keydown.escape')
+  closePlanNotice(): void {
+    this.planNotice = null;
+  }
+
+  private startCheckout(plan: PlanCard, route: string): void {
+    sessionStorage.setItem('selectedPlan', JSON.stringify(plan.raw));
+    this.router.navigate([route]);
+  }
+
+  scrollToPlans(): void {
+    document.getElementById('plans')?.scrollIntoView({ behavior: this.reducedMotion ? 'auto' : 'smooth' });
+  }
+
+  /** `receive_farm-In_bookings_and_farm-Out` -> `Receive farm-in bookings and farm-out`. */
+  private featureLabel(key: string): string {
+    const text = key.replace(/_/g, ' ').toLowerCase().replace(/\bpc\b/g, 'PC');
+    return text.charAt(0).toUpperCase() + text.slice(1);
   }
 
   readonly trackByIndex = (index: number) => index;

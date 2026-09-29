@@ -1,0 +1,167 @@
+{
+  "$comment": "Single source of truth for the public, indexable website routes. Consumed by src/app/services/seo.service.ts (canonical + fallback title/description + robots) and by scripts/generate-sitemap.js (sitemap.xml). When you add a public route to app-routing.module.ts, add it here too, and add its top-level prefix to the SPA allowlist in src/.htaccess so it returns 200 instead of 404.",
+  "siteUrl": "https://www.1800limo.com",
+  "canonicalAliases": {
+    "/home": "/",
+    "/services": "/",
+    "/quotebot_section": "/"
+  },
+  "noindexPrefixes": [
+    "/admin",
+    "/admin-login",
+    "/sub-admin-login",
+    "/login",
+    "/otp",
+    "/affiliate",
+    "/sub_affiliate",
+    "/travel_agent",
+    "/sub_travel_agent",
+    "/individual",
+    "/quotebot",
+    "/email",
+    "/payment-by-email",
+    "/payment-details",
+    "/transaction-history",
+    "/live-ride-tracking",
+    "/public-invoice-summary",
+    "/states-test",
+    "/add-driver-details-from-invite",
+    "/passenger",
+    "/driver"
+  ],
+  "pages": [
+    {
+      "path": "/",
+      "title": "1800 Limo - Premium Chauffeur & Transportation Services",
+      "description": "1800 Limo offers premium chauffeur services, premium vehicle hire, and airport transfers worldwide. Book your ride today.",
+      "changefreq": "weekly",
+      "priority": 1.0
+    },
+    {
+      "path": "/fleet",
+      "title": "Our Fleet: Sedans, SUVs, Limos, Vans & Buses | 1-800-LIMO",
+      "description": "Compare luxury sedans, SUVs, stretch limousines, Sprinter vans and motor coaches with passenger capacity, luggage space and starting rates. Get an instant quote.",
+      "changefreq": "weekly",
+      "priority": 0.9
+    },
+    {
+      "path": "/countries",
+      "title": "Countries & Cities We Serve | 1-800-LIMO.COM",
+      "description": "1-800-LIMO.COM arranges licensed chauffeured cars in cities and airports across North America, Europe, the Middle East, Asia and beyond. See where we operate.",
+      "changefreq": "monthly",
+      "priority": 0.8
+    },
+    {
+      "path": "/about-us",
+      "title": "About Us | 1-800-LIMO.COM",
+      "description": "Three decades of excellence in premium transportation. Discover the story, values, and people behind 1-800-LIMO.COM's commitment to delivering unparalleled service.",
+      "changefreq": "monthly",
+      "priority": 0.7
+    },
+    {
+      "path": "/safety",
+      "title": "Passenger Safety & Chauffeur Standards | 1-800-LIMO.COM",
+      "description": "How 1-800-LIMO.COM keeps every ride safe: vetted, licensed and insured chauffeurs, inspected vehicles, live ride tracking and 24/7 dispatch support.",
+      "changefreq": "monthly",
+      "priority": 0.6
+    },
+    {
+      "path": "/customer-faq",
+      "title": "Customer FAQ | 1-800-LIMO.COM",
+      "description": "Find answers to frequently asked questions about booking, payments, fleet, and policies at 1-800-LIMO.COM.",
+      "changefreq": "monthly",
+      "priority": 0.7
+    },
+    {
+      "path": "/driver-faq",
+      "title": "Driver FAQ | 1-800-LIMO.COM",
+      "description": "Learn how to join 1-800-LIMO.COM as a driver. Find answers to requirements, application processes, earnings, and operations.",
+      "changefreq": "monthly",
+      "priority": 0.6
+    },
+    {
+      "path": "/group-travel-planner",
+      "title": "Group Travel Planner | 1-800-LIMO.COM",
+      "description": "Plan your group travel with 1-800-LIMO.COM. Find answers about motor coach rentals, group bookings, policy and fleet amenities.",
+      "changefreq": "monthly",
+      "priority": 0.7
+    },
+    {
+      "path": "/tutorials",
+      "title": "Tutorials & Guides | 1-800-LIMO.COM",
+      "description": "Watch our step-by-step video tutorials and guides to learn how to book rides, register as an affiliate, manage subscriptions, and use the 1-800-LIMO.COM platform.",
+      "changefreq": "monthly",
+      "priority": 0.5
+    },
+    {
+      "path": "/blog",
+      "title": "Blog: Chauffeur, Airport & Group Travel Tips | 1-800-LIMO",
+      "description": "Guides and news from 1-800-LIMO.COM on airport transfers, corporate travel, group and event transportation, and getting the most from your chauffeur.",
+      "changefreq": "weekly",
+      "priority": 0.7
+    },
+    {
+      "path": "/contact-us",
+      "title": "Contact Us | 1-800-LIMO.COM",
+      "description": "Get in touch with 1-800-LIMO.COM. Whether you need a ride today or have questions about our services, our team is ready to assist you 24/7.",
+      "changefreq": "monthly",
+      "priority": 0.7
+    },
+    {
+      "path": "/investors",
+      "title": "Investor Relations | 1-800-LIMO.COM",
+      "description": "Learn about 1-800-LIMO.COM's history, its digital chauffeur marketplace and the investment opportunity in premium ground transportation.",
+      "changefreq": "monthly",
+      "priority": 0.4
+    },
+    {
+      "path": "/insurance-licensing",
+      "title": "Insurance & Licensing | 1-800-LIMO.COM",
+      "description": "Operators on 1-800-LIMO.COM are licensed and commercially insured. Learn about the credentials we check before a chauffeur can accept your booking.",
+      "changefreq": "yearly",
+      "priority": 0.4
+    },
+    {
+      "path": "/cancellation-policy",
+      "title": "Cancellation Policy | 1-800-LIMO.COM",
+      "description": "Read the 1-800-LIMO.COM cancellation and no-show policy, including notice periods, refund rules and how to change or cancel a reservation.",
+      "changefreq": "yearly",
+      "priority": 0.4
+    },
+    {
+      "path": "/privacy-policy",
+      "title": "Privacy Policy | 1-800-LIMO.COM",
+      "description": "How 1-800-LIMO.COM collects, uses and protects your personal information when you book chauffeured transportation through our website and apps.",
+      "changefreq": "yearly",
+      "priority": 0.3
+    },
+    {
+      "path": "/client-terms-condition",
+      "title": "Client Terms & Conditions | 1-800-LIMO.COM",
+      "description": "Terms and conditions for passengers booking chauffeured transportation through 1-800-LIMO.COM, including payment, liability and service rules.",
+      "changefreq": "yearly",
+      "priority": 0.3
+    },
+    {
+      "path": "/delivery-membership-terms-condition",
+      "title": "Delivery Membership Terms | 1-800-LIMO.COM",
+      "description": "Terms and conditions for the 1-800-LIMO.COM delivery membership program.",
+      "changefreq": "yearly",
+      "priority": 0.3
+    },
+    {
+      "path": "/subscription",
+      "title": "Partner Subscription Plans | 1-800-LIMO.COM",
+      "description": "Subscription plans for limousine operators and chauffeurs who want to receive prearranged bookings through the 1-800-LIMO.COM marketplace.",
+      "changefreq": "monthly",
+      "priority": 0.5
+    },
+    {
+      "path": "/partner-registration",
+      "title": "Become a Partner Operator | 1-800-LIMO.COM",
+      "description": "Register your chauffeured transportation company or join as an independent driver on 1-800-LIMO.COM and start receiving prearranged bookings.",
+      "changefreq": "monthly",
+      "priority": 0.5
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+# Served in place of /robots.txt on every host that is NOT www.1800limo.com
+# (staging, QA, preview, bare IP...). See src/.htaccess.
+# These environments must never be indexed.
+
+User-agent: *
+Disallow: /

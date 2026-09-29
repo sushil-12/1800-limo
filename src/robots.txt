@@ -1,0 +1,32 @@
+# robots.txt for https://www.1800limo.com
+# Served as a static file (see angular.json assets + src/.htaccess).
+# Non-production hosts get src/robots-staging.txt instead.
+
+User-agent: *
+Allow: /
+
+# Logged-in / app / transactional areas - nothing to index here.
+Disallow: /admin
+Disallow: /admin-login
+Disallow: /sub-admin-login
+Disallow: /login
+Disallow: /otp
+Disallow: /affiliate/
+Disallow: /sub_affiliate/
+Disallow: /travel_agent/
+Disallow: /sub_travel_agent/
+Disallow: /individual/
+Disallow: /quotebot/
+Disallow: /email/
+Disallow: /payment-by-email/
+Disallow: /payment-details
+Disallow: /transaction-history
+Disallow: /live-ride-tracking/
+Disallow: /public-invoice-summary
+Disallow: /states-test
+Disallow: /add-driver-details-from-invite
+
+# Legacy ColdFusion URLs are 301/410'd by the server; no need to crawl them.
+Disallow: /*.cfm$
+
+Sitemap: https://www.1800limo.com/sitemap.xml

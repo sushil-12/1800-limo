@@ -6,53 +6,72 @@
 -->
 <div class="tw-scope tw-bg-white tw-font-poppins tw-text-black tw-antialiased">
 
-	<!-- Hero -->
-	<div class="tw-mx-auto tw-w-full tw-max-w-7xl tw-px-4 tw-pt-12 sm:tw-px-6 sm:tw-pt-10 md:tw-px-10 lg:tw-px-10 lg:tw-pt-12">
-		<!-- Text left, image right from xl; image drops below the buttons on smaller screens -->
-		<div class="xl:tw-grid xl:tw-grid-cols-2 xl:tw-items-center xl:tw-gap-12">
-		<div class="tw-max-w-4xl">
-			<h1 class="tw-m-0 tw-font-poppins tw-text-[2rem] tw-font-bold tw-leading-[1.15] tw-tracking-[-0.01em] tw-text-black tw-text-balance min-[400px]:tw-text-4xl sm:tw-text-5xl md:tw-text-6xl lg:tw-text-[3.25rem]">
-				Drive On Your Terms.
-				<br class="tw-hidden min-[400px]:tw-inline">
-				Get Booked. Get Paid.
-			</h1>
+	<!-- Hero: full-bleed photo slider in a card shaped like the site header (same margins and radius) -->
+	<div class="lp-hero" (mouseenter)="pauseHero = true" (mouseleave)="pauseHero = false">
+		<div class="lp-hero__slides" aria-hidden="true">
+			<ng-container *ngFor="let slide of heroSlides; let i = index">
+				<img *ngIf="i === 0 || heroSlidesReady"
+					class="lp-hero__slide" [class.is-active]="i === activeHeroSlide"
+					[src]="slide.image" [attr.srcset]="slide.image + ' 2048w, ' + slide.imageSmall + ' 1200w'"
+					sizes="100vw" alt="" width="2048" height="1152" decoding="async"
+					[attr.fetchpriority]="i === 0 ? 'high' : null"
+					[style.object-position]="slide.focus">
+			</ng-container>
+		</div>
+		<div class="lp-hero__shade" aria-hidden="true"></div>
 
-			<p class="tw-mb-0 tw-mt-6 tw-max-w-[567px] tw-font-poppins tw-text-base tw-leading-normal tw-text-[#9E9DA2] sm:tw-mt-8 sm:tw-text-lg md:tw-text-xl lg:tw-mt-10 lg:tw-text-xl lg:tw-leading-[30px]">
-				Join 1800-LIMO.COM - a veteran-owned global ground transportation platform with 30+ years
-				of livery experience. Set your own schedule, accept the rides you want, keep your tips, and
-				get paid by direct deposit.
+		<div class="lp-container lp-hero__content">
+			<p class="tw-m-0 tw-inline-flex tw-items-center tw-gap-2 tw-rounded-full tw-border tw-border-solid tw-border-white/20 tw-bg-white/10 tw-px-4 tw-py-1.5 tw-font-poppins tw-text-xs tw-font-semibold tw-uppercase tw-tracking-[0.14em] tw-text-white tw-backdrop-blur-sm sm:tw-text-[13px]">
+				<span class="tw-h-1.5 tw-w-1.5 tw-rounded-full tw-bg-brand-orange" aria-hidden="true"></span>
+				Veteran-owned &middot; 30+ years of livery
 			</p>
 
-			<div class="tw-mt-8 tw-flex tw-flex-col tw-gap-4 min-[400px]:tw-flex-row sm:tw-mt-10 sm:tw-gap-5 lg:tw-mt-14 lg:tw-gap-6">
-				<a [href]="playStoreUrl" target="_blank" rel="noopener"
-					class="tw-flex tw-h-14 tw-w-full tw-items-center tw-justify-center tw-gap-3 tw-rounded-md tw-bg-black tw-px-6 tw-text-white tw-no-underline tw-transition hover:tw-bg-neutral-800 hover:tw-text-white hover:tw-no-underline focus-visible:tw-outline focus-visible:tw-outline-2 focus-visible:tw-outline-offset-2 focus-visible:tw-outline-black min-[400px]:tw-w-auto sm:tw-h-16 sm:tw-min-w-[220px] lg:tw-min-w-[260px]">
-					<svg class="tw-h-6 tw-w-6 tw-shrink-0 sm:tw-h-7 sm:tw-w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-						stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
-						<path d="M4 2.5v19l17-9.5-17-9.5Z" />
-						<path d="M4 2.5 14.5 12 4 21.5" />
-						<path d="m15.8 8.6-3.3 3.4 3.3 3.4" />
-					</svg>
-					<span class="tw-font-poppins tw-text-base tw-font-bold tw-uppercase tw-tracking-wide sm:tw-text-lg">Get the App</span>
-				</a>
+			<h1 class="tw-m-0 tw-mt-6 tw-max-w-[15ch] tw-font-poppins tw-text-[2.25rem] tw-font-bold tw-leading-[1.08] tw-tracking-[-0.02em] tw-text-white min-[400px]:tw-text-[2.6rem] sm:tw-text-6xl lg:tw-text-[4.25rem]">
+				Your Rates. Your Rides. <span class="tw-text-brand-orange">Your Business.</span>
+			</h1>
 
-				<a [href]="appStoreUrl" target="_blank" rel="noopener"
-					class="tw-flex tw-h-14 tw-w-full tw-items-center tw-justify-center tw-gap-3 tw-rounded-md tw-bg-black tw-px-6 tw-text-white tw-no-underline tw-transition hover:tw-bg-neutral-800 hover:tw-text-white hover:tw-no-underline focus-visible:tw-outline focus-visible:tw-outline-2 focus-visible:tw-outline-offset-2 focus-visible:tw-outline-black min-[400px]:tw-w-auto sm:tw-h-16 sm:tw-min-w-[220px] lg:tw-min-w-[260px]">
-					<span class="tw-flex tw-h-8 tw-w-8 tw-shrink-0 tw-items-center tw-justify-center tw-rounded-full tw-bg-white tw-text-black sm:tw-h-9 sm:tw-w-9">
-						<i class="fa-brands fa-app-store tw-text-base sm:tw-text-lg" aria-hidden="true"></i>
-					</span>
-					<span class="tw-font-poppins tw-text-base tw-font-bold tw-uppercase tw-tracking-wide sm:tw-text-lg">App Store</span>
-				</a>
+			<p class="tw-mb-0 tw-mt-5 tw-max-w-[34rem] tw-font-poppins tw-text-base tw-leading-relaxed tw-text-white/85 sm:tw-mt-6 sm:tw-text-lg lg:tw-text-xl">
+				Set your own price and keep 100% of it. Our booking fee is paid by the client.
+				Pick the rides you want and get paid within 3 business days.
+			</p>
+
+			<div class="tw-mt-8 tw-flex tw-flex-col tw-gap-3 min-[480px]:tw-flex-row sm:tw-mt-10 sm:tw-gap-5">
+				<ng-container *ngTemplateOutlet="storeBadges; context: { $implicit: 'light' }"></ng-container>
+			</div>
+
+			<p class="tw-mb-0 tw-mt-5 tw-font-poppins tw-text-base tw-text-white/80 sm:tw-mt-6 sm:tw-text-lg">
+				Own a limo company?
+				<button type="button" class="lp-link lp-link--on-dark" (click)="scrollToPlans()">
+					Run it from our web portal <span class="lp-link__arrow" aria-hidden="true">&rarr;</span>
+				</button>
+			</p>
+
+			<!-- Slide label + picker -->
+			<div class="tw-mt-10 tw-flex tw-items-center tw-gap-4 lg:tw-absolute lg:tw-bottom-8 lg:tw-right-[31px] lg:tw-mt-0">
+				<p class="tw-m-0 tw-min-w-[9rem] tw-font-poppins tw-text-sm tw-font-medium tw-text-white/90" aria-live="polite">
+					{{ heroSlides[activeHeroSlide].label }}
+				</p>
+				<div class="tw-flex tw-gap-2" role="group" aria-label="Hero photos">
+					<button *ngFor="let slide of heroSlides; let i = index" type="button"
+						class="lp-hero__dot" [class.is-active]="i === activeHeroSlide"
+						[attr.aria-label]="'Show photo: ' + slide.label" [attr.aria-pressed]="i === activeHeroSlide"
+						(click)="showHeroSlide(i)"></button>
+				</div>
 			</div>
 		</div>
 
-		<div class="tw-mt-10 sm:tw-mt-12 xl:tw-mt-0">
-			<img src="assets/images/driver-landing/hero-chauffeur.webp" width="1239" height="809"
-				alt="Chauffeur in uniform beside a black car at the airport as a plane takes off at sunset"
-				fetchpriority="high" decoding="async"
-				class="tw-block tw-h-auto tw-w-full tw-rounded-2xl tw-object-cover tw-shadow-[0_24px_48px_-24px_rgba(17,24,39,0.45)]">
+		<!-- Stats strip -->
+		<div class="lp-hero__stats">
+			<dl class="lp-container tw-m-0 tw-grid tw-grid-cols-2 tw-gap-x-6 tw-gap-y-5 tw-py-6 lg:tw-grid-cols-4 lg:tw-py-7">
+				<div *ngFor="let stat of heroStats" class="tw-m-0">
+					<dt class="tw-m-0 tw-font-poppins tw-text-2xl tw-font-bold tw-leading-none tw-text-white sm:tw-text-3xl">{{ stat.value }}</dt>
+					<dd class="tw-m-0 tw-mt-1.5 tw-font-poppins tw-text-sm tw-text-white/70 sm:tw-text-base">{{ stat.label }}</dd>
+				</div>
+			</dl>
 		</div>
-		</div>
+	</div>
 
+	<div class="lp-container">
 		<!-- Apply CTA -->
 		<div class="tw-mt-14 tw-rounded-xl tw-bg-brand-orange tw-px-5 tw-py-8 sm:tw-mt-20 sm:tw-px-8 sm:tw-py-10 lg:tw-mt-12 lg:tw-px-14 lg:tw-py-12 xl:tw-px-16">
 			<form class="tw-m-0 tw-flex tw-flex-col tw-gap-6 xl:tw-flex-row xl:tw-items-center xl:tw-justify-between xl:tw-gap-10"
@@ -69,8 +88,7 @@
 							placeholder="Enter your mobile number"
 							class="tw-m-0 tw-h-14 tw-w-full tw-rounded-md tw-border-0 tw-bg-white tw-px-5 tw-font-poppins !tw-text-base tw-font-normal tw-text-black tw-shadow-none tw-outline-none placeholder:!tw-text-base placeholder:!tw-font-normal placeholder:tw-text-[#C4C4C4] focus:tw-ring-2 focus:tw-ring-black sm:tw-h-16 sm:tw-px-7 sm:!tw-text-lg sm:placeholder:!tw-text-lg">
 					</div>
-					<button type="submit"
-						class="tw-m-0 tw-h-14 tw-shrink-0 tw-cursor-pointer tw-rounded-md tw-border-0 tw-bg-black tw-px-8 tw-font-poppins tw-text-base tw-font-bold tw-uppercase tw-tracking-wide tw-text-white tw-transition hover:tw-bg-neutral-800 focus-visible:tw-outline focus-visible:tw-outline-2 focus-visible:tw-outline-offset-2 focus-visible:tw-outline-white sm:tw-h-16 sm:tw-text-lg">
+					<button type="submit" class="lp-btn lp-btn--on-color tw-shrink-0">
 						Apply to Drive
 					</button>
 				</div>
@@ -80,7 +98,7 @@
 	</div>
 
 	<!-- App showcase: phone first, then its callouts one by one (left, right, left, right) -->
-	<div #showcase class="tw-mx-auto tw-w-full tw-max-w-7xl tw-px-4 tw-pt-12 sm:tw-px-6 sm:tw-pt-16 md:tw-px-10 lg:tw-px-12 lg:tw-pt-20">
+	<div #showcase class="lp-container tw-pt-12 sm:tw-pt-16 lg:tw-pt-20">
 		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
 			How <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">1800-LIMO.COM</span> Works
 		</h2>
@@ -142,10 +160,10 @@
 		</div>
 
 		<!-- Screen picker -->
-		<div class="tw-mt-8 tw-flex tw-flex-wrap tw-justify-center tw-gap-2 sm:tw-mt-10 lg:tw-mt-10" role="group" aria-label="App screens">
+		<div class="tw-mt-8 tw-flex tw-flex-wrap tw-justify-center tw-gap-x-3 tw-gap-y-2 sm:tw-mt-10 lg:tw-mt-10" role="group" aria-label="App screens">
 			<button *ngFor="let screen of showcaseScreens; let i = index" type="button"
-				class="tw-m-0 tw-cursor-pointer tw-rounded-full tw-border-0 tw-px-5 tw-py-2 tw-font-poppins tw-text-sm tw-font-semibold tw-transition-colors tw-duration-300 focus-visible:tw-outline focus-visible:tw-outline-2 focus-visible:tw-outline-offset-2 focus-visible:tw-outline-black"
-				[ngClass]="i === activeScreen ? 'tw-bg-black tw-text-white' : 'tw-bg-[#F3F4F6] tw-text-[#374151] hover:tw-bg-[#E5E7EB]'"
+				class="lp-btn lp-btn--sm lp-btn--pill"
+				[ngClass]="{ 'lp-btn--light': i !== activeScreen }"
 				[attr.aria-pressed]="i === activeScreen"
 				(click)="selectScreen(i)">
 				{{ screen.label }}
@@ -153,8 +171,56 @@
 		</div>
 	</div>
 
+	<!-- App vs web portal -->
+	<div class="lp-container tw-pt-12 sm:tw-pt-16 lg:tw-pt-20">
+		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
+			One Platform, <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">Two Ways</span> to Work
+		</h2>
+		<p class="tw-mx-auto tw-mb-0 tw-mt-4 tw-max-w-3xl tw-text-balance tw-text-center tw-font-poppins tw-text-base tw-font-normal tw-leading-normal tw-text-[#2E2E3A] sm:tw-mt-5 sm:tw-text-lg lg:tw-text-xl">
+			Drive with the app, run your business on the web, or do both.
+		</p>
+
+		<div class="tw-mt-8 tw-grid tw-grid-cols-1 tw-gap-5 sm:tw-mt-10 md:tw-grid-cols-2 md:tw-gap-6 xl:tw-gap-10">
+			<div *ngFor="let channel of channels; let first = first"
+				class="tw-flex tw-flex-col tw-rounded-2xl tw-p-6 sm:tw-p-8 lg:tw-p-10"
+				[ngClass]="first ? 'tw-bg-[#F8F8F8] tw-text-black' : 'tw-bg-black tw-text-white'">
+				<p class="tw-m-0 tw-font-poppins tw-text-sm tw-font-semibold tw-uppercase tw-tracking-widest tw-text-brand-orange">
+					{{ channel.eyebrow }}
+				</p>
+				<h3 class="tw-m-0 tw-mt-3 tw-text-balance tw-font-poppins tw-text-xl tw-font-bold tw-leading-snug sm:tw-text-2xl lg:tw-text-[1.75rem]"
+					[ngClass]="first ? 'tw-text-black' : 'tw-text-white'">
+					{{ channel.title }}
+				</h3>
+				<p class="tw-m-0 tw-mt-3 tw-font-poppins tw-text-base tw-leading-normal sm:tw-text-lg"
+					[ngClass]="first ? 'tw-text-[#6B7280]' : 'tw-text-[#C4C4C4]'">
+					{{ channel.description }}
+				</p>
+				<ul class="tw-m-0 tw-mt-6 tw-flex tw-list-none tw-flex-col tw-gap-3 tw-p-0">
+					<li *ngFor="let point of channel.points"
+						class="tw-m-0 tw-flex tw-items-start tw-gap-3 tw-font-poppins tw-text-base tw-leading-snug">
+						<svg class="tw-mt-0.5 tw-h-5 tw-w-5 tw-shrink-0 tw-text-brand-orange" viewBox="0 0 24 24" fill="none"
+							stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M20 6 9 17l-5-5" />
+						</svg>
+						<span>{{ point }}</span>
+					</li>
+				</ul>
+				<div class="tw-mt-auto tw-flex tw-flex-wrap tw-gap-x-4 tw-gap-y-3 tw-pt-8">
+					<ng-container *ngIf="first; else portalCta">
+						<ng-container *ngTemplateOutlet="storeBadges; context: { $implicit: 'dark' }"></ng-container>
+					</ng-container>
+					<ng-template #portalCta>
+						<button type="button" class="lp-btn lp-btn--orange" (click)="scrollToPlans()">
+							See Plans
+						</button>
+					</ng-template>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<!-- Benefits -->
-	<div class="tw-mx-auto tw-w-full tw-max-w-7xl tw-px-4 tw-pt-12 sm:tw-px-6 sm:tw-pt-16 md:tw-px-10 lg:tw-px-12 lg:tw-pt-20">
+	<div class="lp-container tw-pt-12 sm:tw-pt-16 lg:tw-pt-20">
 		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
 			<span class="tw-font-poppins tw-font-bold tw-text-brand-orange">1800-LIMO.COM</span> Benefits
 		</h2>
@@ -185,7 +251,7 @@
 	</div>
 
 	<!-- Who Can Apply -->
-	<div class="tw-mx-auto tw-w-full tw-max-w-7xl tw-px-4 tw-pt-12 sm:tw-px-6 sm:tw-pt-16 md:tw-px-10 lg:tw-px-12 lg:tw-pt-20">
+	<div class="lp-container tw-pt-12 sm:tw-pt-16 lg:tw-pt-20">
 		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
 			Who Can <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">Apply</span>
 		</h2>
@@ -211,8 +277,96 @@
 		</div>
 	</div>
 
+	<!-- Plans (live from get-subscription-products) -->
+	<div id="plans" class="lp-container tw-scroll-mt-24 tw-pt-12 sm:tw-pt-16 lg:tw-pt-20">
+		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
+			Plans for <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">Operators</span>
+		</h2>
+		<p class="tw-mx-auto tw-mb-0 tw-mt-4 tw-max-w-3xl tw-text-balance tw-text-center tw-font-poppins tw-text-base tw-font-normal tw-leading-normal tw-text-[#2E2E3A] sm:tw-mt-5 sm:tw-text-lg lg:tw-text-xl">
+			Start free and receive bookings from 1800-LIMO.COM. Upgrade when you want our software to run your own daily bookings.
+		</p>
+
+		<div *ngIf="plans.length" class="tw-mt-8 tw-grid tw-grid-cols-1 tw-gap-5 sm:tw-mt-10 md:tw-grid-cols-2 lg:tw-grid-cols-3 lg:tw-gap-6 xl:tw-gap-8">
+			<div *ngFor="let plan of plans"
+				class="tw-flex tw-flex-col tw-rounded-2xl tw-border tw-border-solid tw-border-[#EEF0F3] tw-bg-white tw-p-6 tw-shadow-[0_14px_34px_-14px_rgba(17,24,39,0.28)] sm:tw-p-8">
+				<h3 class="tw-m-0 tw-font-poppins tw-text-lg tw-font-bold tw-leading-snug tw-text-[#2A2A3C] sm:tw-text-xl">
+					{{ plan.name }}
+				</h3>
+				<p class="tw-m-0 tw-mt-4 tw-font-poppins tw-leading-none tw-text-black">
+					<ng-container *ngIf="plan.price > 0; else freePrice">
+						<span class="tw-text-4xl tw-font-bold sm:tw-text-5xl">${{ plan.price }}</span>
+						<span class="tw-text-base tw-font-normal tw-text-[#6B7280]"> / month</span>
+					</ng-container>
+					<ng-template #freePrice>
+						<span class="tw-text-4xl tw-font-bold sm:tw-text-5xl">Free</span>
+					</ng-template>
+				</p>
+				<p class="tw-m-0 tw-mt-3 tw-font-poppins tw-text-base tw-leading-snug tw-text-[#6B7280]">
+					{{ plan.tagline }}
+				</p>
+				<ul class="tw-m-0 tw-mt-6 tw-flex tw-list-none tw-flex-col tw-gap-2.5 tw-border-0 tw-border-t tw-border-solid tw-border-[#EEF0F3] tw-p-0 tw-pt-6">
+					<li *ngFor="let feature of visibleFeatures(plan)"
+						class="tw-m-0 tw-flex tw-items-start tw-gap-2.5 tw-font-poppins tw-text-[15px] tw-leading-snug tw-text-[#2E2E3A]">
+						<svg class="tw-mt-0.5 tw-h-4 tw-w-4 tw-shrink-0 tw-text-brand-orange" viewBox="0 0 24 24" fill="none"
+							stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M20 6 9 17l-5-5" />
+						</svg>
+						<span>
+							<span class="tw-font-medium">{{ feature.title }}</span>
+							<span *ngIf="expandedPlans.has(plan.id) && feature.description"
+								class="tw-mt-0.5 tw-block tw-text-[13.5px] tw-text-[#6B7280]">{{ feature.description }}</span>
+						</span>
+					</li>
+				</ul>
+				<p *ngIf="plan.features.length > planFeatureLimit" class="tw-m-0 tw-mt-4 tw-font-poppins tw-text-sm">
+					<button type="button" class="lp-link" [attr.aria-expanded]="expandedPlans.has(plan.id)" (click)="toggleFeatures(plan)">
+						{{ expandedPlans.has(plan.id) ? 'Show less' : 'Show all ' + plan.features.length + ' features' }}
+					</button>
+				</p>
+				<div class="tw-mt-auto tw-pt-8">
+					<button type="button" class="lp-btn lp-btn--block" [ngClass]="{ 'lp-btn--light': plan.price === 0 }" (click)="choosePlan(plan)">
+						{{ plan.price > 0 ? 'Subscribe' : 'Join Free' }}
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<p *ngIf="plansFailed" class="tw-mb-0 tw-mt-8 tw-text-center tw-font-poppins tw-text-base tw-text-[#6B7280] sm:tw-mt-10">
+			Plans couldn't load right now. Please refresh the page to try again.
+		</p>
+		<p class="tw-mx-auto tw-mb-0 tw-mt-8 sm:tw-mt-10 tw-max-w-2xl tw-text-balance tw-text-center tw-font-poppins tw-text-sm tw-text-[#9E9DA2]">
+			On every booking, 1800-LIMO.COM adds a 25% fee on top of your rate, paid by the client. You always receive the full rate you set.
+		</p>
+	</div>
+
+	<!-- Plan notice: a signed-in affiliate has more vehicles than the chosen plan covers -->
+	<div *ngIf="planNotice" class="tw-fixed tw-inset-0 tw-z-[1050] tw-flex tw-items-center tw-justify-center tw-bg-black/50 tw-p-4"
+		(click)="closePlanNotice()">
+		<div role="dialog" aria-modal="true" aria-labelledby="plan-notice-title"
+			class="tw-w-full tw-max-w-lg tw-rounded-2xl tw-bg-white tw-p-6 tw-shadow-2xl sm:tw-p-8"
+			(click)="$event.stopPropagation()">
+			<h3 id="plan-notice-title" class="tw-m-0 tw-font-poppins tw-text-xl tw-font-bold tw-leading-snug tw-text-black">
+				Check your vehicles
+			</h3>
+			<p class="tw-m-0 tw-mt-3 tw-font-poppins tw-text-base tw-leading-normal tw-text-[#2E2E3A]">
+				{{ planNotice.message }}
+			</p>
+			<div class="tw-mt-6 tw-flex tw-flex-col-reverse tw-gap-x-3 tw-gap-y-1 sm:tw-flex-row sm:tw-justify-end">
+				<button type="button" class="lp-btn lp-btn--sm lp-btn--light" (click)="closePlanNotice()">
+					Close
+				</button>
+				<button type="button" class="lp-btn lp-btn--sm" (click)="openVehicleSettings()">
+					Vehicle Settings
+				</button>
+				<button *ngIf="planNotice.proceedWith" type="button" class="lp-btn lp-btn--sm lp-btn--orange" (click)="proceedWithNotice()">
+					Proceed
+				</button>
+			</div>
+		</div>
+	</div>
+
 	<!-- FAQ -->
-	<div class="tw-mx-auto tw-w-full tw-max-w-6xl tw-px-4 tw-py-12 sm:tw-px-6 sm:tw-py-16 md:tw-px-10 lg:tw-px-12 lg:tw-py-20">
+	<div class="lp-container tw-py-12 sm:tw-py-16 lg:tw-py-20">
 		<h2 class="tw-m-0 tw-text-center tw-font-poppins tw-text-2xl tw-font-bold tw-uppercase tw-leading-tight tw-text-black min-[400px]:tw-text-[1.75rem] sm:tw-text-4xl lg:tw-text-[2.75rem]">
 			Frequently Asked <span class="tw-font-poppins tw-font-bold tw-text-brand-orange">Questions</span>
 		</h2>
@@ -227,6 +381,58 @@
 				</dd>
 			</div>
 		</dl>
+		<p class="tw-mb-0 tw-mt-8 tw-font-poppins tw-text-base sm:tw-mt-10 sm:tw-text-lg">
+			<a routerLink="/driver-faq" class="lp-link">
+				More driver questions <span class="lp-link__arrow" aria-hidden="true">&rarr;</span>
+			</a>
+		</p>
 	</div>
+
+	<!-- Closing CTA -->
+	<div class="lp-container tw-pb-12 sm:tw-pb-16 lg:tw-pb-20">
+		<div class="tw-flex tw-flex-col tw-items-center tw-gap-8 tw-rounded-xl tw-bg-black tw-px-5 tw-py-10 tw-text-center sm:tw-px-8 lg:tw-px-14 lg:tw-py-12 xl:tw-flex-row xl:tw-justify-between xl:tw-text-left">
+			<div>
+				<p class="tw-m-0 tw-font-poppins tw-text-2xl tw-font-bold tw-leading-tight tw-text-white sm:tw-text-3xl">
+					Ready when you are.
+				</p>
+				<p class="tw-m-0 tw-mt-2 tw-font-poppins tw-text-base tw-text-[#C4C4C4] sm:tw-text-lg">
+					Download the driver app, or pick a plan to run your fleet on the web.
+				</p>
+			</div>
+			<div class="tw-flex tw-w-full tw-flex-col tw-gap-3 min-[480px]:tw-w-auto min-[480px]:tw-flex-row min-[480px]:tw-flex-wrap min-[480px]:tw-justify-center sm:tw-gap-4 xl:tw-shrink-0">
+				<ng-container *ngTemplateOutlet="storeBadges; context: { $implicit: 'light' }"></ng-container>
+				<button type="button" class="lp-btn lp-btn--orange" (click)="scrollToPlans()">
+					See Plans
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- App Store / Google Play badges. Context: 'dark' (on white) or 'light' (on black). -->
+	<ng-template #storeBadges let-tone>
+		<a [href]="appStoreUrl" target="_blank" rel="noopener" class="lp-btn store-badge"
+			[ngClass]="{ 'lp-btn--light': tone === 'light' }" aria-label="Download on the App Store">
+			<svg class="store-badge__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+				<path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
+			</svg>
+			<span class="store-badge__text">
+				<span class="store-badge__small">Download on the</span>
+				<span class="store-badge__big">App Store</span>
+			</span>
+		</a>
+		<a [href]="playStoreUrl" target="_blank" rel="noopener" class="lp-btn store-badge"
+			[ngClass]="{ 'lp-btn--light': tone === 'light' }" aria-label="Get it on Google Play">
+			<svg class="store-badge__icon" viewBox="0 0 512 512" aria-hidden="true">
+				<path fill="#00D7FE" d="M48 24 272 256 48 488c-10-6-16-18-16-32V56c0-14 6-26 16-32Z" />
+				<path fill="#00F076" d="M48 24c8-5 19-6 30 0l274 156-80 76L48 24Z" />
+				<path fill="#FFD500" d="m352 180 94 53c24 14 24 32 0 46l-94 53-80-76 80-76Z" />
+				<path fill="#FF3A44" d="m272 256 80 76L78 488c-11 6-22 5-30 0l224-232Z" />
+			</svg>
+			<span class="store-badge__text">
+				<span class="store-badge__small">Get it on</span>
+				<span class="store-badge__big">Google Play</span>
+			</span>
+		</a>
+	</ng-template>
 
 </div>

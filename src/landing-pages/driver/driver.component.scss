@@ -2,7 +2,7 @@
 // (generated as `.tw-scope .tw-*`) and the global Bootstrap/style.css rules for a, button.
 
 $ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-$brand-orange: #de9b3d;
+$brand-orange: #f3933d;
 
 // Lines sections up with the site header (header.component.scss): header margin 25px
 // + Bootstrap .container padding 15px + .navbar padding 16px, capped at the same
@@ -260,10 +260,10 @@ $brand-orange: #de9b3d;
 }
 
 .tw-scope .lp-btn--orange {
-	--btn-top: #ecb466;
-	--btn-bottom: #de9b3d;
-	--btn-edge: #b27422;
-	--btn-glow: rgba(222, 155, 61, 0.5);
+	--btn-top: #f7ad6b;
+	--btn-bottom: #f3933d;
+	--btn-edge: #c86f1f;
+	--btn-glow: rgba(243, 147, 61, 0.5);
 }
 
 .tw-scope .lp-btn--light {
@@ -356,6 +356,54 @@ $brand-orange: #de9b3d;
 
 	@media (min-width: 640px) {
 		font-size: 1.4rem;
+	}
+}
+
+// Country picker added by intl-tel-input on the Apply CTA's mobile field. Its markup is
+// created at runtime (no view encapsulation attributes), hence ::ng-deep.
+:host ::ng-deep .lp-phone {
+	.iti {
+		display: block;
+		width: 100%;
+	}
+
+	// Same grey flag + dial-code chip as the affiliate phone fields, inset inside the input.
+	.iti__flag-container {
+		padding: 0.625rem 0 0.625rem 0.75rem;
+
+		@media (min-width: 640px) {
+			padding-block: 0.75rem;
+			padding-left: 1rem;
+		}
+	}
+
+	.iti__selected-flag {
+		padding: 0 0.5rem 0 0.625rem;
+		border-radius: 4px;
+	}
+
+	// styles.scss forces 90px for every separate-dial-code field; this input also has the chip's inset.
+	.iti--separate-dial-code input[type="tel"] {
+		padding-left: 7.25rem !important;
+
+		@media (min-width: 640px) {
+			padding-left: 7.75rem !important;
+		}
+	}
+
+	.iti__selected-dial-code {
+		font-family: 'Poppins', sans-serif;
+		font-size: 1rem;
+		color: #000;
+
+		@media (min-width: 640px) {
+			font-size: 1.125rem;
+		}
+	}
+
+	.iti__country-list {
+		font-family: 'Poppins', sans-serif;
+		color: #000;
 	}
 }
 

@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/services/auth.service';
+import { CommonService } from 'src/app/services/common.service';
+import * as intlTelInput from 'intl-tel-input';
 
 interface Benefit {
   title: string;
@@ -98,7 +100,7 @@ const FLEET_PLAN_ID = 3;
 
 const ICON_TONE = {
   purple: 'tw-bg-[#EFEDFE] tw-text-[#635BFF]',
-  orange: 'tw-bg-[#FFF1E6] tw-text-[#F08A2C]',
+  orange: 'tw-bg-[#FFF1E6] tw-text-[#F3933D]',
   green: 'tw-bg-[#E9F7EF] tw-text-[#16A34A]',
   blue: 'tw-bg-[#EAF0FE] tw-text-[#3B6FE0]',
   teal: 'tw-bg-[#E6F2EF] tw-text-[#0F4C45]',
@@ -120,6 +122,7 @@ const HIDE_DURATION = 450;
 })
 export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('showcase') private showcaseRef?: ElementRef<HTMLElement>;
+  @ViewChild('mobileInput') private mobileInputRef?: ElementRef<HTMLInputElement>;
 
   readonly heroSlides: HeroSlide[] = [
     { image: 'assets/images/driver-landing/hero-booking.webp', imageSmall: 'assets/images/driver-landing/hero-booking-sm.webp', label: 'New booking, your rate', focus: '72% center' },
@@ -161,7 +164,7 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     {
       eyebrow: 'Web Portal',
       title: 'Run your limo business from any browser',
-      description: 'For owner-operators and fleets. Manage your own clients and take 1800-LIMO.COM bookings in one place.',
+      description: 'For owner-operators and fleets. Manage your own clients and take 1-800-LIMO.COM bookings in one place.',
       points: [
         'Create and manage your own daily bookings',
         'Add vehicles, drivers and your own rates',
@@ -239,7 +242,7 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
       answer: 'Applications are reviewed after all required documents are submitted. Processing times may vary; you will be contacted once your profile has been reviewed.'
     },
     {
-      question: 'Does 1800-LIMO.COM control my schedule or rates?',
+      question: 'Does 1-800-LIMO.COM control my schedule or rates?',
       answer: 'No. You set your own availability and rates. You choose which booking opportunities to accept or decline. There are no mandatory hours or surge-pricing controls.'
     },
     {
@@ -247,42 +250,30 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
       answer: 'Earnings are deposited directly to your account within 3 business days from the date client funds are received. Tips are 100% yours. Taxes, tolls, and other expenses are collected directly from the client.'
     },
     {
-      question: 'Does 1800-LIMO.COM take a cut of my rate?',
+      question: 'Does 1-800-LIMO.COM take a cut of my rate?',
       answer: 'No. We quote your all-inclusive rate to the client and add our 25% booking fee on top of it. The client pays the fee, so you receive the full rate you set.'
     },
     {
       question: 'Do I need a paid plan to drive?',
-      answer: 'No. Joining is free, and the Free plan lists your vehicles and drivers so you receive bookings from 1800-LIMO.COM. The Basic and Fleet Operator plans add our web software for running your own daily bookings, farm-ins and farm-outs.'
+      answer: 'No. Joining is free, and the Free plan lists your vehicles and drivers so you receive bookings from 1-800-LIMO.COM. The Basic and Fleet Operator plans add our web software for running your own daily bookings, farm-ins and farm-outs.'
     },
     {
       question: 'Is this available outside the US?',
-      answer: '1800-LIMO.COM is a global platform with 900+ affiliates worldwide. Availability may vary by region. Check the platform during registration for coverage in your area.'
+      answer: '1-800-LIMO.COM is a global platform with 900+ affiliates worldwide. Availability may vary by region. Check the platform during registration for coverage in your area.'
     }
   ];
 
   readonly showcaseScreens: ShowcaseScreen[] = [
     {
-      label: 'Wallet',
-      image: 'assets/images/driver-landing/phone-1.webp',
-      imageAlt: 'Driver app wallet screen showing total earnings, deposits and transfers',
-      hotspots: false,
-      callouts: [
-        { side: 'left', y: 21.73, title: 'Stripe Connect deposits', text: "Earnings land straight in the driver's bank account.", iconText: 'S', iconClass: ICON_TONE.purple },
-        { side: 'right', y: 32.46, title: 'Instant payouts', text: 'Cash out anytime instead of waiting for the cycle.', icon: ['M13 2 3 14h9l-1 8 10-12h-9l1-8z'], iconClass: ICON_TONE.orange },
-        { side: 'left', y: 60.62, title: 'Automatic affiliate splits', text: "Each reservation's share is calculated and paid out.", icon: ['m15 10 5 5-5 5', 'M4 4v7a4 4 0 0 0 4 4h12'], iconClass: ICON_TONE.green },
-        { side: 'right', y: 71.73, title: 'Full transfer history', text: 'Every payout linked to its reservation, searchable.', icon: ['M21 6H3', 'M15 12H3', 'M17 18H3'], iconClass: ICON_TONE.blue }
-      ]
-    },
-    {
-      label: 'Navigation',
-      image: 'assets/images/driver-landing/phone-2.webp',
-      imageAlt: 'Driver app turn-by-turn navigation screen for a ride in progress',
+      label: 'My Bookings',
+      image: 'assets/images/driver-landing/phone-4.webp',
+      imageAlt: 'Driver app bookings list with pending, finalized and paid trips',
       hotspots: true,
       callouts: [
-        { side: 'left', y: 18.85, title: 'Turn-by-turn navigation', text: 'Built-in guidance to the next stop.', icon: ['m3 11 19-9-9 19-2-8-8-2z'], iconClass: ICON_TONE.teal },
-        { side: 'right', y: 58.51, title: 'Live GPS tracking', text: 'Passengers and dispatch see the car move.', icon: ['M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z', 'M12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'], iconClass: ICON_TONE.blue },
-        { side: 'left', y: 77.67, title: 'Live distance and ETA', text: 'Arrival time updates as the ride progresses.', icon: ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z', 'M12 6v6l4 2'], iconClass: ICON_TONE.orange },
-        { side: 'right', y: 86.38, title: 'One-tap ride completion', text: 'Finalize the trip and trigger the payout.', icon: ['M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z', 'M4 22v-7'], iconClass: ICON_TONE.red }
+        { side: 'left', y: 18.85, title: 'Push alerts for new bookings', text: 'Every request reaches the driver the moment it lands.', icon: ['M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9', 'M10.3 21a1.94 1.94 0 0 0 3.4 0'], iconClass: ICON_TONE.orange },
+        { side: 'right', y: 32.46, title: 'Full trip details', text: 'Passenger, flight number, pickup and drop-off in one card.', icon: ['M21 6H3', 'M15 12H3', 'M17 18H3'], iconClass: ICON_TONE.blue },
+        { side: 'left', y: 52.38, title: 'Distance and fare upfront', text: 'Trip total and mileage shown before anyone commits.', icon: ['M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z', 'M12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'], iconClass: ICON_TONE.red },
+        { side: 'right', y: 74.41, title: 'Accept, finalize, invoice', text: 'Accept or reject, finalize and pay, then view the invoice.', icon: ['M20 6 9 17l-5-5'], iconClass: ICON_TONE.green }
       ]
     },
     {
@@ -298,17 +289,29 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
       ]
     },
     {
-      label: 'My Bookings',
-      image: 'assets/images/driver-landing/phone-4.webp',
-      imageAlt: 'Driver app bookings list with pending, finalized and paid trips',
+      label: 'Navigation',
+      image: 'assets/images/driver-landing/phone-2.webp',
+      imageAlt: 'Driver app turn-by-turn navigation screen for a ride in progress',
       hotspots: true,
       callouts: [
-        { side: 'left', y: 18.85, title: 'Push alerts for new bookings', text: 'Every request reaches the driver the moment it lands.', icon: ['M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9', 'M10.3 21a1.94 1.94 0 0 0 3.4 0'], iconClass: ICON_TONE.orange },
-        { side: 'right', y: 32.46, title: 'Full trip details', text: 'Passenger, flight number, pickup and drop-off in one card.', icon: ['M21 6H3', 'M15 12H3', 'M17 18H3'], iconClass: ICON_TONE.blue },
-        { side: 'left', y: 52.38, title: 'Distance and fare upfront', text: 'Trip total and mileage shown before anyone commits.', icon: ['M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z', 'M12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'], iconClass: ICON_TONE.red },
-        { side: 'right', y: 74.41, title: 'Accept, finalize, invoice', text: 'Accept or reject, finalize and pay, then view the invoice.', icon: ['M20 6 9 17l-5-5'], iconClass: ICON_TONE.green }
+        { side: 'left', y: 18.85, title: 'Turn-by-turn navigation', text: 'Built-in guidance to the next stop.', icon: ['m3 11 19-9-9 19-2-8-8-2z'], iconClass: ICON_TONE.teal },
+        { side: 'right', y: 58.51, title: 'Live GPS tracking', text: 'Passengers and dispatch see the car move.', icon: ['M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z', 'M12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'], iconClass: ICON_TONE.blue },
+        { side: 'left', y: 77.67, title: 'Live distance and ETA', text: 'Arrival time updates as the ride progresses.', icon: ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z', 'M12 6v6l4 2'], iconClass: ICON_TONE.orange },
+        { side: 'right', y: 86.38, title: 'One-tap ride completion', text: 'Finalize the trip and trigger the payout.', icon: ['M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z', 'M4 22v-7'], iconClass: ICON_TONE.red }
       ]
-    }
+    },
+    {
+      label: 'Wallet',
+      image: 'assets/images/driver-landing/phone-1.webp',
+      imageAlt: 'Driver app wallet screen showing total earnings, deposits and transfers',
+      hotspots: false,
+      callouts: [
+        { side: 'left', y: 21.73, title: 'Stripe Connect deposits', text: "Earnings land straight in the driver's bank account.", iconText: 'S', iconClass: ICON_TONE.purple },
+        { side: 'right', y: 32.46, title: 'Instant payouts', text: 'Cash out anytime instead of waiting for the cycle.', icon: ['M13 2 3 14h9l-1 8 10-12h-9l1-8z'], iconClass: ICON_TONE.orange },
+        { side: 'left', y: 60.62, title: 'Automatic affiliate splits', text: "Each reservation's share is calculated and paid out.", icon: ['m15 10 5 5-5 5', 'M4 4v7a4 4 0 0 0 4 4h12'], iconClass: ICON_TONE.green },
+        { side: 'right', y: 71.73, title: 'Full transfer history', text: 'Every payout linked to its reservation, searchable.', icon: ['M21 6H3', 'M15 12H3', 'M17 18H3'], iconClass: ICON_TONE.blue }
+      ]
+    },
   ];
 
   /** Index of the phone screen currently shown. */
@@ -324,11 +327,14 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
 
   mobile = '';
   error = '';
+  /** Country flag + dial code picker on the Apply CTA's mobile field. */
+  private phoneInput?: intlTelInput.Plugin;
 
   private plansSub?: Subscription;
 
   constructor(
     private authService: AuthService,
+    private commonService: CommonService,
     private router: Router
   ) {}
 
@@ -351,6 +357,14 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    if (this.mobileInputRef) {
+      // Signed-in users start on their own country (as in affiliate step 1); everyone else by IP location.
+      const user = this.authService.currentUserValue;
+      const country = user?.phoneCountry || user?.country || 'auto';
+      this.phoneInput = intlTelInput(this.mobileInputRef.nativeElement, this.commonService.getTelInputOptions(country));
+      this.mobileInputRef.nativeElement.addEventListener('countrychange', () => this.error = '');
+    }
+
     const el = this.showcaseRef?.nativeElement;
     if (!el || typeof window === 'undefined') return;
 
@@ -373,6 +387,7 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clearShowcaseTimers();
     this.plansSub?.unsubscribe();
     clearInterval(this.heroTimer);
+    this.phoneInput?.destroy();
   }
 
   showHeroSlide(index: number): void {
@@ -538,7 +553,11 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
 
   applyToDrive(): void {
     const digits = this.mobile.replace(/\D/g, '');
-    if (digits.length < 7 || digits.length > 15) {
+    // isValidNumber() needs the utils script; until it loads, fall back to a length check.
+    const valid = this.phoneInput && (window as any).intlTelInputUtils
+      ? this.phoneInput.isValidNumber()
+      : digits.length >= 7 && digits.length <= 15;
+    if (!valid) {
       this.error = 'Please enter a valid mobile number.';
       return;
     }

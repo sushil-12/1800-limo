@@ -27,7 +27,7 @@
 			</p>
 
 			<h1 class="tw-m-0 tw-mt-6 tw-max-w-[15ch] tw-font-poppins tw-text-[2.25rem] tw-font-bold tw-leading-[1.08] tw-tracking-[-0.02em] tw-text-white min-[400px]:tw-text-[2.6rem] sm:tw-text-6xl lg:tw-text-[4.25rem]">
-				Your Rates. Your Rides. <span class="tw-text-brand-orange">Your Business.</span>
+				Your Rates. Your Rides. <span class="tw-text-brand-orange tw-font-bold">Your Business.</span>
 			</h1>
 
 			<p class="tw-mb-0 tw-mt-5 tw-max-w-[34rem] tw-font-poppins tw-text-base tw-leading-relaxed tw-text-white/85 sm:tw-mt-6 sm:tw-text-lg lg:tw-text-xl">
@@ -181,7 +181,7 @@
 			Drive with the app, run your business on the web, or do both.
 		</p>
 
-		<div class="tw-mt-8 tw-grid tw-grid-cols-1 tw-gap-5 sm:tw-mt-10 md:tw-grid-cols-2 md:tw-gap-6 xl:tw-gap-10">
+		<div class="tw-mt-8 tw-grid tw-grid-cols-1 tw-gap-5 sm:tw-mt-10 md:tw-gap-6 lg:tw-grid-cols-2 xl:tw-gap-10">
 			<div *ngFor="let channel of channels; let first = first"
 				class="tw-flex tw-flex-col tw-rounded-2xl tw-p-6 sm:tw-p-8 lg:tw-p-10"
 				[ngClass]="first ? 'tw-bg-[#F8F8F8] tw-text-black' : 'tw-bg-black tw-text-white'">
@@ -325,7 +325,7 @@
 					</button>
 				</p>
 				<div class="tw-mt-auto tw-pt-8">
-					<button type="button" class="lp-btn lp-btn--block" [ngClass]="{ 'lp-btn--light': plan.price === 0 }" (click)="choosePlan(plan)">
+					<button type="button" class="lp-btn lp-btn--block" (click)="choosePlan(plan)">
 						{{ plan.price > 0 ? 'Subscribe' : 'Join Free' }}
 					</button>
 				</div>

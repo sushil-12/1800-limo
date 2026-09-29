@@ -66,7 +66,8 @@ export class AuthService {
 
   /** Texts the driver app download link. `data.phone` must be in E.164 form (`+15551234567`). */
   sendDriverAppLink(data: { phone: string }) {
-    return this.httpClient.post(this.serverUrl + 'send-driver-app-link', data);
+    // return this.httpClient.post(this.serverUrl + 'send-driver-app-link', data);
+    return this.httpClient.post('https://api.1800-limo.com/send-driver-app-link', data);
   }
 
   createPayment(data){

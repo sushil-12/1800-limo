@@ -311,6 +311,43 @@ $brand-orange: #f3933d;
 	width: 100%;
 }
 
+// Validation / throttle feedback under the Apply CTA's phone field. It sits on the orange
+// band, where plain red text muddies, so it gets a white chip to read against.
+.tw-scope .lp-formmsg {
+	display: inline-flex;
+	align-self: flex-start;
+	align-items: flex-start;
+	gap: 0.5rem;
+	max-width: 100%;
+	margin: 0.75rem 0 0;
+	padding: 0.5rem 0.875rem;
+	border-radius: 10px;
+	background: #fff;
+	box-shadow: 0 8px 18px -10px rgba(0, 0, 0, 0.55);
+	color: #d92d20;
+	font-family: 'Poppins', sans-serif;
+	font-size: 0.875rem;
+	font-weight: 700;
+	line-height: 1.35;
+	text-align: left;
+
+	@media (min-width: 640px) {
+		font-size: 0.9375rem;
+	}
+}
+
+// Same chip for the "link is on its way" confirmation.
+.tw-scope .lp-formmsg--ok {
+	color: #15803d;
+}
+
+.tw-scope .lp-formmsg__icon {
+	flex-shrink: 0;
+	width: 1.125rem;
+	height: 1.125rem;
+	margin-top: 0.05em;
+}
+
 // Ring shown inside a button while its request is in flight.
 .tw-scope .lp-btn__spinner {
 	box-sizing: border-box;

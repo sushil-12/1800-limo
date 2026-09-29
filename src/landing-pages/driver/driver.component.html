@@ -80,25 +80,42 @@
 					Ready to start driving? Enter your mobile number to get the app link.
 				</p>
 
-				<div class="tw-flex tw-w-full tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-gap-4 xl:tw-max-w-2xl xl:tw-flex-1">
-					<div class="lp-phone tw-flex-1">
-						<label for="driver-mobile" class="tw-sr-only">Mobile number</label>
-						<input #mobileInput id="driver-mobile" name="mobile" type="tel" inputmode="tel" autocomplete="tel"
-							[(ngModel)]="mobile" (ngModelChange)="onMobileChange()" [disabled]="sending"
-							placeholder="Enter your mobile number"
-							class="tw-m-0 tw-h-14 tw-w-full tw-rounded-md tw-border-0 tw-bg-white tw-px-5 tw-font-poppins !tw-text-base tw-font-normal tw-text-black tw-shadow-none tw-outline-none placeholder:!tw-text-base placeholder:!tw-font-normal placeholder:tw-text-[#C4C4C4] focus:tw-ring-2 focus:tw-ring-black sm:tw-h-16 sm:tw-px-7 sm:!tw-text-lg sm:placeholder:!tw-text-lg">
+				<div class="tw-flex tw-w-full tw-flex-col xl:tw-max-w-2xl xl:tw-flex-1">
+					<div class="tw-flex tw-w-full tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-gap-4">
+						<div class="lp-phone tw-flex-1">
+							<label for="driver-mobile" class="tw-sr-only">Mobile number</label>
+							<input #mobileInput id="driver-mobile" name="mobile" type="tel" inputmode="tel" autocomplete="tel"
+								[(ngModel)]="mobile" (ngModelChange)="onMobileChange()" [disabled]="sending"
+								placeholder="Enter your mobile number"
+								class="tw-m-0 tw-h-14 tw-w-full tw-rounded-md tw-border-0 tw-bg-white tw-px-5 tw-font-poppins !tw-text-base tw-font-normal tw-text-black tw-shadow-none tw-outline-none placeholder:!tw-text-base placeholder:!tw-font-normal placeholder:tw-text-[#C4C4C4] focus:tw-ring-2 focus:tw-ring-black sm:tw-h-16 sm:tw-px-7 sm:!tw-text-lg sm:placeholder:!tw-text-lg">
+						</div>
+						<button type="submit" class="lp-btn lp-btn--on-color tw-shrink-0"
+							[disabled]="sending" [attr.aria-busy]="sending || null">
+							<span *ngIf="sending" class="lp-btn__spinner" aria-hidden="true"></span>
+							{{ sending ? 'Sending...' : 'Apply to Drive' }}
+						</button>
 					</div>
-					<button type="submit" class="lp-btn lp-btn--on-color tw-shrink-0"
-						[disabled]="sending" [attr.aria-busy]="sending || null">
-						<span *ngIf="sending" class="lp-btn__spinner" aria-hidden="true"></span>
-						{{ sending ? 'Sending...' : 'Apply to Drive' }}
-					</button>
+
+					<!-- Feedback belongs to the field, so it sits under it. The button's 3D edge
+					     already hangs below the row, hence the small top margin. -->
+					<p *ngIf="error || sent" aria-live="polite" role="status"
+						class="lp-formmsg" [ngClass]="{ 'lp-formmsg--ok': !error }">
+						<svg class="lp-formmsg__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+							stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<ng-container *ngIf="error; else okIcon">
+								<circle cx="12" cy="12" r="10" />
+								<path d="M12 8v5" />
+								<path d="M12 16h.01" />
+							</ng-container>
+							<ng-template #okIcon>
+								<path d="M21.8 10.9A10 10 0 1 1 16 3.3" />
+								<path d="m9 11 3 3L22 4" />
+							</ng-template>
+						</svg>
+						<span>{{ error || sent }}</span>
+					</p>
 				</div>
 			</form>
-			<p *ngIf="error || sent" aria-live="polite"
-				class="tw-mb-0 tw-mt-3 tw-font-poppins tw-text-center tw-text-sm tw-font-medium tw-text-white xl:tw-text-right">
-				{{ error || sent }}
-			</p>
 		</div>
 	</div>
 

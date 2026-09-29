@@ -622,19 +622,14 @@ export class BookingTripPreviewComponent implements OnInit {
   private applyActiveLeg(): void {
     const b = this.bookingPreview || {};
 
-    const isTravelAgentBooking =
-      this.userRole === 'travel_agent' ||
-      b?.account_type === 'travel_planner' ||
-      b?.account_type === 'travel_agent' ||
-      b?.created_by_role === 'travel_agent' ||
-      b?.created_by_role === 'travel_planner';
-
     // Inside the booking form the affiliate is still pricing the trip, so the card
     // always shows; on saved bookings it is hidden once the booking is settled.
+    // TA-involved bookings show it too — the template keeps the TA/admin rows
+    // away from affiliates, so they only see payout, base rate and client total.
     const isSettled = ['paid', 'paid_cash', 'transfer_failed'].includes(b?.payment_status);
     this.showRateDistribution =
       this.userRole === 'admin' ||
-      (this.userRole === 'affiliate' && !isTravelAgentBooking &&
+      (this.userRole === 'affiliate' &&
         (this.previewMode !== 'view' || !isSettled));
 
     try {

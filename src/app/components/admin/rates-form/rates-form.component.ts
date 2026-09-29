@@ -374,6 +374,11 @@ export class RatesFormComponent implements OnInit, OnChanges, OnDestroy {
 
 	}
 
+	/** Travel Advisor Share row: only admin and the travel agent see it, and only when a TA is on the booking. */
+	get showTravelAdvisorShare(): boolean {
+		return ['admin', 'travel_agent'].includes(this.userRole) && this.isTravelShare && !this.isCreatedByAdmin;
+	}
+
 	returnZero() {
 		return 0;
 	}

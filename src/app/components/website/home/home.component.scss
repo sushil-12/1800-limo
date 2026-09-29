@@ -5326,3 +5326,137 @@ h2.ride-mobile-heading {
     width: 100%;
   }
 }
+
+/* --- DRIVE WITH US --- */
+.drive-with-us-section {
+	padding: 40px 0 10px;
+}
+
+.drive-with-us-card {
+	background: #000;
+	border-radius: 20px;
+	overflow: hidden;
+}
+
+.drive-with-us-image img {
+	width: 100%;
+	height: 100%;
+	min-height: 380px;
+	object-fit: cover;
+	display: block;
+}
+
+.drive-with-us-content {
+	padding: 40px 45px;
+}
+
+.drive-with-us-badge {
+	display: inline-block;
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	border-radius: 24px;
+	padding: 6px 16px;
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: #fff;
+}
+
+.drive-with-us-content h2 {
+	margin: 20px 0 0;
+	font-size: 42px;
+	font-weight: 800;
+	color: #fff;
+}
+
+.drive-with-us-content h2 span {
+	color: #F3933D;
+}
+
+.drive-with-us-content p {
+	margin: 16px 0 0;
+	font-size: 18px;
+	line-height: 1.6;
+	color: rgba(255, 255, 255, 0.85);
+}
+
+.drive-with-us-points {
+	list-style: none;
+	margin: 20px 0 0;
+	padding: 0;
+}
+
+.drive-with-us-points li {
+	position: relative;
+	padding-left: 28px;
+	margin-bottom: 10px;
+	font-size: 17px;
+	color: #fff;
+}
+
+.drive-with-us-points li::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 7px;
+	width: 14px;
+	height: 8px;
+	border-left: 2px solid #F3933D;
+	border-bottom: 2px solid #F3933D;
+	transform: rotate(-45deg);
+}
+
+.drive-with-us-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 26px;
+	padding: 14px 30px;
+	border-radius: 28px;
+	background: #F3933D;
+	color: #000 !important;
+	font-size: 17px;
+	font-weight: 700;
+	text-decoration: none !important;
+	transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.drive-with-us-btn:hover,
+.drive-with-us-btn:focus {
+	background: #ffab5c;
+	transform: translateY(-2px);
+}
+
+@media (max-width: 991px) {
+	.drive-with-us-image img {
+		min-height: 260px;
+	}
+
+	.drive-with-us-content {
+		padding: 30px 25px 35px;
+	}
+
+	.drive-with-us-content h2 {
+		font-size: 30px;
+	}
+
+	.drive-with-us-content p,
+	.drive-with-us-points li {
+		font-size: 16px;
+	}
+}
+
+@media (max-width: 600px) {
+	.drive-with-us-section {
+		padding: 25px 0 5px;
+	}
+
+	.drive-with-us-content h2 {
+		font-size: 26px;
+	}
+
+	.drive-with-us-btn {
+		width: 100%;
+		justify-content: center;
+	}
+}

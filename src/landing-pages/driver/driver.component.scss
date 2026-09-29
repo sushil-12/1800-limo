@@ -216,7 +216,7 @@ $brand-orange: #f3933d;
 		box-shadow 0.16s $ease-out,
 		filter 0.16s $ease-out;
 
-	&:hover {
+	&:hover:not(:disabled) {
 		color: var(--btn-fg);
 		text-decoration: none;
 		filter: brightness(1.06);
@@ -227,12 +227,19 @@ $brand-orange: #f3933d;
 			0 calc(var(--btn-depth) + 16px) 28px -10px var(--btn-glow);
 	}
 
-	&:active {
+	&:active:not(:disabled) {
 		transform: translateY(calc(var(--btn-depth) - 1px));
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.22),
 			0 1px 0 var(--btn-edge),
 			0 4px 8px -4px var(--btn-glow);
+	}
+
+	// While a request is in flight: stays put, reads as unavailable, keeps its own colours.
+	&:disabled {
+		transform: none;
+		opacity: 0.65;
+		cursor: not-allowed;
 	}
 
 	&:focus {
@@ -302,6 +309,27 @@ $brand-orange: #f3933d;
 .tw-scope .lp-btn--block {
 	display: flex;
 	width: 100%;
+}
+
+// Ring shown inside a button while its request is in flight.
+.tw-scope .lp-btn__spinner {
+	box-sizing: border-box;
+	width: 1.05em;
+	height: 1.05em;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: lp-btn-spin 0.6s linear infinite;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation-duration: 1.6s;
+	}
+}
+
+@keyframes lp-btn-spin {
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 // App Store / Google Play badge, built on .lp-btn.

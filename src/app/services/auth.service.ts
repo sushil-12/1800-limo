@@ -64,6 +64,11 @@ export class AuthService {
     return this.httpClient.get(this.serverUrl + 'get-subscription-products');
   }
 
+  /** Texts the driver app download link. `data.phone` must be in E.164 form (`+15551234567`). */
+  sendDriverAppLink(data: { phone: string }) {
+    return this.httpClient.post(this.serverUrl + 'send-driver-app-link', data);
+  }
+
   createPayment(data){
     return this.httpClient.post(this.serverUrl + 'create-subscription-plan', data);
   }

@@ -107,6 +107,19 @@ const ICON_TONE = {
   red: 'tw-bg-[#FDECEC] tw-text-[#D63A3A]'
 };
 
+// Apply CTA throttling. The server is the real rate limiter; these are a client-side
+// courtesy guard so an idle visitor can't sit on the button and burn SMS credit.
+/** localStorage log of app-link sends: { <hashed number>: [timestamps] }. */
+const SEND_LOG_KEY = 'driverAppLinkSends';
+/** One number can request the link this many times per window (they only need it once). */
+const MAX_SENDS_PER_NUMBER = 2;
+/** Any numbers together can be requested this many times per window from one browser. */
+const MAX_SENDS_PER_BROWSER = 5;
+/** Sends older than this drop out of the log, so the caps above reset after a day. */
+const SEND_WINDOW_MS = 24 * 60 * 60 * 1000;
+/** Minimum gap between two sends, so nobody can walk down a list of numbers. */
+const SEND_COOLDOWN_MS = 30 * 1000;
+
 // Showcase timeline (ms). Motion uses transform/opacity only; see the template.
 const PHONE_LEAD_IN = 700;
 const CALLOUT_STEP = 650;
@@ -327,10 +340,15 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
 
   mobile = '';
   error = '';
+  /** Confirmation shown under the Apply CTA once the link is on its way. */
+  sent = '';
+  /** True while `send-driver-app-link` is in flight; disables the form. */
+  sending = false;
   /** Country flag + dial code picker on the Apply CTA's mobile field. */
   private phoneInput?: intlTelInput.Plugin;
 
   private plansSub?: Subscription;
+  private appLinkSub?: Subscription;
 
   constructor(
     private authService: AuthService,
@@ -362,7 +380,7 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
       const user = this.authService.currentUserValue;
       const country = user?.phoneCountry || user?.country || 'auto';
       this.phoneInput = intlTelInput(this.mobileInputRef.nativeElement, this.commonService.getTelInputOptions(country));
-      this.mobileInputRef.nativeElement.addEventListener('countrychange', () => this.error = '');
+      this.mobileInputRef.nativeElement.addEventListener('countrychange', () => this.onMobileChange());
     }
 
     const el = this.showcaseRef?.nativeElement;
@@ -386,6 +404,7 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showcaseObserver?.disconnect();
     this.clearShowcaseTimers();
     this.plansSub?.unsubscribe();
+    this.appLinkSub?.unsubscribe();
     clearInterval(this.heroTimer);
     this.phoneInput?.destroy();
   }
@@ -551,17 +570,118 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showcaseTimers = [];
   }
 
+  /** Editing the number clears whatever the last attempt said. */
+  onMobileChange(): void {
+    this.error = '';
+    this.sent = '';
+  }
+
   applyToDrive(): void {
-    const digits = this.mobile.replace(/\D/g, '');
-    // isValidNumber() needs the utils script; until it loads, fall back to a length check.
-    const valid = this.phoneInput && (window as any).intlTelInputUtils
-      ? this.phoneInput.isValidNumber()
-      : digits.length >= 7 && digits.length <= 15;
-    if (!valid) {
+    if (this.sending) return;
+
+    const phone = this.e164Number();
+    if (!phone) {
       this.error = 'Please enter a valid mobile number.';
       return;
     }
+
+    const blocked = this.throttleMessage(phone);
+    if (blocked) {
+      this.error = blocked;
+      return;
+    }
+
     this.error = '';
-    // TODO: send the app link via SMS once the API endpoint is available.
+    this.sent = '';
+    this.sending = true;
+    this.appLinkSub = this.authService.sendDriverAppLink({ phone }).subscribe({
+      next: () => {
+        this.sending = false;
+        this.sent = 'Sent! Check your texts for the download link.';
+        this.mobile = '';
+        this.recordSend(phone);
+      },
+      error: (err: any) => {
+        this.sending = false;
+        // A server-side 429 counts as a send here too, so a page refresh can't wipe the cooldown.
+        if (err?.status === 429) this.recordSend(phone);
+        this.error = err?.status === 429
+          ? 'Too many requests. Please try again later.'
+          : err?.error?.message || "We couldn't send the link right now. Please try again.";
+      }
+    });
+  }
+
+  /** The typed number in E.164 (`+15551234567`), or '' when it isn't a valid mobile number. */
+  private e164Number(): string {
+    const digits = this.mobile.replace(/\D/g, '');
+
+    // isValidNumber()/getNumber() need the utils script; until it loads, fall back to a length
+    // check and build the number from the picker's dial code.
+    if (this.phoneInput && (window as any).intlTelInputUtils) {
+      return this.phoneInput.isValidNumber() ? this.phoneInput.getNumber() : '';
+    }
+    if (digits.length < 7 || digits.length > 15) return '';
+    // separateDialCode is on, so the field holds a national number - unless one was pasted in.
+    if (this.mobile.trim().startsWith('+')) return `+${digits}`;
+    const dialCode = this.phoneInput?.getSelectedCountryData()?.dialCode;
+    return dialCode ? `+${dialCode}${digits}` : '';
+  }
+
+  /** Why this send is being refused, or '' when it may go through. */
+  private throttleMessage(phone: string): string {
+    const log = this.readSendLog();
+    const all = Object.values(log).flat();
+
+    if ((log[this.numberKey(phone)]?.length ?? 0) >= MAX_SENDS_PER_NUMBER) {
+      return 'We already texted the app link to this number. Please check your messages.';
+    }
+    if (all.length >= MAX_SENDS_PER_BROWSER) {
+      return 'Too many requests. Please try again later.';
+    }
+    if (all.length && Date.now() - Math.max(...all) < SEND_COOLDOWN_MS) {
+      return 'Please wait a moment before requesting another link.';
+    }
+    return '';
+  }
+
+  private recordSend(phone: string): void {
+    const log = this.readSendLog();
+    const key = this.numberKey(phone);
+    log[key] = [...(log[key] ?? []), Date.now()];
+    try {
+      localStorage.setItem(SEND_LOG_KEY, JSON.stringify(log));
+    } catch {
+      // Storage full or blocked (private mode): the server-side limit still applies.
+    }
+  }
+
+  /** Reads the log, dropping entries that have aged out of the window. */
+  private readSendLog(): Record<string, number[]> {
+    const log: Record<string, number[]> = {};
+    let parsed: any;
+    try {
+      parsed = JSON.parse(localStorage.getItem(SEND_LOG_KEY) ?? 'null');
+    } catch {
+      return log; // Hand-edited or unreadable: treat it as no history.
+    }
+    if (!parsed || typeof parsed !== 'object') return log;
+
+    const cutoff = Date.now() - SEND_WINDOW_MS;
+    for (const [key, times] of Object.entries(parsed)) {
+      // Only entries older than the window are dropped, so a tampered clock can never
+      // hand out extra sends - at worst it holds the visitor to the cap for longer.
+      const kept = (Array.isArray(times) ? times : [])
+        .filter((time: any) => typeof time === 'number' && time > cutoff);
+      if (kept.length) log[key] = kept;
+    }
+    return log;
+  }
+
+  /** Short non-reversible key, so the log doesn't keep phone numbers in readable form. */
+  private numberKey(phone: string): string {
+    let hash = 5381;
+    for (const char of phone) hash = ((hash << 5) + hash + char.charCodeAt(0)) | 0;
+    return (hash >>> 0).toString(36);
   }
 }

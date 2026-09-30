@@ -869,3 +869,16 @@ gmp-basic-place-autocomplete {
 	border-top: 1px solid #e2e8f0;
 	background: #f8fafc;
 }
+
+// Booking column in the bookings tables (admin, affiliate, individual, travel agent).
+// Fixed width so it looks the same everywhere, no matter how much spare width the table has.
+.custom_table table.table {
+	th.booking-col,
+	td.booking-col {
+		width: 160px !important;
+		min-width: 160px !important;
+		white-space: nowrap !important;
+		text-align: left;
+		vertical-align: top !important;
+	}
+}

@@ -2093,7 +2093,7 @@
 				</h4>
 				<div class="row px-4" *ngIf="Form.affiliate_type.value == 'affiliate'">
 					<!-- Vehicle Type -->
-					<div id="vehicle-type" [ngClass]="Form.vehicle_type.value ? 'col-md-4 mb-3' : 'col-md-12 mb-3'">
+					<div id="vehicle-type" class="col-md-12 mb-3">
 						<ng-select appearance="outline" [items]="vehicleType_arr" bindLabel="formatted_name"
 							bindValue="vehicleType_id" placeholder="Select Vehicle Type" dropdownPosition="bottom"
 							[markFirst]="true" [virtualScroll]="true" formControlName="vehicle_type"

@@ -98,7 +98,7 @@
 								<tr role="row">
 									<th>Status</th>
 									<th>Date</th>
-									<th>Booking</th>
+									<th class="booking-col">Booking</th>
 
 									<th>Pax</th>
 									<th>Driver</th>
@@ -214,10 +214,10 @@
 										<p style="font-weight: 600 !important;">{{ FormatTime(booking?.pickup_time) }}
 										</p>
 									</td>
-									<td class="text-left font-weight-bolder">
+									<td class="text-left font-weight-bolder booking-col">
 										<p (click)="showBookingPreviewModal(booking?.booking_id)"
-											class="booking-id-font font-weight-bolder cursor-pointer text-underline">
-											<span [innerHTML]="highlighText(booking?.booking_id )"
+											class="booking-id-font font-weight-bolder cursor-pointer">
+											<span class="text-underline" [innerHTML]="highlighText(booking?.booking_id )"
 												style="font-weight: 600;"></span>
 										</p>
 										<p class="booking-id-font font-weight-bolder">

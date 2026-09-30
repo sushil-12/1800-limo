@@ -157,7 +157,7 @@
 										<i class="fa" style="font-size: 20px;"
 											[ngClass]="{'fa-sort-up': orderBy === 'pickup_date_asc', 'fa-sort-down': orderBy === 'pickup_date_desc', 'fa-sort': !orderBy.startsWith('pickup_date')}"></i>
 									</th>
-									<th (click)="handleSort('booking_id')" style="cursor: pointer;">
+									<th class="booking-col" (click)="handleSort('booking_id')" style="cursor: pointer;">
 										Booking
 										<i class="fa" style="font-size: 20px;"
 											[ngClass]="{'fa-sort-up': orderBy === 'booking_id_asc', 'fa-sort-down': orderBy === 'booking_id_desc', 'fa-sort': !orderBy.startsWith('booking_id')}"></i>
@@ -409,7 +409,7 @@
 											</p>
 										</td>
 									</ng-template>
-									<td class="text-left font-weight-bolder ">
+									<td class="text-left font-weight-bolder booking-col">
 										<p (click)="showBookingPreviewModal(booking?.booking_id)"
 											class="booking-id-font font-weight-bolder cursor-pointer">
 											<span class="text-underline" [innerHTML]="highlighText(booking.booking_id )"
@@ -422,7 +422,7 @@
 											<span class="currency">{{booking?.currency_symbol}}</span><span
 												[innerHTML]="highlighText(booking.grand_total ? (booking.grand_total).toFixed(2) : 0 )"></span>
 										</p>
-                                         <div class="pax-luggage-badges" *ngIf="booking?.total_passengers || booking?.luggage_count">
+                                        <div class="pax-luggage-badges" *ngIf="booking?.total_passengers || booking?.luggage_count">
 											<span class="badge-pill pax-badge" *ngIf="booking?.total_passengers" title="Passengers">
 												<i class="fa fa-user"></i>&nbsp;{{booking?.total_passengers}}
 											</span>
@@ -430,7 +430,6 @@
 												<i class="fa fa-suitcase"></i>&nbsp;{{booking?.luggage_count}}
 											</span>
 										</div>
-										
 									</td>
 
 									<td>

@@ -924,7 +924,7 @@ button.view-button.dropdown-toggle::after {
 	display: flex;
 	gap: 6px;
 	margin-top: 6px;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 
 	.badge-pill {
 		display: inline-flex;
@@ -934,7 +934,7 @@ button.view-button.dropdown-toggle::after {
 		border-radius: 12px;
 		font-size: 13px;
 		font-weight: 600;
-		color: #000000;
+		color: #3a3a3a;
 		white-space: nowrap;
 
 		i {

@@ -777,7 +777,9 @@ export class RatesFormComponent implements OnInit, OnChanges, OnDestroy {
 		const isDataComplete = this.isBookingDataComplete(data);
 
 
-		const shouldPreserveInitialReservationRates = ['edit', 'repeat', 'return', 'round'].includes(this.bookingType);
+		// A round trip is built from a one-way booking, so its saved rates don't cover the
+		// return leg - it must fetch fresh rates (booking-rates-vehicle) instead of preserving them.
+		const shouldPreserveInitialReservationRates = ['edit', 'repeat', 'return'].includes(this.bookingType);
 
 		// A bumped rate_refresh_token marks an explicit user pick (quote vehicle,
 		// affiliate dropdown). Those must always recalculate — never swallow them
@@ -795,6 +797,15 @@ export class RatesFormComponent implements OnInit, OnChanges, OnDestroy {
 			} else {
 			}
 			return;
+		}
+
+		// Round trip: hold off until the prefilled booking data is complete, then fetch once.
+		if (this.bookingType === 'round' && !this.hasCapturedInitialBookingDataBaseline && !isExplicitSelection) {
+			if (!isDataComplete) {
+				this.previousBookingData = JSON.parse(JSON.stringify(data));
+				return;
+			}
+			this.hasCapturedInitialBookingDataBaseline = true;
 		}
 
 		// An explicit pick ends the hydration-preserve phase: from here on,

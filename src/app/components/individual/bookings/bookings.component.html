@@ -96,7 +96,7 @@
                             <thead>
                                 <tr role="row">
                                     <th>Status</th>
-                                    <th>Booking</th>
+                                    <th class="booking-col">Booking</th>
 
                                     <th>Date</th>
                                     <th>Pax</th>
@@ -176,11 +176,11 @@
                                         </div>
                                     </td>
 
-                                    <td class="text-left font-weight-bolder">
+                                    <td class="text-left font-weight-bolder booking-col">
                                         <p data-toggle="modal" data-target="#previewBookingOnID"
                                             (click)="showBookingPreviewModal(booking?.booking_id)"
-                                            class="booking-id-font font-weight-bolder cursor-pointer text-underline">
-                                            <span [innerHTML]="highlighText(booking?.booking_id )"
+                                            class="booking-id-font font-weight-bolder cursor-pointer">
+                                            <span class="text-underline" [innerHTML]="highlighText(booking?.booking_id )"
                                                 style="font-weight: 600;"></span>
                                         </p>
                                         <p class="booking-id-font font-weight-bolder">

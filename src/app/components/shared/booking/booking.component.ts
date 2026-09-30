@@ -769,8 +769,10 @@ export class BookingComponent implements OnInit, OnDestroy {
 			chargedAmenities: this.Form.chargedAmenities.value || []
 		};
 
-		// keep the canonical quote store consistent for any code that reads it
-		if (!this.is_booking_edit_case) {
+		// keep the canonical quote store consistent for any code that reads it; skip it
+		// while a leg's distance is unresolved — the backend reads location_info[0] and [1]
+		// by index, so a round trip saved with one entry breaks the master-vehicle API
+		if (!this.is_booking_edit_case && location_info.length === (isRoundTrip ? 2 : 1)) {
 			localStorage.setItem('quotebot_form', JSON.stringify(payload));
 		}
 		return payload;
@@ -803,6 +805,18 @@ export class BookingComponent implements OnInit, OnDestroy {
 				}
 			} finally {
 				this.quoteLoading = false;
+			}
+			// _MapController resolves null (no distance set) when a leg can't be routed;
+			// don't send a round trip without its return leg
+			if (this.distance <= 0 || (isRoundTrip && this.return_distance <= 0)) {
+				this.$errors.openDialog({
+					errors: {
+						error: this.distance <= 0
+							? 'Could not calculate the route. Please check the pickup and drop-off locations.'
+							: 'Could not calculate the return trip route. Please check the return pickup and drop-off locations.'
+					}
+				});
+				return;
 			}
 			// rebuild so location_info reflects the distance/time we just resolved
 			payload = this.buildQuotePayload();

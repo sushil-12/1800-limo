@@ -73,7 +73,7 @@
 
 	<div class="lp-container">
 		<!-- Apply CTA -->
-		<div class="tw-mt-14 tw-rounded-xl tw-bg-brand-orange tw-px-5 tw-py-8 sm:tw-mt-20 sm:tw-px-8 sm:tw-py-10 lg:tw-mt-12 lg:tw-px-14 lg:tw-py-12 xl:tw-px-16">
+		<div class="tw-mt-14 tw-rounded-xl tw-bg-brand-orange tw-px-4 tw-py-8 sm:tw-mt-20 sm:tw-px-8 sm:tw-py-10 lg:tw-mt-12 lg:tw-px-14 lg:tw-py-12 xl:tw-px-16">
 			<form class="tw-m-0 tw-flex tw-flex-col tw-gap-6 xl:tw-flex-row xl:tw-items-center xl:tw-justify-between xl:tw-gap-10"
 				(ngSubmit)="applyToDrive()" novalidate>
 				<p class="tw-m-0 tw-font-poppins tw-text-center tw-text-lg tw-font-semibold tw-leading-snug tw-text-white tw-text-balance sm:tw-text-xl lg:tw-text-xl xl:tw-max-w-[25rem] xl:tw-text-left">
@@ -81,13 +81,13 @@
 				</p>
 
 				<div class="tw-flex tw-w-full tw-flex-col xl:tw-max-w-2xl xl:tw-flex-1">
-					<div class="tw-flex tw-w-full tw-flex-col tw-gap-3 sm:tw-flex-row sm:tw-gap-4">
+					<div class="tw-flex tw-w-full tw-flex-col tw-gap-3 md:tw-flex-row md:tw-gap-4">
 						<div class="lp-phone tw-flex-1">
 							<label for="driver-mobile" class="tw-sr-only">Mobile number</label>
 							<input #mobileInput id="driver-mobile" name="mobile" type="tel" inputmode="tel" autocomplete="tel"
 								[(ngModel)]="mobile" (ngModelChange)="onMobileChange()" [disabled]="sending"
 								placeholder="Enter your mobile number"
-								class="tw-m-0 tw-h-14 tw-w-full tw-rounded-md tw-border-0 tw-bg-white tw-px-5 tw-font-poppins !tw-text-base tw-font-normal tw-text-black tw-shadow-none tw-outline-none placeholder:!tw-text-base placeholder:!tw-font-normal placeholder:tw-text-[#C4C4C4] focus:tw-ring-2 focus:tw-ring-black sm:tw-h-16 sm:tw-px-7 sm:!tw-text-lg sm:placeholder:!tw-text-lg">
+								class="tw-m-0 tw-h-14 tw-w-full tw-rounded-md tw-border-0 tw-bg-transparent tw-pr-3 tw-font-poppins !tw-text-base tw-font-normal tw-text-black tw-shadow-none tw-outline-none placeholder:!tw-font-normal placeholder:tw-text-[#C4C4C4] sm:tw-h-16 sm:tw-pr-5 sm:!tw-text-lg">
 						</div>
 						<button type="submit" class="lp-btn lp-btn--on-color tw-shrink-0"
 							[disabled]="sending" [attr.aria-busy]="sending || null">

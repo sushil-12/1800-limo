@@ -53,6 +53,28 @@ const DESKTOP_KEY = 'adminNotifications:desktop';
 /** Background calls must never pop the global error dialog. */
 const SILENT = { headers: new HttpHeaders({ [SILENT_ERRORS_HEADER]: '1' }) };
 
+/** Decodes HTML entities (&period; &comma; &amp; ...) the API may have stored. */
+function decodeEntities(value: string | null): string | null {
+	if (!value || value.indexOf('&') === -1) {
+		return value;
+	}
+	const el = document.createElement('textarea');
+	let decoded = value;
+	for (let i = 0; i < 2; i++) {
+		el.innerHTML = decoded;
+		decoded = el.value;
+	}
+	return decoded;
+}
+
+function normalize(n: AdminNotification): AdminNotification {
+	return {
+		...n,
+		actor_name: decodeEntities(n.actor_name),
+		changes: (n.changes || []).map(c => ({ ...c, old: decodeEntities(c.old), new: decodeEntities(c.new) || '' })),
+	};
+}
+
 /**
  * Booking-activity notifications for the admin dashboard.
  *
@@ -86,7 +108,12 @@ export class AdminNotificationService {
 				params = params.set(key, value === true ? '1' : String(value));
 			}
 		});
-		return this.http.get<any>(this.serverUrl, { params, ...(silent ? SILENT : {}) }).pipe(map(res => res.data as AdminNotificationPage));
+		return this.http.get<any>(this.serverUrl, { params, ...(silent ? SILENT : {}) }).pipe(
+			map(res => {
+				const page = res.data as AdminNotificationPage;
+				return { ...page, data: (page.data || []).map(normalize) };
+			})
+		);
 	}
 
 	markRead(id: number): Observable<any> {

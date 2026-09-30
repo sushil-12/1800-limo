@@ -41,7 +41,7 @@
 
 	<div class="an-list" *ngIf="!loading && items.length">
 		<article class="an-card" *ngFor="let n of items; trackBy: trackById" [class.unread]="!n.read_at">
-			<header class="an-card-head">
+			<div class="an-card-head">
 				<div class="an-avatar" [attr.data-event]="n.event" aria-hidden="true">{{ initials(actorName(n)) }}</div>
 
 				<div class="an-who">
@@ -62,32 +62,33 @@
 					<button type="button" class="an-btn an-btn-sm" *ngIf="!n.read_at" (click)="markRead(n, $event)">Mark read</button>
 					<button type="button" class="an-btn an-btn-sm an-btn-primary" (click)="openBooking(n, $event)">Open booking</button>
 				</div>
-			</header>
+			</div>
 
 			<div class="an-changes" *ngIf="changesOf(n).length; else noChanges">
 				<div class="an-changes-title">
 					{{ isNewBooking(n) ? 'Booking details' : changesOf(n).length + ' field' + (changesOf(n).length === 1 ? '' : 's') + ' changed' }}
 				</div>
-				<table>
-					<thead>
-						<tr>
-							<th scope="col">Field</th>
-							<th scope="col" *ngIf="!isNewBooking(n)">Before</th>
-							<th scope="col">{{ isNewBooking(n) ? 'Value' : 'After' }}</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr *ngFor="let c of changesOf(n)">
-							<th scope="row" class="an-label">{{ c.label }}</th>
-							<td *ngIf="!isNewBooking(n)" class="an-old">
+				<div class="an-diff">
+					<div class="an-diff-head" *ngIf="!isNewBooking(n)">
+						<span>Field</span><span>Before</span><span>After</span>
+					</div>
+					<div class="an-diff-row" *ngFor="let c of changesOf(n)" [class.single]="isNewBooking(n)">
+						<div class="an-label">{{ c.label }}</div>
+						<ng-container *ngIf="!isNewBooking(n); else valueOnly">
+							<div class="an-cell an-was">
+								<span class="an-mobile-tag">Before</span>
 								<span *ngIf="c.old; else emptyVal">{{ c.old }}</span>
-							</td>
-							<td class="an-new">
+							</div>
+							<div class="an-cell an-now">
+								<span class="an-mobile-tag">After</span>
 								<span *ngIf="c.new; else emptyVal">{{ c.new }}</span>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+							</div>
+						</ng-container>
+						<ng-template #valueOnly>
+							<div class="an-cell an-value">{{ c.new }}</div>
+						</ng-template>
+					</div>
+				</div>
 			</div>
 			<ng-template #noChanges>
 				<div class="an-nochanges">No field details were recorded for this entry.</div>

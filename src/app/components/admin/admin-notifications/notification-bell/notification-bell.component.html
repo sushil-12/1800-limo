@@ -1,12 +1,13 @@
 <div class="nb">
 	<button type="button" class="nb-trigger" (click)="toggle($event)" [attr.aria-expanded]="open"
-		[class.has-unread]="(notifications.unreadCount$ | async)" aria-label="Booking notifications">
-		<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
-			stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-			<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
-			<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+		[class.has-unread]="(notifications.unreadCount$ | async)"
+		[attr.aria-label]="'Booking notifications' + ((notifications.unreadCount$ | async) ? ', ' + (notifications.unreadCount$ | async) + ' unread' : '')"
+		title="Booking activity">
+		<svg class="nb-bell" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+			<path fill-rule="evenodd" clip-rule="evenodd"
+				d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z" />
 		</svg>
-		<span class="nb-badge" *ngIf="(notifications.unreadCount$ | async) as count">
+		<span class="nb-badge" *ngIf="(notifications.unreadCount$ | async) as count" aria-hidden="true">
 			{{ count > 99 ? '99+' : count }}
 		</span>
 	</button>
@@ -46,19 +47,24 @@
 							<span class="nb-src">· {{ sourceLabel(n) }}</span>
 						</div>
 
-						<ul class="nb-changes" *ngIf="changesOf(n).length">
-							<li *ngFor="let c of (expanded.has(n.id) ? changesOf(n) : changesOf(n).slice(0, collapsedChanges))">
-								<span class="nb-label">{{ c.label }}</span>
-								<span class="nb-values">
-									<ng-container *ngIf="!isNewBooking(n) && c.old !== null; else onlyNew">
-										<span class="nb-old">{{ c.old || 'empty' }}</span>
-										<span class="nb-arrow" aria-label="changed to">→</span>
-										<span class="nb-new">{{ c.new || 'empty' }}</span>
-									</ng-container>
-									<ng-template #onlyNew><span class="nb-new">{{ c.new }}</span></ng-template>
-								</span>
-							</li>
-						</ul>
+						<div class="nb-changes" *ngIf="changesOf(n).length">
+							<div class="nb-change" *ngFor="let c of (expanded.has(n.id) ? changesOf(n) : changesOf(n).slice(0, collapsedChanges))">
+								<div class="nb-label">{{ c.label }}</div>
+								<ng-container *ngIf="!isNewBooking(n) && c.old !== null; else onlyNew">
+									<div class="nb-line nb-was">
+										<span class="nb-sign">Was</span>
+										<span class="nb-val">{{ c.old || 'empty' }}</span>
+									</div>
+									<div class="nb-line nb-now">
+										<span class="nb-sign">Now</span>
+										<span class="nb-val">{{ c.new || 'empty' }}</span>
+									</div>
+								</ng-container>
+								<ng-template #onlyNew>
+									<div class="nb-line nb-value"><span class="nb-val">{{ c.new }}</span></div>
+								</ng-template>
+							</div>
+						</div>
 
 						<button type="button" class="nb-more" *ngIf="changesOf(n).length > collapsedChanges"
 							(click)="toggleExpanded(n, $event)">

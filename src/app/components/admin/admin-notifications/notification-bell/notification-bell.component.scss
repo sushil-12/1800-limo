@@ -1,5 +1,6 @@
 :host {
 	display: inline-block;
+	font-family: 'Roboto', system-ui, -apple-system, sans-serif;
 	--nb-accent: var(--orange, #f47a20);
 	--nb-text: #1f2328;
 	--nb-muted: #6b7280;
@@ -10,7 +11,20 @@
 	position: relative;
 }
 
+// Global site CSS styles bare buttons; pin ours down explicitly.
+.nb button {
+	-webkit-appearance: none;
+	appearance: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+	box-shadow: none;
+	font-family: inherit;
+}
+
 // ---- Trigger ----
+// Colors are pinned with !important: site CSS restyles bare nav buttons
+// (it previously turned this one blue with a white icon).
 
 .nb-trigger {
 	position: relative;
@@ -19,48 +33,101 @@
 	justify-content: center;
 	width: 40px;
 	height: 40px;
-	border: 0;
-	border-radius: 50%;
-	background: transparent;
-	color: var(--nb-text);
+	padding: 0 !important;
+	border: 1px solid #e5e7eb !important;
+	border-radius: 50% !important;
+	background: #f6f7f9 !important;
+	color: #374151 !important;
 	cursor: pointer;
-	transition: background 0.15s;
+	transition: background 0.15s, border-color 0.15s, color 0.15s;
 
-	&:hover,
-	&[aria-expanded='true'] {
-		background: rgba(0, 0, 0, 0.06);
+	&:hover {
+		background: #eceff3 !important;
+		color: #111827 !important;
 	}
 
-	&.has-unread svg {
-		animation: nb-ring 0.9s ease-in-out 1;
-		transform-origin: 50% 10%;
+	&[aria-expanded='true'] {
+		background: #fff4ea !important;
+		border-color: var(--nb-accent) !important;
+		color: var(--nb-accent) !important;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--nb-accent) !important;
+		outline-offset: 2px;
+	}
+
+	&.has-unread {
+		color: var(--nb-accent) !important;
+
+		.nb-bell {
+			animation: nb-ring 1s ease-in-out 1;
+		}
+	}
+}
+
+.nb-bell {
+	display: block;
+	width: 22px;
+	height: 22px;
+	transform-origin: 50% 12%;
+
+	path {
+		fill: black !important;
+		stroke: none !important;
 	}
 }
 
 @keyframes nb-ring {
 	0%, 100% { transform: rotate(0); }
-	20% { transform: rotate(14deg); }
-	40% { transform: rotate(-12deg); }
-	60% { transform: rotate(8deg); }
-	80% { transform: rotate(-4deg); }
+	15% { transform: rotate(16deg); }
+	30% { transform: rotate(-14deg); }
+	45% { transform: rotate(10deg); }
+	60% { transform: rotate(-6deg); }
+	75% { transform: rotate(3deg); }
 }
 
 .nb-badge {
 	position: absolute;
-	top: 2px;
-	right: 0;
-	min-width: 18px;
-	height: 18px;
+	top: -4px;
+	right: -4px;
+	min-width: 20px;
+	height: 20px;
 	padding: 0 5px;
 	border: 2px solid #fff;
 	border-radius: 10px;
-	background: #d93025;
-	color: #fff;
-	font-size: 10px;
+	background: #e11d48;
+	color: #fff !important;
+	font-size: 11px;
 	font-weight: 700;
-	line-height: 14px;
+	line-height: 16px;
 	text-align: center;
-	box-sizing: content-box;
+	box-sizing: border-box;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+	pointer-events: none;
+
+	// Soft pulse so new activity catches the eye without being noisy.
+	&::after {
+		content: '';
+		position: absolute;
+		inset: -2px;
+		border-radius: 10px;
+		border: 2px solid #e11d48;
+		animation: nb-pulse 2s ease-out 3;
+		opacity: 0;
+	}
+}
+
+@keyframes nb-pulse {
+	0% { transform: scale(1); opacity: 0.6; }
+	100% { transform: scale(1.8); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.nb-trigger.has-unread .nb-bell,
+	.nb-badge::after {
+		animation: none;
+	}
 }
 
 // ---- Panel ----
@@ -116,7 +183,7 @@
 
 .nb-link {
 	border: 0;
-	background: none;
+	background: transparent !important;
 	padding: 0;
 	color: var(--nb-accent);
 	font-size: 13px;
@@ -240,60 +307,94 @@
 	line-height: 18px;
 }
 
-// ---- Changes ----
+// ---- Changes (diff style) ----
 
 .nb-changes {
-	list-style: none;
-	margin: 8px 0 0;
-	padding: 8px 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.nb-change {
+	border: 1px solid var(--nb-line);
 	border-radius: 8px;
-	background: #f6f7f9;
-
-	li {
-		display: grid;
-		grid-template-columns: 96px 1fr;
-		gap: 8px;
-		padding: 3px 0;
-		font-size: 12px;
-		line-height: 1.4;
-
-		& + li {
-			border-top: 1px dashed #e3e6ea;
-		}
-	}
+	overflow: hidden;
+	background: #fff;
 }
 
 .nb-label {
-	color: var(--nb-muted);
-	font-weight: 500;
+	padding: 5px 10px;
+	background: #f3f4f6;
+	color: #374151;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
 }
 
-.nb-values {
+.nb-line {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 6px 10px;
+	font-size: 13px;
+	line-height: 1.45;
+}
+
+.nb-sign {
+	flex: 0 0 34px;
+	margin-top: 1px;
+	padding: 1px 0;
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 700;
+	text-align: center;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.nb-val {
 	min-width: 0;
 	overflow-wrap: anywhere;
 	white-space: pre-line;
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
 }
 
-.nb-old {
-	color: #9aa0a6;
-	text-decoration: line-through;
+.nb-was {
+	background: #fef2f2;
+	color: #7f1d1d;
+
+	.nb-sign {
+		background: #fecaca;
+		color: #991b1b;
+	}
 }
 
-.nb-arrow {
-	margin: 0 4px;
-	color: var(--nb-muted);
+.nb-now {
+	background: #f0fdf4;
+	color: #14532d;
+	font-weight: 600;
+
+	.nb-sign {
+		background: #bbf7d0;
+		color: #166534;
+	}
 }
 
-.nb-new {
+.nb-value {
 	color: var(--nb-text);
 	font-weight: 600;
 }
 
 .nb-more {
-	margin-top: 6px;
+	margin-top: 8px;
 	padding: 0;
 	border: 0;
-	background: none;
+	background: transparent !important;
 	color: var(--nb-accent);
 	font-size: 12px;
 	font-weight: 600;
@@ -331,7 +432,7 @@
 	padding: 3px 10px;
 	border: 1px solid #d9dde3;
 	border-radius: 12px;
-	background: #fff;
+	background: #fff !important;
 	color: var(--nb-muted);
 	font-size: 12px;
 	cursor: pointer;
@@ -339,7 +440,7 @@
 	&.on {
 		border-color: var(--nb-accent);
 		color: var(--nb-accent);
-		background: #fff8f1;
+		background: #fff4ea !important;
 	}
 
 	&:disabled {
@@ -355,9 +456,5 @@
 		left: 16px;
 		right: 16px;
 		width: auto;
-	}
-
-	.nb-changes li {
-		grid-template-columns: 80px 1fr;
 	}
 }

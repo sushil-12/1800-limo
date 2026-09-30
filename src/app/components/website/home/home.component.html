@@ -245,7 +245,8 @@
 													</div>
 													<div *ngIf="isAddressDropdownOpen('pickup_address')"
 														class="qb-airport-field__dropdown qb-address-field__dropdown"
-														style="position:absolute; top:100%; left:0; right:0; z-index:30; max-height:260px; overflow:auto; background:#fff; border:1px solid #d9d9d9; border-radius:12px; margin-top:6px; box-shadow:0 10px 24px rgba(0,0,0,0.14);">
+														style="position:absolute; top:100%; left:0; right:0; z-index:30; max-height:360px; overflow:auto; background:#fff; border:1px solid #d9d9d9; border-radius:12px; margin-top:6px; box-shadow:0 10px 24px rgba(0,0,0,0.14);">
+														<ng-container *ngTemplateOutlet="addressQuickPicks; context: { $implicit: 'pickup_address' }"></ng-container>
 														<button type="button"
 															class="qb-airport-field__option qb-address-field__option"
 															*ngFor="let address of getAddressOptions('pickup_address')"
@@ -462,7 +463,8 @@
 
 													<div *ngIf="isAddressDropdownOpen('dropoff_address')"
 														class="qb-airport-field__dropdown qb-address-field__dropdown"
-														style="position:absolute; top:100%; left:0; right:0; z-index:30; max-height:260px; overflow:auto; background:#fff; border:1px solid #d9d9d9; border-radius:12px; margin-top:6px; box-shadow:0 10px 24px rgba(0,0,0,0.14);">
+														style="position:absolute; top:100%; left:0; right:0; z-index:30; max-height:360px; overflow:auto; background:#fff; border:1px solid #d9d9d9; border-radius:12px; margin-top:6px; box-shadow:0 10px 24px rgba(0,0,0,0.14);">
+														<ng-container *ngTemplateOutlet="addressQuickPicks; context: { $implicit: 'dropoff_address' }"></ng-container>
 														<button type="button"
 															class="qb-airport-field__option qb-address-field__option"
 															*ngFor="let address of getAddressOptions('dropoff_address')"
@@ -816,7 +818,8 @@
 													</div>
 													<div *ngIf="isAddressDropdownOpen('return_pickup_address')"
 														class="qb-airport-field__dropdown qb-address-field__dropdown"
-														style="position:absolute; top:100%; left:0; right:0; z-index:30; max-height:260px; overflow:auto; background:#fff; border:1px solid #d9d9d9; border-radius:12px; margin-top:6px; box-shadow:0 10px 24px rgba(0,0,0,0.14);">
+														style="position:absolute; top:100%; left:0; right:0; z-index:30; max-height:360px; overflow:auto; background:#fff; border:1px solid #d9d9d9; border-radius:12px; margin-top:6px; box-shadow:0 10px 24px rgba(0,0,0,0.14);">
+														<ng-container *ngTemplateOutlet="addressQuickPicks; context: { $implicit: 'return_pickup_address' }"></ng-container>
 														<button type="button"
 															class="qb-airport-field__option qb-address-field__option"
 															*ngFor="let address of getAddressOptions('return_pickup_address')"
@@ -1031,7 +1034,8 @@
 													</div>
 													<div *ngIf="isAddressDropdownOpen('return_dropoff_address')"
 														class="qb-airport-field__dropdown qb-address-field__dropdown"
-														style="position:absolute; top:100%; left:0; right:0; z-index:30; max-height:260px; overflow:auto; background:#fff; border:1px solid #d9d9d9; border-radius:12px; margin-top:6px; box-shadow:0 10px 24px rgba(0,0,0,0.14);">
+														style="position:absolute; top:100%; left:0; right:0; z-index:30; max-height:360px; overflow:auto; background:#fff; border:1px solid #d9d9d9; border-radius:12px; margin-top:6px; box-shadow:0 10px 24px rgba(0,0,0,0.14);">
+														<ng-container *ngTemplateOutlet="addressQuickPicks; context: { $implicit: 'return_dropoff_address' }"></ng-container>
 														<button type="button"
 															class="qb-airport-field__option qb-address-field__option"
 															*ngFor="let address of getAddressOptions('return_dropoff_address')"
@@ -2141,3 +2145,33 @@
 
 	</div>
 </div>
+
+<!-- Address dropdown quick picks ("Near Me" + "Recent Searches"), shared by pickup/dropoff and return trip -->
+<ng-template #addressQuickPicks let-fieldName>
+	<ng-container *ngIf="shouldShowNearMe(fieldName)">
+		<div class="qb-address-quickpick__heading">Near Me</div>
+		<button type="button" class="qb-address-quickpick__option"
+			(mousedown)="$event.preventDefault()"
+			(click)="useNearMeLocation(fieldName)">
+			<i class="fa-solid fa-location-arrow qb-address-quickpick__icon" aria-hidden="true"></i>
+			<span class="qb-address-quickpick__label">{{ getNearMeLabel() }}</span>
+		</button>
+	</ng-container>
+	<ng-container *ngIf="getRecentLocationOptions(fieldName) as recents">
+		<ng-container *ngIf="recents.length">
+			<div class="qb-address-quickpick__heading">Recent Searches</div>
+			<button type="button" class="qb-address-quickpick__option"
+				*ngFor="let recent of recents"
+				(mousedown)="$event.preventDefault()"
+				(click)="selectRecentLocation(recent, fieldName)">
+				<i class="qb-address-quickpick__icon"
+					[ngClass]="recent.airport ? 'fas fa-plane-departure' : 'fas fa-history'"
+					aria-hidden="true"></i>
+				<span class="qb-address-quickpick__label">{{ recent.address }}</span>
+			</button>
+		</ng-container>
+	</ng-container>
+	<div class="qb-address-quickpick__heading"
+		*ngIf="getAddressOptions(fieldName).length && (shouldShowNearMe(fieldName) || getRecentLocationOptions(fieldName).length)">
+		Suggestions</div>
+</ng-template>

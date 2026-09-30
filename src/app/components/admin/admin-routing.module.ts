@@ -46,6 +46,7 @@ import { InvoiceSummaryComponent } from './invoice-summary/invoice-summary.compo
 import { SubAdminComponent } from './sub-admin/sub-admin.component';
 import { AddSubAdminComponent } from './add-sub-admin/add-sub-admin.component';
 import { AdminGuardGuard } from '../../../app/guards/admin-guard.guard';
+import { AdminNotificationsComponent } from './admin-notifications/admin-notifications.component';
 import { SubAdminGuard } from '../../../app/guards/sub-admin.guard';
 import { CreateDebitCcCardComponent } from './create-debit-cc-card/create-debit-cc-card.component';
 import { HomePageComponent } from './cms/home-page/home-page.component';
@@ -194,6 +195,11 @@ const routes: Routes = [
 		path: 'daily-bookings-admin',
 		canActivate: [SubAdminGuard],
 		component: DailyBookingsComponent
+	},
+	{
+		path: 'notifications',
+		canActivate: [AdminGuardGuard],
+		component: AdminNotificationsComponent
 	},
 	{
 		path: 'booking-list',

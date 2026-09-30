@@ -98,6 +98,7 @@ import { InvestorsComponent } from './components/website/investors/investors.com
 import { BlogComponent } from './components/website/blog/blog.component';
 import { BlogDetailComponent } from './components/website/blog-detail/blog-detail.component';
 import { ToastrModule } from 'ngx-toastr';
+import { NotificationBellComponent } from './components/admin/admin-notifications/notification-bell/notification-bell.component';
 
 @NgModule({
 	declarations: [
@@ -183,6 +184,7 @@ import { ToastrModule } from 'ngx-toastr';
 		NgxChartsModule,
 		BsDatepickerModule,
 		NgxDaterangepickerMd.forRoot(),
+		NotificationBellComponent,
 		ToastrModule.forRoot({
 			positionClass: 'toast-top-right',
 			timeOut: 3000,

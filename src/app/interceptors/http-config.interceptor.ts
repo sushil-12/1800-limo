@@ -15,6 +15,8 @@ import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { NgxSpinnerService } from 'ngx-spinner';
 
+export const SILENT_ERRORS_HEADER = 'X-Silent-Errors';
+
 @Injectable()
 export class HttpConfigInterceptor implements HttpInterceptor {
 	public errors: any;
@@ -28,6 +30,12 @@ export class HttpConfigInterceptor implements HttpInterceptor {
 
 	intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 		const token: string = localStorage.getItem('token');
+
+		// Background requests (e.g. notification polling) opt out of the error dialog.
+		const silent = request.headers.has(SILENT_ERRORS_HEADER);
+		if (silent) {
+			request = request.clone({ headers: request.headers.delete(SILENT_ERRORS_HEADER) });
+		}
 
 		if (token) {
 			request = request.clone({ headers: request.headers.set('Authorization', 'Bearer ' + token) });
@@ -47,6 +55,9 @@ export class HttpConfigInterceptor implements HttpInterceptor {
 				return event;
 			}),
 			catchError((errorData: HttpErrorResponse) => {
+				if (silent) {
+					return throwError(() => errorData);
+				}
 				this.spinner.hide()
 				if (errorData.status == 401) {
 					this.errors = {

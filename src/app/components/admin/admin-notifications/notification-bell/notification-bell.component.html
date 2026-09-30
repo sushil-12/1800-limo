@@ -1,0 +1,56 @@
+<div class="nb">
+	<button type="button" class="nb-trigger" (click)="toggle($event)" [attr.aria-expanded]="open"
+		aria-label="Booking notifications">
+		<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+			stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+			<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+		</svg>
+		<span class="nb-badge" *ngIf="(notifications.unreadCount$ | async) as count">
+			{{ count > 99 ? '99+' : count }}
+		</span>
+	</button>
+
+	<div class="nb-panel" *ngIf="open" role="dialog" aria-label="Booking activity">
+		<div class="nb-head">
+			<span class="nb-title">Booking activity</span>
+			<button type="button" class="nb-link" (click)="markAllRead()"
+				[disabled]="!(notifications.unreadCount$ | async)">Mark all read</button>
+		</div>
+
+		<div class="nb-list">
+			<ng-container *ngIf="(notifications.recent$ | async) as items">
+				<button type="button" class="nb-item" *ngFor="let n of items; trackBy: trackById"
+					[class.unread]="!n.read_at" (click)="openItem(n)">
+					<span class="nb-dot" aria-hidden="true"></span>
+					<span class="nb-body">
+						<span class="nb-meta">
+							<span class="nb-tag" [attr.data-event]="n.event">{{ eventLabel(n.event) }}</span>
+							<span class="nb-time">{{ n.created_at | date:'MMM d, h:mm a' }}</span>
+						</span>
+						<span class="nb-item-title">{{ n.title }}</span>
+						<span class="nb-summary" *ngIf="changeSummary(n) as s">{{ s }}</span>
+					</span>
+				</button>
+				<div class="nb-empty" *ngIf="!items.length">No booking activity yet.</div>
+			</ng-container>
+		</div>
+
+		<div class="nb-foot">
+			<button type="button" class="nb-link" (click)="viewAll()">View all activity</button>
+			<div class="nb-toggles">
+				<button type="button" class="nb-toggle" [class.on]="notifications.soundEnabled"
+					(click)="toggleSound()" title="Play a sound for new activity">
+					Sound {{ notifications.soundEnabled ? 'on' : 'off' }}
+				</button>
+				<button type="button" class="nb-toggle" [class.on]="notifications.desktopEnabled"
+					*ngIf="notifications.desktopPermission !== 'unsupported'"
+					[disabled]="notifications.desktopPermission === 'denied'"
+					(click)="toggleDesktop()"
+					[title]="notifications.desktopPermission === 'denied' ? 'Blocked in browser settings' : 'Show a desktop notification for new activity'">
+					Desktop {{ notifications.desktopEnabled ? 'on' : 'off' }}
+				</button>
+			</div>
+		</div>
+	</div>
+</div>

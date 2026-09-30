@@ -65,6 +65,9 @@
 				  </div> -->
 				<div id="google_translate_element_admin_desktop"></div>
 			</li>
+			<li class="nav-item mr-2" *ngIf="!bkpData && role == 'admin'">
+				<app-notification-bell></app-notification-bell>
+			</li>
 			<li class="nav-item dropdown no-caret mr-2 dropdown-user" *ngIf="!bkpData">
 				<a class="user-profile btn btn-icon btn-transparent-dark dropdown-toggle" id="navbarDropdownUserImage"
 					href="javascript:void(0);" role="button" data-toggle="dropdown" aria-haspopup="true"

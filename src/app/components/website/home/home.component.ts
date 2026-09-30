@@ -23,6 +23,8 @@ import { DaterangepickerDirective } from 'ngx-daterangepicker-material';
 import { Swiper } from 'swiper';
 import { Navigation, Autoplay, Pagination } from 'swiper/modules';
 import { BlogService } from '../blog/blog.service';
+import { LocationContextService } from '../../../services/location-context.service';
+import { RecentLocation, RecentLocationsService } from '../../../services/recent-locations.service';
 
 type QuoteBotControlSyncOptions = {
 	markAsDirty?: boolean;
@@ -132,6 +134,12 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 	private locationRequestVersionByField: Record<string, number> = {};
 	private airportSearchDebounceTimers: Record<string, ReturnType<typeof setTimeout>> = {};
 	private airportAutocompleteSessionTokens: Record<string, string> = {};
+	private addressAutocompleteSessionTokens: Record<string, string> = {};
+	private addressSearchDebounceTimers: Record<string, ReturnType<typeof setTimeout>> = {};
+	/** Autocomplete results keyed by bias + query, so re-focusing or backspacing doesn't hit Google again. */
+	private addressPredictionCache = new Map<string, Array<any>>();
+	/** Fields whose dropdown shows the "Near Me" + "Recent Searches" sections. */
+	private readonly quickPickAddressFields = new Set(['pickup_address', 'dropoff_address', 'return_pickup_address', 'return_dropoff_address']);
 
 	//For reactive form
 	quoteBotForm: FormGroup;
@@ -287,7 +295,9 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 		private airportIndex: AirportIndexService,
 		private amenitiesService: AmenitiesService,
 		private blogService: BlogService,
-		private cdr: ChangeDetectorRef
+		private cdr: ChangeDetectorRef,
+		private locationContext: LocationContextService,
+		private recentLocations: RecentLocationsService,
 	) {
 		// Start the debug overlay as early as possible (constructor) so errors thrown
 		// during ngOnInit / first change-detection are captured. Doing this in
@@ -416,6 +426,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 		});
 
 		this.currentUser = this.stateManagementService.getUser()
+
+		// Warm up address dropdown data. Neither call prompts for location permission.
+		void this.recentLocations.loadServerRecents();
+		void this.locationContext.resolveNearMe();
 
 		this.steps = localStorage.getItem("stepCompleted");
 		this.accountStatus = localStorage.getItem("account_approval");
@@ -916,7 +930,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 		const currentValue = this.isExtraStopField(fieldName)
 			? this.getExtraStopFieldValue(fieldName)
 			: String(this.quoteBotForm?.get(fieldName)?.value || '').trim();
-		return this.isAddressDropdownOpen(fieldName) && !currentValue;
+		return this.isAddressDropdownOpen(fieldName) && !currentValue && !this.hasAddressQuickPicks(fieldName);
 	}
 
 	private clearAddressDropdownBlurTimer(): void {
@@ -1048,7 +1062,6 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 			markAsTouched: true,
 		});
 		this.openAddressDropdown(fieldName, nextValue);
-		void this.searchAddress(nextValue, fieldName);
 	}
 
 	private isAirportTerminalAddress(address: any): boolean {
@@ -1091,12 +1104,14 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 					});
 					this.SetFormValue(typeField, 'airport');
 					this.SetFormValue(fieldName, address.name);
-					this.onAirportSelected({
+					const airport = {
 						id: String(local.id),
 						name: address.name,
 						latitude: local.lat ?? 0,
 						longitude: local.long ?? 0,
-					}, airportField);
+					};
+					this.onAirportSelected(airport, airportField);
+					this.rememberRecentLocation(fieldName, address.name, airport.latitude, airport.longitude, airport);
 				});
 			} else if (address?.placeId) {
 				const googleAirport = await this.fetchGoogleAirportDetails(address.placeId, address.name);
@@ -1106,13 +1121,20 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 							preserveMirroredReturnSelection: this.shouldPreserveMirroredReturnSelection(fieldName),
 						});
 						this.SetFormValue(typeField, 'airport');
-						this.SetFormValue(fieldName, (googleAirport as any).display_address || googleAirport.name);
+						const airportLabel = (googleAirport as any).display_address || googleAirport.name;
+						this.SetFormValue(fieldName, airportLabel);
 						this.onAirportSelected(googleAirport, airportField);
+						this.rememberRecentLocation(fieldName, airportLabel, googleAirport.latitude, googleAirport.longitude, {
+							id: String(googleAirport.id),
+							name: airportLabel,
+							latitude: googleAirport.latitude,
+							longitude: googleAirport.longitude,
+						});
 					});
 				}
 			}
 		} else {
-			const googleAddress = await this.fetchGoogleAddressDetails(address?.placeId);
+			const googleAddress = await this.fetchGoogleAddressDetails(address?.placeId, this.consumeAddressSessionToken(fieldName));
 			if (googleAddress) {
 				this.ngZone.run(() => {
 					const typeField = this.getAddressTypeFieldName(fieldName);
@@ -1125,10 +1147,106 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 					}
 					this.onAutocompleteSelected(googleAddress, fieldName);
 					this.onLocationSelected(googleAddress, fieldName);
+					this.rememberRecentLocation(
+						fieldName,
+						googleAddress.display_address ?? googleAddress.formatted_address,
+						googleAddress.latitude,
+						googleAddress.longitude,
+					);
 				});
 			}
 		}
 		this.closeAddressDropdown(fieldName);
+	}
+
+	// --- "Near Me" + "Recent Searches" quick picks (pickup/dropoff dropdowns) ---
+
+	/** Whether the dropdown shows quick picks, which replace the "Enter & select an address" prompt. */
+	hasAddressQuickPicks(fieldName: string): boolean {
+		return this.quickPickAddressFields.has(fieldName);
+	}
+
+	/** "Near Me" only shows before the user starts typing. */
+	shouldShowNearMe(fieldName: string): boolean {
+		return this.hasAddressQuickPicks(fieldName) && !this.getAddressQuickPickQuery(fieldName);
+	}
+
+	getNearMeLabel(): string {
+		const label = this.locationContext.getNearMeSnapshot()?.label;
+		return label ? `Use current location (${label})` : 'Use current location';
+	}
+
+	/** Recent locations: all of them for an empty field, else those matching the typed text. */
+	getRecentLocationOptions(fieldName: string): RecentLocation[] {
+		if (!this.hasAddressQuickPicks(fieldName)) {
+			return [];
+		}
+		const query = this.getAddressQuickPickQuery(fieldName);
+		return this.recentLocations.getRecent(query, query ? 3 : 5);
+	}
+
+	useNearMeLocation(fieldName: string): void {
+		this.clearAddressDropdownBlurTimer();
+		this.closeAddressDropdown(fieldName);
+		const typeField = this.getAddressTypeFieldName(fieldName);
+		if (this.quoteBotForm.get(typeField)?.value === 'airport') {
+			this.clearAirportSelection(this.getCorrespondingAirportFieldName(fieldName), {
+				preserveMirroredReturnSelection: this.shouldPreserveMirroredReturnSelection(fieldName),
+			});
+		}
+		this.useCurrentPickupLocation(fieldName);
+	}
+
+	selectRecentLocation(recent: RecentLocation, fieldName: string): void {
+		this.clearAddressDropdownBlurTimer();
+		const typeField = this.getAddressTypeFieldName(fieldName);
+		const airportField = this.getCorrespondingAirportFieldName(fieldName);
+		const preserveMirroredReturnSelection = this.shouldPreserveMirroredReturnSelection(fieldName);
+
+		this.ngZone.run(() => {
+			if (recent.airport) {
+				this.clearAddressResolvedSelection(fieldName, { preserveMirroredReturnSelection });
+				this.SetFormValue(typeField, 'airport');
+				this.SetFormValue(fieldName, recent.address);
+				this.onAirportSelected(recent.airport, airportField);
+			} else {
+				if (this.quoteBotForm.get(typeField)?.value === 'airport') {
+					this.SetFormValue(typeField, 'city');
+					this.clearAirportSelection(airportField, { preserveMirroredReturnSelection });
+				}
+				const location = {
+					formatted_address: recent.address,
+					display_address: recent.address,
+					latitude: recent.latitude,
+					longitude: recent.longitude,
+				};
+				this.onAutocompleteSelected(location, fieldName);
+				this.onLocationSelected(location, fieldName);
+			}
+			this.rememberRecentLocation(fieldName, recent.address, recent.latitude, recent.longitude, recent.airport);
+		});
+		this.closeAddressDropdown(fieldName);
+	}
+
+	private getAddressQuickPickQuery(fieldName: string): string {
+		const value = String(this.quoteBotForm?.get(fieldName)?.value || '').trim();
+		// A resolved selection is not a search query — show the full list on re-focus.
+		const isResolved = this.hasExistingQuoteBotLocation(fieldName)
+			|| this.hasResolvedAirportSelection(this.getCorrespondingAirportFieldName(fieldName));
+		return isResolved ? '' : value;
+	}
+
+	private rememberRecentLocation(
+		fieldName: string,
+		address: string,
+		latitude: number,
+		longitude: number,
+		airport?: RecentLocation['airport'],
+	): void {
+		if (!this.hasAddressQuickPicks(fieldName)) {
+			return;
+		}
+		this.recentLocations.add({ address, latitude, longitude, airport: airport ?? null });
 	}
 
 	async selectExtraStopAddressOption(address: any, fieldName: string): Promise<void> {
@@ -1159,7 +1277,6 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 		const index = parseInt(fieldName.replace(isReturn ? 'return_extra_stop_' : 'extra_stop_', ''), 10);
 		this.fillExtraStop(index, normalizedValue, 0, 0, isReturn);
 		this.openAddressDropdown(fieldName, normalizedValue);
-		void this.searchAddress(normalizedValue, fieldName);
 	}
 
 	onExtraStopAddressBlur(fieldName: string): void {
@@ -1288,7 +1405,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 		return normalizedName ? `${normalizedName} - ${normalizedAddress}` : normalizedAddress;
 	}
 
-	private searchGoogleAddressPredictions(searchText: string): Promise<Array<any>> {
+	private searchGoogleAddressPredictions(searchText: string, sessionToken?: string): Promise<Array<any>> {
 		const apiKey = this.getGoogleMapsApiKey();
 		if (!apiKey || !String(searchText || '').trim()) {
 			return Promise.resolve([]);
@@ -1304,7 +1421,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 			body: JSON.stringify({
 				input: searchText,
 				includeQueryPredictions: false,
-				languageCode: 'en-US'
+				languageCode: 'en-US',
+				// Rank near the user / their country first; without a position Google biases by IP.
+				...this.locationContext.getAutocompleteBias(),
+				...(sessionToken ? { sessionToken } : {})
 			})
 		})
 			.then((response) => response.ok ? response.json() : Promise.resolve({ suggestions: [] }))
@@ -1338,36 +1458,64 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 			.catch(() => []);
 	}
 
-	private fetchGoogleAddressDetails(placeId: string): Promise<any | null> {
-		const service = this.getAddressPlacesService();
-		if (!service || !placeId) {
+	private fetchGoogleAddressDetails(placeId: string, sessionToken?: string): Promise<any | null> {
+		const apiKey = this.getGoogleMapsApiKey();
+		if (!apiKey || !placeId) {
 			return Promise.resolve(null);
 		}
 
-		return new Promise((resolve) => {
-			service.getDetails(
-				{
-					placeId,
-					fields: ['place_id', 'name', 'formatted_address', 'geometry']
-				},
-				(place, status) => {
-					if (status !== google.maps.places.PlacesServiceStatus.OK || !place?.geometry?.location) {
-						resolve(null);
-						return;
-					}
-
-					const formattedAddress = place.formatted_address ?? '';
-					const placeName = (place.name ?? '').trim();
-
-					resolve({
-						formatted_address: formattedAddress,
-						display_address: this.getAddressSelectionLabel(placeName, formattedAddress),
-						latitude: place.geometry.location.lat(),
-						longitude: place.geometry.location.lng()
-					});
+		// Places API (New) details. Passing the autocomplete session token ends the
+		// session, so the keystroke requests before it are billed as one session.
+		const query = sessionToken ? `?sessionToken=${encodeURIComponent(sessionToken)}` : '';
+		return fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}${query}`, {
+			headers: {
+				'X-Goog-Api-Key': apiKey,
+				'X-Goog-FieldMask': 'id,displayName,formattedAddress,location'
+			}
+		})
+			.then((response) => response.ok ? response.json() : null)
+			.then((place: any) => {
+				const latitude = place?.location?.latitude;
+				const longitude = place?.location?.longitude;
+				if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+					return null;
 				}
-			);
-		});
+
+				const formattedAddress = place.formattedAddress ?? '';
+				const placeName = String(place.displayName?.text ?? '').trim();
+
+				return {
+					formatted_address: formattedAddress,
+					display_address: this.getAddressSelectionLabel(placeName, formattedAddress),
+					latitude,
+					longitude
+				};
+			})
+			.catch(() => null);
+	}
+
+	private getOrCreateAddressSessionToken(fieldName: string): string {
+		if (!this.addressAutocompleteSessionTokens[fieldName]) {
+			this.addressAutocompleteSessionTokens[fieldName] = this.generateSessionToken();
+		}
+		return this.addressAutocompleteSessionTokens[fieldName];
+	}
+
+	/** Returns the field's session token and starts a fresh one for the next search. */
+	private consumeAddressSessionToken(fieldName: string): string | undefined {
+		const token = this.addressAutocompleteSessionTokens[fieldName];
+		delete this.addressAutocompleteSessionTokens[fieldName];
+		return token;
+	}
+
+	private cacheAddressPredictions(cacheKey: string, options: Array<any>): void {
+		if (this.addressPredictionCache.size >= 100) {
+			const oldestKey = this.addressPredictionCache.keys().next().value;
+			if (oldestKey !== undefined) {
+				this.addressPredictionCache.delete(oldestKey);
+			}
+		}
+		this.addressPredictionCache.set(cacheKey, options);
 	}
 
 	async searchAddress(value: string, fieldName: string): Promise<void> {
@@ -1418,8 +1566,28 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 
 		// For all other input: run normal Google address search only.
 		// Airport results only appear for exact IATA codes (handled above).
+		const cacheKey = `${this.locationContext.getBiasCacheKey()}|${searchText.toLowerCase()}`;
+		const cachedOptions = this.addressPredictionCache.get(cacheKey);
+		if (cachedOptions) {
+			this.setAddressOptions(fieldName, cachedOptions);
+			this.setAddressSearchLoading(fieldName, false);
+			return;
+		}
+
+		// Wait for a pause in typing so we don't bill a request per keystroke.
+		await new Promise<void>((resolve) => {
+			clearTimeout(this.addressSearchDebounceTimers[fieldName]);
+			this.addressSearchDebounceTimers[fieldName] = setTimeout(resolve, 200);
+		});
+		if (!this.isLatestAddressSearchVersion(fieldName, requestVersion)) {
+			return;
+		}
+
 		try {
-			const addressOptions = await this.searchGoogleAddressPredictions(searchText);
+			const addressOptions = await this.searchGoogleAddressPredictions(searchText, this.getOrCreateAddressSessionToken(fieldName));
+			if (addressOptions.length) {
+				this.cacheAddressPredictions(cacheKey, addressOptions);
+			}
 			if (this.isLatestAddressSearchVersion(fieldName, requestVersion)) {
 				this.setAddressOptions(fieldName, addressOptions);
 				this.setAddressSearchLoading(fieldName, false);
@@ -1916,6 +2084,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 				input,
 				includeQueryPredictions: false,
 				languageCode: 'en-US',
+				...this.locationContext.getAutocompleteBias(),
 				sessionToken
 			})
 		})
@@ -2527,6 +2696,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 				this.errorDialogService.closeDialog();
 				const lat = position.coords.latitude;
 				const lng = position.coords.longitude;
+				this.locationContext.rememberPosition(lat, lng);
 				this.SetFormValue(`${fieldName}_lat`, lat);
 				this.SetFormValue(`${fieldName}_long`, lng);
 				const typeField = this.getAddressTypeFieldName(fieldName);
@@ -2610,6 +2780,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.ngZone.run(() => {
 				if (status === "OK" && results[0]) {
 					this.errorDialogService.closeDialog();
+					this.locationContext.rememberGeocodeResult(lat, lng, results[0]);
 					const address = results[0].formatted_address;
 					this.SetFormValue(fieldName, address);
 					console.log("Reverse Geocoded Address:", address);
@@ -2789,7 +2960,6 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.quoteBotSwitch(previous_quotebot?.service_type?.length > 1 ? previous_quotebot?.service_type : "one_way")
 			this.scheduleQuoteBotAutocompleteDisplaySync()
 			setTimeout(() => this.retryGoogleAutocompleteInitialization(), 0);
-			this.autoPickLocationOnLoad();
 
 			// if (new Date(this.QBForm.pickup_date.value).getDate() < new Date().getDate() || new Date(this.QBForm.pickup_date.value).getMonth() + 1 < new Date().getMonth() + 1) {
 			// 	console.log('----------ssssssssssssssetttttttttt', this.getTimeHHMMSS(this.QBForm.pickup_date.value, true))
@@ -2819,31 +2989,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 			this.quoteBotSwitch('one_way')
 			this.scheduleQuoteBotAutocompleteDisplaySync()
 			setTimeout(() => this.retryGoogleAutocompleteInitialization(), 0);
-			this.autoPickLocationOnLoad();
 		}
 
 		// drop any restored/default slot that has already passed
 		this.refreshTimeSlots()
-	}
-
-	/**
-	 * Auto-pick current pickup location on page load/reload.
-	 */
-	autoPickLocationOnLoad() {
-		setTimeout(() => {
-			if (this.QBForm?.pickup_type?.value === 'airport') {
-				return;
-			}
-
-			if (this.hasExistingQuoteBotLocation('pickup_address')) {
-				return;
-			}
-
-			console.log('Auto-picking current location on home page load...');
-			// iOS Safari blocks geolocation on auto-load (requires a direct user gesture).
-			// Suppress the error dialog here; user can tap "Use Current Location" to trigger manually.
-			this.getCurrentLocation('pickup_address', { showErrorDialog: false });
-		}, 100);
 	}
 
 	validateTimeHHMMSS(time) {
@@ -4971,6 +5120,9 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 		Object.values(this.airportSearchDebounceTimers).forEach((timer) => clearTimeout(timer));
 		this.airportSearchDebounceTimers = {};
 		this.airportAutocompleteSessionTokens = {};
+		Object.values(this.addressSearchDebounceTimers).forEach((timer) => clearTimeout(timer));
+		this.addressSearchDebounceTimers = {};
+		this.addressAutocompleteSessionTokens = {};
 		// Clean up Swiper instance
 		if (this.clientLogoSwiper) {
 			this.clientLogoSwiper.destroy(true, true);

@@ -1,0 +1,79 @@
+<div class="an container-fluid">
+	<div class="an-header">
+		<div>
+			<h1 class="an-title">Booking activity</h1>
+			<p class="an-sub">Bookings created, edited, cancelled or paid by customers and travel planners. Kept for 90 days.</p>
+		</div>
+		<button type="button" class="custom-filled-button orange-button an-mark-all" (click)="markAllRead()">
+			Mark all read
+		</button>
+	</div>
+
+	<div class="an-filters">
+		<input type="search" class="form-control an-search" placeholder="Booking # or user name"
+			[(ngModel)]="filters.search" (ngModelChange)="onSearchInput($event)" aria-label="Search">
+		<select class="form-control" [(ngModel)]="filters.event" (ngModelChange)="applyFilters()" aria-label="Event type">
+			<option value="">All events</option>
+			<option *ngFor="let o of eventOptions" [value]="o.value">{{ o.label }}</option>
+		</select>
+		<label class="an-date">From
+			<input type="date" class="form-control" [(ngModel)]="filters.from" (ngModelChange)="applyFilters()">
+		</label>
+		<label class="an-date">To
+			<input type="date" class="form-control" [(ngModel)]="filters.to" (ngModelChange)="applyFilters()">
+		</label>
+		<label class="an-check">
+			<input type="checkbox" [(ngModel)]="filters.unread" (ngModelChange)="applyFilters()"> Unread only
+		</label>
+		<button type="button" class="an-clear" (click)="clearFilters()">Clear</button>
+	</div>
+
+	<div class="an-error" *ngIf="error">{{ error }}</div>
+	<div class="an-state" *ngIf="loading">Loading…</div>
+	<div class="an-state" *ngIf="!loading && !error && !items.length">No booking activity matches these filters.</div>
+
+	<div class="an-list" *ngIf="!loading && items.length">
+		<div class="an-item" *ngFor="let n of items; trackBy: trackById" [class.unread]="!n.read_at">
+			<button type="button" class="an-row" (click)="toggle(n)" [attr.aria-expanded]="expanded.has(n.id)">
+				<span class="an-dot" aria-hidden="true"></span>
+				<span class="an-tag" [attr.data-event]="n.event">{{ eventLabel(n.event) }}</span>
+				<span class="an-main">
+					<span class="an-item-title">{{ n.title }}</span>
+					<span class="an-meta">
+						{{ n.created_at | date:'MMM d, y, h:mm a' }}
+						<ng-container *ngIf="actorRole(n)"> · {{ actorRole(n) }}</ng-container>
+						· via {{ n.source === 'app' ? 'mobile app' : 'website' }}
+						<ng-container *ngIf="n.changes?.length"> · {{ n.changes.length }} field{{ n.changes.length === 1 ? '' : 's' }}</ng-container>
+					</span>
+				</span>
+				<span class="an-open" role="link" tabindex="0" (click)="openBooking(n, $event)"
+					(keydown.enter)="openBooking(n, $any($event))">Open booking</span>
+			</button>
+
+			<div class="an-changes" *ngIf="expanded.has(n.id) && n.changes?.length">
+				<table>
+					<thead>
+						<tr>
+							<th>Field</th>
+							<th *ngIf="n.event !== 'created'">Before</th>
+							<th>{{ n.event === 'created' ? 'Value' : 'After' }}</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr *ngFor="let c of n.changes">
+							<td class="an-label">{{ c.label }}</td>
+							<td *ngIf="n.event !== 'created'" class="an-old">{{ c.old || '—' }}</td>
+							<td class="an-new">{{ c.new || '—' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<div class="an-pager" *ngIf="lastPage > 1">
+		<button type="button" (click)="goToPage(filters.page - 1)" [disabled]="filters.page <= 1">Previous</button>
+		<span>Page {{ filters.page }} of {{ lastPage }} · {{ total }} total</span>
+		<button type="button" (click)="goToPage(filters.page + 1)" [disabled]="filters.page >= lastPage">Next</button>
+	</div>
+</div>

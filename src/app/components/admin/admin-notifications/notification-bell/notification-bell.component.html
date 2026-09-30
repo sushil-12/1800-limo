@@ -1,6 +1,6 @@
 <div class="nb">
 	<button type="button" class="nb-trigger" (click)="toggle($event)" [attr.aria-expanded]="open"
-		aria-label="Booking notifications">
+		[class.has-unread]="(notifications.unreadCount$ | async)" aria-label="Booking notifications">
 		<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
 			stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 			<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -13,31 +13,74 @@
 
 	<div class="nb-panel" *ngIf="open" role="dialog" aria-label="Booking activity">
 		<div class="nb-head">
-			<span class="nb-title">Booking activity</span>
+			<div>
+				<div class="nb-title">Booking activity</div>
+				<div class="nb-subtitle" *ngIf="(notifications.unreadCount$ | async) as count; else allRead">
+					{{ count }} unread
+				</div>
+				<ng-template #allRead><div class="nb-subtitle">You're all caught up</div></ng-template>
+			</div>
 			<button type="button" class="nb-link" (click)="markAllRead()"
 				[disabled]="!(notifications.unreadCount$ | async)">Mark all read</button>
 		</div>
 
 		<div class="nb-list">
 			<ng-container *ngIf="(notifications.recent$ | async) as items">
-				<button type="button" class="nb-item" *ngFor="let n of items; trackBy: trackById"
-					[class.unread]="!n.read_at" (click)="openItem(n)">
-					<span class="nb-dot" aria-hidden="true"></span>
-					<span class="nb-body">
-						<span class="nb-meta">
-							<span class="nb-tag" [attr.data-event]="n.event">{{ eventLabel(n.event) }}</span>
-							<span class="nb-time">{{ n.created_at | date:'MMM d, h:mm a' }}</span>
-						</span>
-						<span class="nb-item-title">{{ n.title }}</span>
-						<span class="nb-summary" *ngIf="changeSummary(n) as s">{{ s }}</span>
-					</span>
-				</button>
-				<div class="nb-empty" *ngIf="!items.length">No booking activity yet.</div>
+				<div class="nb-item" *ngFor="let n of items; trackBy: trackById" [class.unread]="!n.read_at"
+					role="button" tabindex="0" (click)="openItem(n)" (keydown.enter)="openItem(n)"
+					[attr.aria-label]="headline(n) + ' by ' + actorName(n)">
+					<div class="nb-avatar" [attr.data-event]="n.event" aria-hidden="true">
+						{{ initials(actorName(n)) }}
+					</div>
+
+					<div class="nb-body">
+						<div class="nb-row">
+							<span class="nb-headline">{{ headline(n) }}</span>
+							<span class="nb-time" [title]="n.created_at | date:'medium'">{{ timeAgo(n.created_at) }}</span>
+						</div>
+
+						<div class="nb-actor">
+							<span class="nb-by">by</span>
+							<span class="nb-name">{{ actorName(n) }}</span>
+							<span class="nb-chip" *ngIf="actorRole(n)">{{ actorRole(n) }}</span>
+							<span class="nb-src">· {{ sourceLabel(n) }}</span>
+						</div>
+
+						<ul class="nb-changes" *ngIf="changesOf(n).length">
+							<li *ngFor="let c of (expanded.has(n.id) ? changesOf(n) : changesOf(n).slice(0, collapsedChanges))">
+								<span class="nb-label">{{ c.label }}</span>
+								<span class="nb-values">
+									<ng-container *ngIf="!isNewBooking(n) && c.old !== null; else onlyNew">
+										<span class="nb-old">{{ c.old || 'empty' }}</span>
+										<span class="nb-arrow" aria-label="changed to">→</span>
+										<span class="nb-new">{{ c.new || 'empty' }}</span>
+									</ng-container>
+									<ng-template #onlyNew><span class="nb-new">{{ c.new }}</span></ng-template>
+								</span>
+							</li>
+						</ul>
+
+						<button type="button" class="nb-more" *ngIf="changesOf(n).length > collapsedChanges"
+							(click)="toggleExpanded(n, $event)">
+							{{ expanded.has(n.id) ? 'Show less' : 'Show all ' + changesOf(n).length + ' changes' }}
+						</button>
+					</div>
+				</div>
+
+				<div class="nb-empty" *ngIf="!items.length">
+					<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+						stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+						<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+					</svg>
+					<div>No booking activity yet.</div>
+					<small>New bookings and edits by customers and travel planners will appear here.</small>
+				</div>
 			</ng-container>
 		</div>
 
 		<div class="nb-foot">
-			<button type="button" class="nb-link" (click)="viewAll()">View all activity</button>
+			<button type="button" class="nb-link" (click)="viewAll()">View all activity →</button>
 			<div class="nb-toggles">
 				<button type="button" class="nb-toggle" [class.on]="notifications.soundEnabled"
 					(click)="toggleSound()" title="Play a sound for new activity">

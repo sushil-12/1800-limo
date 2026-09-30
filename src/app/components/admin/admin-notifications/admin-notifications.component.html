@@ -1,31 +1,38 @@
-<div class="an container-fluid">
+<div class="an">
 	<div class="an-header">
 		<div>
 			<h1 class="an-title">Booking activity</h1>
-			<p class="an-sub">Bookings created, edited, cancelled or paid by customers and travel planners. Kept for 90 days.</p>
+			<p class="an-sub">Everything customers and travel planners create, edit, cancel or pay — who did it and exactly what changed. Kept for 90 days.</p>
 		</div>
-		<button type="button" class="custom-filled-button orange-button an-mark-all" (click)="markAllRead()">
-			Mark all read
-		</button>
+		<button type="button" class="an-btn an-btn-primary" (click)="markAllRead()">Mark all read</button>
 	</div>
 
 	<div class="an-filters">
-		<input type="search" class="form-control an-search" placeholder="Booking # or user name"
-			[(ngModel)]="filters.search" (ngModelChange)="onSearchInput($event)" aria-label="Search">
-		<select class="form-control" [(ngModel)]="filters.event" (ngModelChange)="applyFilters()" aria-label="Event type">
+		<div class="an-search-wrap">
+			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+				stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<circle cx="11" cy="11" r="7"></circle>
+				<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+			</svg>
+			<input type="search" class="an-input an-search" placeholder="Booking # or user name"
+				[(ngModel)]="filters.search" (ngModelChange)="onSearchInput($event)" aria-label="Search">
+		</div>
+		<select class="an-input" [(ngModel)]="filters.event" (ngModelChange)="applyFilters()" aria-label="Event type">
 			<option value="">All events</option>
 			<option *ngFor="let o of eventOptions" [value]="o.value">{{ o.label }}</option>
 		</select>
-		<label class="an-date">From
-			<input type="date" class="form-control" [(ngModel)]="filters.from" (ngModelChange)="applyFilters()">
+		<label class="an-field">
+			<span>From</span>
+			<input type="date" class="an-input" [(ngModel)]="filters.from" (ngModelChange)="applyFilters()">
 		</label>
-		<label class="an-date">To
-			<input type="date" class="form-control" [(ngModel)]="filters.to" (ngModelChange)="applyFilters()">
+		<label class="an-field">
+			<span>To</span>
+			<input type="date" class="an-input" [(ngModel)]="filters.to" (ngModelChange)="applyFilters()">
 		</label>
 		<label class="an-check">
 			<input type="checkbox" [(ngModel)]="filters.unread" (ngModelChange)="applyFilters()"> Unread only
 		</label>
-		<button type="button" class="an-clear" (click)="clearFilters()">Clear</button>
+		<button type="button" class="an-btn" (click)="clearFilters()">Clear</button>
 	</div>
 
 	<div class="an-error" *ngIf="error">{{ error }}</div>
@@ -33,47 +40,66 @@
 	<div class="an-state" *ngIf="!loading && !error && !items.length">No booking activity matches these filters.</div>
 
 	<div class="an-list" *ngIf="!loading && items.length">
-		<div class="an-item" *ngFor="let n of items; trackBy: trackById" [class.unread]="!n.read_at">
-			<button type="button" class="an-row" (click)="toggle(n)" [attr.aria-expanded]="expanded.has(n.id)">
-				<span class="an-dot" aria-hidden="true"></span>
-				<span class="an-tag" [attr.data-event]="n.event">{{ eventLabel(n.event) }}</span>
-				<span class="an-main">
-					<span class="an-item-title">{{ n.title }}</span>
-					<span class="an-meta">
-						{{ n.created_at | date:'MMM d, y, h:mm a' }}
-						<ng-container *ngIf="actorRole(n)"> · {{ actorRole(n) }}</ng-container>
-						· via {{ n.source === 'app' ? 'mobile app' : 'website' }}
-						<ng-container *ngIf="n.changes?.length"> · {{ n.changes.length }} field{{ n.changes.length === 1 ? '' : 's' }}</ng-container>
-					</span>
-				</span>
-				<span class="an-open" role="link" tabindex="0" (click)="openBooking(n, $event)"
-					(keydown.enter)="openBooking(n, $any($event))">Open booking</span>
-			</button>
+		<article class="an-card" *ngFor="let n of items; trackBy: trackById" [class.unread]="!n.read_at">
+			<header class="an-card-head">
+				<div class="an-avatar" [attr.data-event]="n.event" aria-hidden="true">{{ initials(actorName(n)) }}</div>
 
-			<div class="an-changes" *ngIf="expanded.has(n.id) && n.changes?.length">
+				<div class="an-who">
+					<div class="an-headline">
+						<span class="an-tag" [attr.data-event]="n.event">{{ eventLabel(n.event) }}</span>
+						{{ headline(n) }}
+					</div>
+					<div class="an-actor">
+						by <strong>{{ actorName(n) }}</strong>
+						<span class="an-chip" *ngIf="actorRole(n)">{{ actorRole(n) }}</span>
+						<span>· {{ sourceLabel(n) }}</span>
+						<span>· <time [attr.datetime]="n.created_at" [title]="n.created_at | date:'medium'">{{ timeAgo(n.created_at) }}</time></span>
+						<span class="an-exact">({{ n.created_at | date:'MMM d, y, h:mm a' }})</span>
+					</div>
+				</div>
+
+				<div class="an-actions">
+					<button type="button" class="an-btn an-btn-sm" *ngIf="!n.read_at" (click)="markRead(n, $event)">Mark read</button>
+					<button type="button" class="an-btn an-btn-sm an-btn-primary" (click)="openBooking(n, $event)">Open booking</button>
+				</div>
+			</header>
+
+			<div class="an-changes" *ngIf="changesOf(n).length; else noChanges">
+				<div class="an-changes-title">
+					{{ isNewBooking(n) ? 'Booking details' : changesOf(n).length + ' field' + (changesOf(n).length === 1 ? '' : 's') + ' changed' }}
+				</div>
 				<table>
 					<thead>
 						<tr>
-							<th>Field</th>
-							<th *ngIf="n.event !== 'created'">Before</th>
-							<th>{{ n.event === 'created' ? 'Value' : 'After' }}</th>
+							<th scope="col">Field</th>
+							<th scope="col" *ngIf="!isNewBooking(n)">Before</th>
+							<th scope="col">{{ isNewBooking(n) ? 'Value' : 'After' }}</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr *ngFor="let c of n.changes">
-							<td class="an-label">{{ c.label }}</td>
-							<td *ngIf="n.event !== 'created'" class="an-old">{{ c.old || '—' }}</td>
-							<td class="an-new">{{ c.new || '—' }}</td>
+						<tr *ngFor="let c of changesOf(n)">
+							<th scope="row" class="an-label">{{ c.label }}</th>
+							<td *ngIf="!isNewBooking(n)" class="an-old">
+								<span *ngIf="c.old; else emptyVal">{{ c.old }}</span>
+							</td>
+							<td class="an-new">
+								<span *ngIf="c.new; else emptyVal">{{ c.new }}</span>
+							</td>
 						</tr>
 					</tbody>
 				</table>
 			</div>
-		</div>
+			<ng-template #noChanges>
+				<div class="an-nochanges">No field details were recorded for this entry.</div>
+			</ng-template>
+		</article>
 	</div>
 
+	<ng-template #emptyVal><span class="an-empty">empty</span></ng-template>
+
 	<div class="an-pager" *ngIf="lastPage > 1">
-		<button type="button" (click)="goToPage(filters.page - 1)" [disabled]="filters.page <= 1">Previous</button>
+		<button type="button" class="an-btn" (click)="goToPage(filters.page - 1)" [disabled]="filters.page <= 1">Previous</button>
 		<span>Page {{ filters.page }} of {{ lastPage }} · {{ total }} total</span>
-		<button type="button" (click)="goToPage(filters.page + 1)" [disabled]="filters.page >= lastPage">Next</button>
+		<button type="button" class="an-btn" (click)="goToPage(filters.page + 1)" [disabled]="filters.page >= lastPage">Next</button>
 	</div>
 </div>

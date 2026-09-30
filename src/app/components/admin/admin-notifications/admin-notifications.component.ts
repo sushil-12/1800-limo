@@ -9,7 +9,9 @@ import {
 	AdminNotificationFilters,
 	AdminNotificationService,
 } from 'src/app/services/admin-notification.service';
-import { bookingLink, EVENT_LABELS, eventLabel } from './admin-notification-ui';
+import {
+	actorName, actorRole, bookingLink, changesOf, EVENT_LABELS, eventLabel, headline, initials, isNewBooking, sourceLabel, timeAgo,
+} from './admin-notification-ui';
 
 /**
  * Full booking-activity history for the admin: filterable, paginated, with
@@ -25,6 +27,14 @@ import { bookingLink, EVENT_LABELS, eventLabel } from './admin-notification-ui';
 export class AdminNotificationsComponent implements OnInit, OnDestroy {
 	readonly eventOptions = Object.entries(EVENT_LABELS).map(([value, label]) => ({ value, label }));
 	readonly eventLabel = eventLabel;
+	readonly headline = headline;
+	readonly actorName = actorName;
+	readonly actorRole = actorRole;
+	readonly sourceLabel = sourceLabel;
+	readonly initials = initials;
+	readonly timeAgo = timeAgo;
+	readonly changesOf = changesOf;
+	readonly isNewBooking = isNewBooking;
 
 	filters: AdminNotificationFilters = { page: 1, per_page: 20, event: '', from: '', to: '', search: '', unread: false };
 	items: AdminNotification[] = [];
@@ -32,7 +42,6 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
 	lastPage = 1;
 	loading = false;
 	error = '';
-	expanded = new Set<number>();
 
 	private search$ = new Subject<string>();
 	private subs = new Subscription();
@@ -97,14 +106,8 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
 		});
 	}
 
-	toggle(n: AdminNotification): void {
-		this.expanded.has(n.id) ? this.expanded.delete(n.id) : this.expanded.add(n.id);
-		if (!n.read_at) {
-			this.markRead(n);
-		}
-	}
-
-	markRead(n: AdminNotification): void {
+	markRead(n: AdminNotification, event?: MouseEvent): void {
+		event?.stopPropagation();
 		n.read_at = new Date().toISOString();
 		this.notifications.markRead(n.id).subscribe();
 	}
@@ -123,10 +126,6 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
 		}
 		const link = bookingLink(n);
 		this.router.navigate(link.commands, { queryParams: link.queryParams });
-	}
-
-	actorRole(n: AdminNotification): string {
-		return n.actor_role === 3 ? 'Travel planner' : n.actor_role === 5 ? 'Customer' : '';
 	}
 
 	trackById(_: number, n: AdminNotification): number {

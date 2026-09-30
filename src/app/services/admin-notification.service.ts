@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { BehaviorSubject, Observable, Subscription, of, timer } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription, of, timer } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { SILENT_ERRORS_HEADER } from '../interceptors/http-config.interceptor';
@@ -58,7 +58,8 @@ const SILENT = { headers: new HttpHeaders({ [SILENT_ERRORS_HEADER]: '1' }) };
  *
  * Polls the unread count every 20s while the admin layout is open. When a
  * newer notification than the last one seen arrives, it refreshes `recent$`
- * and (if enabled) plays a chime and shows a browser notification.
+ * and emits the new items on `newActivity$` (toasts), plus an optional chime
+ * and browser notification.
  */
 @Injectable({
 	providedIn: 'root'
@@ -66,6 +67,8 @@ const SILENT = { headers: new HttpHeaders({ [SILENT_ERRORS_HEADER]: '1' }) };
 export class AdminNotificationService {
 	readonly unreadCount$ = new BehaviorSubject<number>(0);
 	readonly recent$ = new BehaviorSubject<AdminNotification[]>([]);
+	/** Items that arrived since the previous poll, newest first. */
+	readonly newActivity$ = new Subject<AdminNotification[]>();
 
 	private serverUrl = environment.serverUrl + 'admin/notifications';
 	private pollSub: Subscription | null = null;
@@ -200,6 +203,7 @@ export class AdminNotificationService {
 	}
 
 	private alert(fresh: AdminNotification[]): void {
+		this.newActivity$.next(fresh);
 		if (this.soundEnabled) {
 			this.playChime();
 		}

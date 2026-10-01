@@ -2988,8 +2988,28 @@ table #navbarDropdownUserImage {
 }
 
 @media (max-width: 991px) {
-    .admin-wrapper #sidenavAccordion.navbar button svg {
+    .admin-wrapper #sidenavAccordion.navbar #sidebarToggle svg {
         transform: rotate(180deg);
+    }
+}
+
+/* The fixed 14rem logo + bell + profile overflow narrow phones (375–393px);
+   let the logo shrink instead of widening the page. */
+@media (max-width: 430px) {
+    .admin-wrapper .topnav .navbar-brand {
+        width: auto;
+        flex: 0 1 14rem;
+        min-width: 0;
+    }
+
+    .admin-wrapper .topnav .navbar-brand img {
+        width: 100%;
+        object-fit: contain;
+        object-position: left center;
+    }
+
+    .admin-wrapper .topnav .navbar-nav {
+        flex-shrink: 0;
     }
 }
 

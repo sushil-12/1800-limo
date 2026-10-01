@@ -84,47 +84,77 @@
 	font-size: 12px;
 }
 
+// Filters: stacked on phones, two rows on tablets, one row on desktop.
 .an-filters {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-end;
-	gap: 10px;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-areas:
+		'search search'
+		'event event'
+		'from to'
+		'foot foot';
+	gap: 12px;
 	margin-bottom: 16px;
-	padding: 12px;
+	padding: 14px;
 	border: 1px solid var(--an-line);
-	border-radius: 10px;
+	border-radius: 12px;
 	background: #fafbfc;
 }
 
+.an-f-search { grid-area: search; }
+.an-f-event { grid-area: event; }
+.an-f-from { grid-area: from; }
+.an-f-to { grid-area: to; }
+.an-f-foot { grid-area: foot; }
+
 .an-input {
-	height: 36px;
-	padding: 0 10px;
+	display: block;
+	width: 100%;
+	min-width: 0;
+	height: 40px;
+	padding: 0 12px;
 	border: 1px solid #d9dde3;
 	border-radius: 8px;
 	background: #fff;
-	font-size: 13px;
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 400 !important;
 	color: var(--an-text);
+	box-sizing: border-box;
+
+	&:focus {
+		outline: none;
+		border-color: var(--an-accent);
+		box-shadow: 0 0 0 3px rgba(244, 122, 32, 0.15);
+	}
+}
+
+// iOS Safari gives date inputs an intrinsic width and centres the value.
+.an-date {
+	-webkit-appearance: none;
+	appearance: none;
+	line-height: 38px;
+
+	&::-webkit-date-and-time-value {
+		text-align: left;
+	}
 }
 
 .an-search-wrap {
 	position: relative;
-	flex: 1 1 220px;
-	min-width: 0;
 
 	svg {
 		position: absolute;
-		left: 10px;
+		left: 12px;
 		top: 50%;
 		transform: translateY(-50%);
 		color: var(--an-muted);
+		pointer-events: none;
 	}
 }
 
 .an-search {
-	width: 100%;
-	padding-left: 32px;
-	font-size: 14px !important;
-	font-weight: 400 !important;
+	padding-left: 36px;
 
 	// Site CSS makes every placeholder bold.
 	&::placeholder {
@@ -137,19 +167,80 @@
 .an-field {
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: 4px;
+	min-width: 0;
 	margin: 0;
-	font-size: 11px;
-	color: var(--an-muted);
+
+	> span {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--an-muted);
+	}
+}
+
+.an-f-foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding-top: 10px;
+	border-top: 1px solid var(--an-line);
 }
 
 .an-check {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
-	gap: 6px;
-	height: 36px;
+	gap: 8px;
 	margin: 0;
-	font-size: 13px;
+	font-size: 14px;
+	color: var(--an-text);
+	cursor: pointer;
+
+	input {
+		width: 18px;
+		height: 18px;
+		margin: 0;
+		accent-color: var(--an-accent);
+	}
+}
+
+.an-btn-ghost {
+	height: 32px;
+	padding: 0 10px;
+	border-color: transparent;
+	background: transparent !important;
+	color: var(--an-accent);
+
+	&:hover:not(:disabled) {
+		background: #fff4ec !important;
+	}
+}
+
+// Tablet (iPad portrait/landscape)
+@media (min-width: 600px) {
+	.an-filters {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		grid-template-areas:
+			'search search event event'
+			'from to foot foot';
+		align-items: end;
+	}
+
+	.an-f-foot {
+		height: 40px;
+		padding-top: 0;
+		border-top: 0;
+	}
+}
+
+// Desktop: a single row.
+@media (min-width: 1200px) {
+	.an-filters {
+		grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+		grid-template-areas: 'search event from to foot';
+	}
 }
 
 // ---- States ----

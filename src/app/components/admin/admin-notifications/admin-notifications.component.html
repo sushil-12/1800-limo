@@ -8,31 +8,40 @@
 	</div>
 
 	<div class="an-filters">
-		<div class="an-search-wrap">
-			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-				stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-				<circle cx="11" cy="11" r="7"></circle>
-				<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-			</svg>
-			<input type="search" class="an-input an-search" placeholder="Booking # or user name"
-				[(ngModel)]="filters.search" (ngModelChange)="onSearchInput($event)" aria-label="Search">
-		</div>
-		<select class="an-input" [(ngModel)]="filters.event" (ngModelChange)="applyFilters()" aria-label="Event type">
-			<option value="">All events</option>
-			<option *ngFor="let o of eventOptions" [value]="o.value">{{ o.label }}</option>
-		</select>
-		<label class="an-field">
+		<label class="an-field an-f-search">
+			<span>Search</span>
+			<div class="an-search-wrap">
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+					stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+					<circle cx="11" cy="11" r="7"></circle>
+					<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+				</svg>
+				<input type="search" class="an-input an-search" placeholder="Booking # or user name"
+					[(ngModel)]="filters.search" (ngModelChange)="onSearchInput($event)">
+			</div>
+		</label>
+		<label class="an-field an-f-event">
+			<span>Event</span>
+			<select class="an-input" [(ngModel)]="filters.event" (ngModelChange)="applyFilters()">
+				<option value="">All events</option>
+				<option *ngFor="let o of eventOptions" [value]="o.value">{{ o.label }}</option>
+			</select>
+		</label>
+		<label class="an-field an-f-from">
 			<span>From</span>
-			<input type="date" class="an-input" [(ngModel)]="filters.from" (ngModelChange)="applyFilters()">
+			<input type="date" class="an-input an-date" [(ngModel)]="filters.from" (ngModelChange)="applyFilters()">
 		</label>
-		<label class="an-field">
+		<label class="an-field an-f-to">
 			<span>To</span>
-			<input type="date" class="an-input" [(ngModel)]="filters.to" (ngModelChange)="applyFilters()">
+			<input type="date" class="an-input an-date" [(ngModel)]="filters.to" (ngModelChange)="applyFilters()">
 		</label>
-		<label class="an-check">
-			<input type="checkbox" [(ngModel)]="filters.unread" (ngModelChange)="applyFilters()"> Unread only
-		</label>
-		<button type="button" class="an-btn" (click)="clearFilters()">Clear</button>
+		<div class="an-f-foot">
+			<label class="an-check">
+				<input type="checkbox" [(ngModel)]="filters.unread" (ngModelChange)="applyFilters()">
+				<span>Unread only</span>
+			</label>
+			<button type="button" class="an-btn an-btn-ghost" (click)="clearFilters()">Clear filters</button>
+		</div>
 	</div>
 
 	<div class="an-error" *ngIf="error">{{ error }}</div>

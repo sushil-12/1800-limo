@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, NgZone, AfterViewInit } from 
 import { AdminService } from '../../../services/admin.service';
 import { IndividualService } from '../../../services/individual.service';
 import { FormGroup, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
+import { FormValidators } from 'src/app/utils/form-validators';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NgxSpinnerService } from "ngx-spinner";
 import { catchError } from 'rxjs/operators';
@@ -49,6 +50,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 
 	public addIndividualAccountForm: FormGroup;
 	public submittedForm: boolean;
+	confirmedAddress = ''; // last address picked from suggestions or loaded from the server
 	public disableSubmitButton: boolean = false;
 	public response: any;
 	public cardDetails: any;
@@ -236,6 +238,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 		const formattedAddress = place.formatted_address ?? '';
 		const placeName = place.name ?? '';
 		const displayAddress = placeName ? `${placeName} - ${formattedAddress}` : formattedAddress;
+		this.confirmedAddress = displayAddress;
 		const patch: any = {
 			address: displayAddress,
 			latitude: lat,
@@ -319,6 +322,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 			).subscribe(result => {
 				this.response = result;
 				this.cardDetails = this.response?.data?.cards
+				this.confirmedAddress = this.response?.data?.address || '';
 				this.addIndividualAccountForm.patchValue({
 					smsOptIn: this.response?.data?.sms_optin == 1 ? true : false,
 					firstName: this.response?.data?.first_name,
@@ -349,21 +353,21 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 	buildAddIndividualForm() {
 		this.addIndividualAccountForm = this.formBuilder.group({
 			role: ['5', [Validators.required, Validators.pattern("^[0-9].*$")]],//individual
-			firstName: ['', Validators.required],
-			middleName: [''],
-			lastName: ['', Validators.required],
-			mobile: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15)]],
+			firstName: ['', [Validators.required, FormValidators.name()]],
+			middleName: ['', [FormValidators.name()]],
+			lastName: ['', [Validators.required, FormValidators.name()]],
+			mobile: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), FormValidators.phone()]],
 			mobileIsd: ['+1', Validators.required],
 			mobileCountry: ['us'],
-			work: [''],
+			work: ['', [FormValidators.phone()]],
 			workIsd: ['+1'],
 			workCountry: ['us'],
-			email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i)]],
-			address: ['', Validators.required],
+			email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i), Validators.maxLength(100)]],
+			address: ['', [Validators.required, FormValidators.address(), FormValidators.addressSelected(() => this.confirmedAddress)]],
 			city: [''],
 			state: [''],
-			country: ['', Validators.required],
-			zipCode: ['', Validators.required],
+			country: ['', [Validators.required, FormValidators.country()]],
+			zipCode: ['', [Validators.required, FormValidators.zip()]],
 			latitude: [''],
 			longitude: [''],
 			card_type: ['personal', Validators.required],
@@ -371,7 +375,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 			cvc: ['', [Validators.required, Validators.pattern("^[0-9]*$"), Validators.minLength(3), Validators.maxLength(5), this.customValidator.dashValidator(), this.customValidator.plusValidator()]],
 			exp_month: ['', Validators.required],
 			exp_year: ['', Validators.required],
-			name: ['', Validators.required],
+			name: ['', [Validators.required, FormValidators.name()]],
 			smsOptIn: [false, Validators.requiredTrue]  // Ensures the checkbox must be checked
 
 		});

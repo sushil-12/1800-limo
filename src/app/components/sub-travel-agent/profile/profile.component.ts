@@ -1,5 +1,6 @@
 import { Component, ElementRef, NgZone, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormValidators } from 'src/app/utils/form-validators';
 import { ActivatedRoute, Router } from '@angular/router';
 import * as intlTelInput from 'intl-tel-input';
 import { NgxSpinnerService } from 'ngx-spinner';
@@ -27,6 +28,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
 
   public profileForm: FormGroup;
   public submittedForm: boolean;
+  confirmedAddress = ''; // last address picked from suggestions or loaded from the server
   public OfficeObject: any;
   public MobileObject: any;
   currentUser: any;
@@ -196,6 +198,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
     const formattedAddress = place.formatted_address ?? '';
     const placeName = place.name ?? '';
     const displayAddress = placeName ? `${placeName} - ${formattedAddress}` : formattedAddress;
+    this.confirmedAddress = displayAddress;
     const patch: any = {
       address: displayAddress,
       latitude: lat,
@@ -275,24 +278,24 @@ export class ProfileComponent implements OnInit, AfterViewInit {
   buildProfileForm() {
     this.profileForm = this.formBuilder.group({
       acc_id: [''],
-      firstName: ['', Validators.required],
-      middleName: [''],
-      lastName: ['', Validators.required],
-      work_contact_number: [''],
+      firstName: ['', [Validators.required, FormValidators.name()]],
+      middleName: ['', [FormValidators.name()]],
+      lastName: ['', [Validators.required, FormValidators.name()]],
+      work_contact_number: ['', [FormValidators.phone()]],
       workIsd: [this.currentUser?.isd || '+1', Validators.required],
       workCountry: [this.currentUser?.phoneCountry || 'us'],
-      mobile: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15)]],
+      mobile: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), FormValidators.phone()]],
       mobileIsd: [this.currentUser?.isd || '+1', Validators.required],
       mobileCountry: [this.currentUser?.phoneCountry || 'us'],
-      email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i)]],
-      address: ['', Validators.required],
+      email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i), Validators.maxLength(100)]],
+      address: ['', [Validators.required, FormValidators.address(), FormValidators.addressSelected(() => this.confirmedAddress)]],
       city: [''],
       state: [''],
-      country: ['', Validators.required],
-      zip: ['', [Validators.required, Validators.pattern("^[0-9+]*$")]],
+      country: ['', [Validators.required, FormValidators.country()]],
+      zip: ['', [Validators.required, FormValidators.zip()]],
       latitude: [''],
       longitude: [''],
-      agency_name: [''],
+      agency_name: ['', [FormValidators.organization()]],
       invite_code: [this.invite_code]
 
     });
@@ -441,6 +444,7 @@ export class ProfileComponent implements OnInit, AfterViewInit {
         this.timezoneForm.patchValue({
           timezone: data?.timezone
         })
+        this.confirmedAddress = data?.address || '';
         this.profileForm.patchValue({
           acc_id: data?.acc_id,
           tp_id: data?.tp_id,

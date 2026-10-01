@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone, AfterViewInit } from '@angular/core';
 import { AdminService } from '../../../services/admin.service';
 import { FormGroup, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
+import { FormValidators } from 'src/app/utils/form-validators';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NgxSpinnerService } from "ngx-spinner";
 import { catchError } from 'rxjs/operators';
@@ -25,6 +26,9 @@ export class EditTravelPlannerAccountComponent implements OnInit, AfterViewInit 
 
 	public editTravelPlannerAccountForm: FormGroup;
 	public submittedForm: boolean;
+	confirmedAddress = ''; // last address picked from suggestions or loaded from the server
+	addressFocused = false;
+	private addressBlurTimer: any;
 	public disableSubmitButton: boolean = false;
 	public response: any;
 	public travelPlannerId: string;
@@ -75,6 +79,7 @@ export class EditTravelPlannerAccountComponent implements OnInit, AfterViewInit 
 			).subscribe(result => {
 				this.response = result;
 
+				this.confirmedAddress = this.response?.data?.Address || '';
 				this.editTravelPlannerAccountForm.patchValue({
 					id: this.travelPlannerId,
 					firstName: this.response?.data?.first_name,
@@ -119,28 +124,28 @@ export class EditTravelPlannerAccountComponent implements OnInit, AfterViewInit 
 		this.editTravelPlannerAccountForm = this.formBuilder.group({
 			id: ['', [Validators.required, Validators.pattern("^[0-9].*$")]],//travelPlanner
 			role: ['3', [Validators.required, Validators.pattern("^[0-9].*$")]],//travelPlanner
-			firstName: ['', Validators.required],
-			middleName: [''],
-			lastName: ['', Validators.required],
-			office: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15)]],
+			firstName: ['', [Validators.required, FormValidators.name()]],
+			middleName: ['', [FormValidators.name()]],
+			lastName: ['', [Validators.required, FormValidators.name()]],
+			office: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), FormValidators.phone()]],
 			officeIsd: ['+1', Validators.required],
 			officeCountry: ['us'],
-			mobile: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15)]],
+			mobile: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), FormValidators.phone()]],
 			mobileIsd: ['+1', Validators.required],
 			mobileCountry: ['us'],
-			email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i)]],
-			address: ['', Validators.required],
+			email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i), Validators.maxLength(100)]],
+			address: ['', [Validators.required, FormValidators.address(), FormValidators.addressSelected(() => this.confirmedAddress)]],
 			city: [''],
 			state: [''],
-			country: ['', Validators.required],
-			zipCode: ['', Validators.required],
-			agencyName: ['', Validators.required],
-			payee: ['', Validators.required],
-			iata: ['', Validators.required],
-			fax: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15)]],
+			country: ['', [Validators.required, FormValidators.country()]],
+			zipCode: ['', [Validators.required, FormValidators.zip()]],
+			agencyName: ['', [Validators.required, FormValidators.organization()]],
+			payee: ['', [Validators.required, FormValidators.organization()]],
+			iata: ['', [Validators.required, FormValidators.iata()]],
+			fax: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), FormValidators.phone()]],
 			faxIsd: ['+1', Validators.required],
 			faxCountry: ['us'],
-			officeNumber: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15)]],
+			officeNumber: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), FormValidators.phone()]],
 			isd_office_number: ['+1', Validators.required],
 			office_country_code: ['us'],
 			latitude: [''],
@@ -171,6 +176,7 @@ export class EditTravelPlannerAccountComponent implements OnInit, AfterViewInit 
 					const placeName = place.name ?? '';
 					const displayAddress = placeName ? `${placeName} - ${formattedAddress}` : formattedAddress;
 
+					this.confirmedAddress = displayAddress;
 					this.editTravelPlannerAccountForm.patchValue({
 						address: displayAddress,
 						latitude: place.geometry.location.lat(),
@@ -201,6 +207,19 @@ export class EditTravelPlannerAccountComponent implements OnInit, AfterViewInit 
 			}
 		);
 
+		// #search1 is hidden behind the Google widget, so track focus on the widget to mark the address touched
+		const addressHost: HTMLElement = this.search1.nativeElement.parentElement;
+		addressHost?.addEventListener('focusin', () => {
+			clearTimeout(this.addressBlurTimer);
+			this.ngZone.run(() => this.addressFocused = true);
+		});
+		addressHost?.addEventListener('focusout', () => {
+			clearTimeout(this.addressBlurTimer);
+			this.addressBlurTimer = setTimeout(() => this.ngZone.run(() => {
+				this.addressFocused = false;
+				this.editTravelPlannerAccountForm.get('address')?.markAsTouched();
+			}), 300);
+		});
 	}
 
 

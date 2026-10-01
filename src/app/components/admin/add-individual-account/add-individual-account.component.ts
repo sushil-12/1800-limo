@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone, AfterViewInit } from '@angular/core';
 import { AdminService } from '../../../services/admin.service';
 import { FormGroup, FormBuilder, Validators, FormArray, FormControl, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { FormValidators } from 'src/app/utils/form-validators';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NgxSpinnerService } from "ngx-spinner";
 import { catchError } from 'rxjs/operators';
@@ -49,6 +50,7 @@ export class AddIndividualAccountComponent implements OnInit, AfterViewInit {
 
 	public addIndividualAccountForm: FormGroup;
 	public submittedForm: boolean;
+	confirmedAddress = ''; // last address picked from suggestions or loaded from the server
 	public disableSubmitButton: boolean = false;
 	public response: any;
 	public yearOptions: any = [];
@@ -281,6 +283,7 @@ export class AddIndividualAccountComponent implements OnInit, AfterViewInit {
 		const formattedAddress = place.formatted_address ?? '';
 		const placeName = place.name ?? '';
 		const displayAddress = placeName ? `${placeName} - ${formattedAddress}` : formattedAddress;
+		this.confirmedAddress = displayAddress;
 		const patch: any = {
 			address: displayAddress,
 			latitude: lat,
@@ -314,21 +317,21 @@ export class AddIndividualAccountComponent implements OnInit, AfterViewInit {
 	buildAddIndividualForm() {
 		this.addIndividualAccountForm = this.formBuilder.group({
 			role: ['5', [Validators.required, Validators.pattern("^[0-9].*$")]],//individual
-			firstName: ['', Validators.required],
-			middleName: [''],
-			lastName: ['', Validators.required],
-			mobile: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15)]],
+			firstName: ['', [Validators.required, FormValidators.name()]],
+			middleName: ['', [FormValidators.name()]],
+			lastName: ['', [Validators.required, FormValidators.name()]],
+			mobile: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), FormValidators.phone()]],
 			mobileIsd: ['+1', Validators.required],
 			mobileCountry: ['us'],
-			work: [''],
+			work: ['', [FormValidators.phone()]],
 			workIsd: ['+1', Validators.required],
 			workCountry: ['us'],
-			email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i)]],
-			address: [''],
+			email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i), Validators.maxLength(100)]],
+			address: ['', [FormValidators.address(), FormValidators.addressSelected(() => this.confirmedAddress)]],
 			city: [''],
 			state: [''],
-			country: [''],
-			zipCode: [''],
+			country: ['', [FormValidators.country()]],
+			zipCode: ['', [FormValidators.zip()]],
 			latitude: [''],
 			longitude: [''],
 			card_type: ['personal', Validators.required],
@@ -336,7 +339,7 @@ export class AddIndividualAccountComponent implements OnInit, AfterViewInit {
 			cvc: ['', [Validators.required, Validators.pattern("^[0-9]*$"), Validators.maxLength(5), this.customValidator.dashValidator(), this.customValidator.plusValidator()]],
 			exp_month: ['', Validators.required],
 			exp_year: ['', Validators.required],
-			name: ['', Validators.required],
+			name: ['', [Validators.required, FormValidators.name()]],
 		}, { validators: this.expiryDateValidator() });
 		this.setExpiryDate(moment());
 	}

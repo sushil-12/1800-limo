@@ -10,8 +10,9 @@
                     <div class="col-md-6">
                         <mat-form-field appearance="outline">
                             <mat-label>First Name <span class="asterisk">*</span></mat-label>
-                            <input formControlName="first_name" type="text" matInput placeholder="First Name">
+                            <input formControlName="first_name" maxlength="50" type="text" matInput placeholder="First Name">
                         </mat-form-field>
+                        <div *ngIf="f.first_name?.errors?.invalidText && (submittedForm || f.first_name?.touched)" class="text-danger">{{ f.first_name?.errors?.invalidText }}</div>
                         <div *ngIf="submittedForm && f.first_name.errors" class="text-danger">
                             <div *ngIf="f.first_name.errors.required">This field is required</div>
                         </div>
@@ -19,8 +20,9 @@
                     <div class="col-md-6">
                         <mat-form-field appearance="outline">
                             <mat-label>Last Name <span class="asterisk">*</span></mat-label>
-                            <input formControlName="last_name" type="text" matInput placeholder="Last Name">
+                            <input formControlName="last_name" maxlength="50" type="text" matInput placeholder="Last Name">
                         </mat-form-field>
+                        <div *ngIf="f.last_name?.errors?.invalidText && (submittedForm || f.last_name?.touched)" class="text-danger">{{ f.last_name?.errors?.invalidText }}</div>
                         <div *ngIf="submittedForm && f.last_name.errors" class="text-danger">
                             <div *ngIf="f.last_name.errors.required">This field is required</div>
                         </div>
@@ -34,6 +36,7 @@
                                 (input)="validatePhoneNumber()" (blur)="validatePhoneNumber()"
                                 [class.is-invalid-input]="(f.phone_number.touched || f.phone_number.dirty) && f.phone_number.invalid" />
                         </mat-form-field>
+                        <div *ngIf="f.phone_number?.errors?.invalidText && (submittedForm || f.phone_number?.touched)" class="text-danger margin-bottom-thin my-mat-hint">{{ f.phone_number?.errors?.invalidText }}</div>
                         <div *ngIf="submittedForm && f?.phone_number?.errors || f?.phone_number?.touched && f?.phone_number?.errors"
                             class="text-danger margin-bottom-thin my-mat-hint">
                             <div *ngIf="f?.phone_number?.errors?.required">This field is required</div>
@@ -64,13 +67,14 @@
                     <div class="col-md-6">
                         <mat-form-field appearance="outline">
                             <mat-label>E-mail <span class="asterisk">*</span></mat-label>
-                            <input formControlName="email" type="email" matInput placeholder="E-mail"
+                            <input formControlName="email" maxlength="100" type="email" matInput placeholder="E-mail"
                                 (focus)="$event.target.select()">
                         </mat-form-field>
                         <div *ngIf="(submittedForm && f.email.errors) || (f.email.touched && f.email.errors)"
                             class="text-danger text-lg m-0">
                             <div *ngIf="f.email.errors.required">This field is required</div>
                             <div *ngIf="f.email.errors.pattern">Email format should be valid</div>
+                            <div *ngIf="f.email.errors.maxlength">Maximum 100 characters allowed</div>
                         </div>
                     </div>
 

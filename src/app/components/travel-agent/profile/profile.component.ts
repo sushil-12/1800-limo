@@ -4,6 +4,7 @@ import { StateManagementService } from '../../../services/statemanagement.servic
 import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormValidators } from 'src/app/utils/form-validators';
 import { CustomvalidationService } from '../../../services/customvalidation.service';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -60,6 +61,7 @@ export class ProfileComponent implements OnInit {
   public profileForm: FormGroup;
   @Input() closeTab: EventEmitter<any> = new EventEmitter();
   public submittedForm: boolean; public yearOptions: any = [];
+  confirmedAddress = ''; // last address picked from suggestions or loaded from the server
   public OfficeObject: any;
   public MobileObject: any;
   public FaxObject: any;
@@ -287,6 +289,7 @@ export class ProfileComponent implements OnInit {
     const formattedAddress = place.formatted_address ?? '';
     const placeName = place.name ?? '';
     const displayAddress = placeName ? `${placeName} - ${formattedAddress}` : formattedAddress;
+    this.confirmedAddress = displayAddress;
     const patch: any = {
       address: displayAddress,
       latitude: lat,
@@ -428,38 +431,38 @@ export class ProfileComponent implements OnInit {
     this.profileForm = this.formBuilder.group({
       acc_id: [''],
       tp_id: [''],
-      firstName: ['', Validators.required],
-      middleName: [''],
-      lastName: ['', Validators.required],
-      work_contact_number: [''],
+      firstName: ['', [Validators.required, FormValidators.name()]],
+      middleName: ['', [FormValidators.name()]],
+      lastName: ['', [Validators.required, FormValidators.name()]],
+      work_contact_number: ['', [FormValidators.phone()]],
       workIsd: [this.currentUser?.isd || '+1', Validators.required],
       workCountry: [this.currentUser?.phoneCountry || 'us'],
-      mobile: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15)]],
+      mobile: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), FormValidators.phone()]],
       mobileIsd: [this.currentUser?.isd || '+1', Validators.required],
       mobileCountry: [this.currentUser?.phoneCountry || 'us'],
-      email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i)]],
-      address: ['', Validators.required],
+      email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i), Validators.maxLength(100)]],
+      address: ['', [Validators.required, FormValidators.address(), FormValidators.addressSelected(() => this.confirmedAddress)]],
       city: [''],
       state: [''],
-      country: ['', Validators.required],
-      zip: ['', [Validators.required]],
-      agency_name: ['', Validators.required],
-      payee: ['', Validators.required],
-      iata: ['', Validators.required],
-      fax: ['', [Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15)]],
+      country: ['', [Validators.required, FormValidators.country()]],
+      zip: ['', [Validators.required, FormValidators.zip()]],
+      agency_name: ['', [Validators.required, FormValidators.organization()]],
+      payee: ['', [Validators.required, FormValidators.organization()]],
+      iata: ['', [Validators.required, FormValidators.iata()]],
+      fax: ['', [Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), FormValidators.phone()]],
       faxIsd: [this.currentUser?.isd || '+1', Validators.required],
       faxCountry: [this.currentUser?.phoneCountry || 'us'],
-      office_number: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15)]],
+      office_number: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), FormValidators.phone()]],
       isd_office_number: [this.currentUser?.isd || '+1', Validators.required],
       office_country_code: [this.currentUser?.phoneCountry || 'us'],
       latitude: [''],
       longitude: [''],
       card_type: ['personal', Validators.required],
-      number: [''],
-      cvc: [''],
+      number: ['', [Validators.pattern("^[0-9]*$"), Validators.minLength(14), Validators.maxLength(20), this.customValidator.dashValidator()]],
+      cvc: ['', [Validators.pattern("^[0-9]*$"), Validators.minLength(3), Validators.maxLength(4), this.customValidator.dashValidator()]],
       exp_month: [''],
       exp_year: [''],
-      name: [''],
+      name: ['', [FormValidators.name()]],
       timezone: ['']
     });
   }
@@ -477,6 +480,7 @@ export class ProfileComponent implements OnInit {
       ).subscribe(({ data }: any) => {
         this.stateManagementService.setprogressBar(false);//hide progressbar
         this.profile_pic = data?.profile_pic;
+        this.confirmedAddress = data?.address || '';
         this.profileForm.patchValue({
           acc_id: data?.acc_id,
           tp_id: data?.tp_id,

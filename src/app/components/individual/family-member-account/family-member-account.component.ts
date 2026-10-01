@@ -1,5 +1,6 @@
 import { Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormValidators } from 'src/app/utils/form-validators';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { throwError } from 'rxjs';
@@ -185,12 +186,12 @@ export class FamilyMemberAccountComponent implements OnInit {
   buildAddIndividualForm() {
     this.addFamilyMemberAccountForm = this.formBuilder.group({
       id: [''],
-      first_name: ['', Validators.required],
-      last_name: ['', Validators.required],
-      phone_number: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15)]],
+      first_name: ['', [Validators.required, FormValidators.name()]],
+      last_name: ['', [Validators.required, FormValidators.name()]],
+      phone_number: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), FormValidators.phone()]],
       phone_isd: ['+1', Validators.required],
       mobileCountry: ['us'],
-      email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i)]],
+      email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i), Validators.maxLength(100)]],
       // address: ['', Validators.required],
       // city: [''],
       // state: [''],

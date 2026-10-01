@@ -55,9 +55,10 @@
 					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>First Name <span class="asterisk">*</span></mat-label>
-							<input formControlName="firstName" type="text" matInput placeholder="First Name"
+							<input formControlName="firstName" maxlength="50" type="text" matInput placeholder="First Name"
 								(focus)="$event.target.select()">
 						</mat-form-field>
+						<div *ngIf="f.firstName?.errors?.invalidText && (submittedForm || f.firstName?.touched)" class="text-danger">{{ f.firstName?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f?.firstName?.errors" class="text-danger">
 							<div *ngIf="f?.firstName?.errors?.required">This field is required</div>
 						</div>
@@ -65,9 +66,10 @@
 					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>Middle Name </mat-label>
-							<input formControlName="middleName" type="text" matInput placeholder="Middle Name"
+							<input formControlName="middleName" maxlength="50" type="text" matInput placeholder="Middle Name"
 								(focus)="$event.target.select()">
 						</mat-form-field>
+						<div *ngIf="f.middleName?.errors?.invalidText && (submittedForm || f.middleName?.touched)" class="text-danger">{{ f.middleName?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f?.middleName?.errors" class="text-danger">
 							<div *ngIf="f?.middleName?.errors?.required">This field is required</div>
 						</div>
@@ -75,9 +77,10 @@
 					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>Last Name <span class="asterisk">*</span></mat-label>
-							<input formControlName="lastName" type="text" matInput placeholder="Last Name"
+							<input formControlName="lastName" maxlength="50" type="text" matInput placeholder="Last Name"
 								(focus)="$event.target.select()">
 						</mat-form-field>
+						<div *ngIf="f.lastName?.errors?.invalidText && (submittedForm || f.lastName?.touched)" class="text-danger">{{ f.lastName?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f?.lastName?.errors || f?.lastName?.touched && f?.lastName?.errors"
 							class="text-danger">
 							<div *ngIf="f?.lastName?.errors?.required">This field is required</div>
@@ -92,6 +95,7 @@
 								(focus)="$event.target.select()" (keypress)="numberOnly($event)"
 								(input)="validateWork()" (blur)="validateWork()" />
 						</mat-form-field>
+						<div *ngIf="f.work_contact_number?.errors?.invalidText && (submittedForm || f.work_contact_number?.touched)" class="text-danger margin-bottom-thin my-mat-hint">{{ f.work_contact_number?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f?.work_contact_number?.errors || f?.work_contact_number?.touched && f?.work_contact_number?.errors"
 							class="text-danger margin-bottom-thin my-mat-hint">
 							<div *ngIf="f?.work_contact_number?.errors?.required">This field is required</div>
@@ -129,6 +133,7 @@
 								(focus)="$event.target.select()" readonly (keypress)="numberOnly($event)"
 								(input)="validateMobile()" (blur)="validateMobile()" />
 						</mat-form-field>
+						<div *ngIf="f.mobile?.errors?.invalidText && (submittedForm || f.mobile?.touched)" class="text-danger margin-bottom-thin my-mat-hint">{{ f.mobile?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f?.mobile?.errors || f?.mobile?.touched && f?.mobile?.errors"
 							class="text-danger margin-bottom-thin my-mat-hint">
 							<div *ngIf="f?.mobile?.errors?.required">This field is required</div>
@@ -155,9 +160,10 @@
 					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>E-mail <span class="asterisk">*</span></mat-label>
-							<input formControlName="email" type="text" matInput placeholder="E-mail"
+							<input formControlName="email" maxlength="100" type="text" matInput placeholder="E-mail"
 								(focus)="$event.target.select()">
 						</mat-form-field>
+						<div *ngIf="f.email?.errors?.maxlength && (submittedForm || f.email?.touched)" class="text-danger">Maximum 100 characters allowed</div>
 						<div *ngIf="submittedForm && f?.email?.errors || f?.email?.touched && f?.email?.errors"
 							class="text-danger">
 							<div *ngIf="f?.email?.errors?.required">This field is required</div>
@@ -187,9 +193,10 @@
 					<div class="col-md-6">
 						<mat-form-field appearance="outline">
 							<mat-label>Agency Name <span class="asterisk">*</span></mat-label>
-							<input formControlName="agency_name" type="text" matInput placeholder="Agency Name"
+							<input formControlName="agency_name" maxlength="100" type="text" matInput placeholder="Agency Name"
 								(focus)="$event.target.select()">
 						</mat-form-field>
+						<div *ngIf="f.agency_name?.errors?.invalidText && (submittedForm || f.agency_name?.touched)" class="text-danger">{{ f.agency_name?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f?.agency_name?.errors" class="text-danger">
 							<div *ngIf="f?.agency_name?.errors?.required">This field is required</div>
 						</div>
@@ -197,9 +204,10 @@
 					<div class="col-md-6">
 						<mat-form-field appearance="outline">
 							<mat-label>Payee Name <span class="asterisk">*</span></mat-label>
-							<input formControlName="payee" type="text" matInput placeholder="Payee Name"
+							<input formControlName="payee" maxlength="100" type="text" matInput placeholder="Payee Name"
 								(focus)="$event.target.select()">
 						</mat-form-field>
+						<div *ngIf="f.payee?.errors?.invalidText && (submittedForm || f.payee?.touched)" class="text-danger">{{ f.payee?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f?.payee?.errors" class="text-danger">
 							<div *ngIf="f?.payee?.errors?.required">This field is required</div>
 						</div>
@@ -210,7 +218,7 @@
 							<mat-label>Address <span class="asterisk">*</span></mat-label>
 							<i matPrefix
 								class="fas fa-search quote-ui-field__prefix quote-ui-field__prefix--address"></i>
-							<input formControlName="address" type="text" matInput placeholder="Address" #search1
+							<input formControlName="address" maxlength="255" type="text" matInput placeholder="Address" #search1
 								autocomplete="off" (focus)="onAddressFocus(search1)" (blur)="onAddressBlur()"
 								(input)="onAddressInput($any($event.target).value)">
 							<button matSuffix type="button" class="address-clear-btn"
@@ -223,6 +231,8 @@
 								</svg>
 							</button>
 						</mat-form-field>
+						<div *ngIf="f.address?.errors?.invalidText && (submittedForm || f.address?.touched)" class="text-danger">{{ f.address?.errors?.invalidText }}</div>
+						<div *ngIf="f.address?.errors?.addressNotSelected && !activeAddressDropdown && (submittedForm || f.address?.touched)" class="text-danger">Please select the Address from the suggestions.</div>
 						<div *ngIf="activeAddressDropdown" class="quote-ui-dropdown-panel">
 							<button type="button" class="quote-ui-dropdown-option" *ngFor="let option of addressOptions"
 								(mousedown)="$event.preventDefault()" (click)="selectAddressOption(option)">
@@ -254,6 +264,7 @@
 								(blur)="validateFax()" />
 
 						</mat-form-field>
+						<div *ngIf="f.fax?.errors?.invalidText && (submittedForm || f.fax?.touched)" class="text-danger margin-bottom-thin my-mat-hint">{{ f.fax?.errors?.invalidText }}</div>
 						<!-- <div *ngIf="submittedForm && f?.fax?.errors || f?.fax?.touched && f?.fax?.errors"
 							class="text-danger margin-bottom-thin my-mat-hint">
 							<div *ngIf="f?.fax?.errors?.required">This field is required</div>
@@ -288,6 +299,7 @@
 
 
 						</mat-form-field>
+						<div *ngIf="f.office_number?.errors?.invalidText && (submittedForm || f.office_number?.touched)" class="text-danger margin-bottom-thin my-mat-hint">{{ f.office_number?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f?.office_number?.errors || f?.office_number?.touched && f?.office_number?.errors"
 							class="text-danger margin-bottom-thin my-mat-hint">
 							<div *ngIf="f?.office_number?.errors?.required">This field is required</div>
@@ -318,9 +330,10 @@
 					<div class="col-md-6">
 						<mat-form-field appearance="outline">
 							<mat-label>IATA # <span class="asterisk">*</span></mat-label>
-							<input formControlName="iata" type="text" matInput placeholder="IATA"
+							<input formControlName="iata" maxlength="15" type="text" matInput placeholder="IATA"
 								(focus)="$event.target.select()">
 						</mat-form-field>
+						<div *ngIf="f.iata?.errors?.invalidText && (submittedForm || f.iata?.touched)" class="text-danger">{{ f.iata?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f?.iata?.errors" class="text-danger">
 							<div *ngIf="f?.iata?.errors?.required">This field is required</div>
 						</div>
@@ -347,9 +360,10 @@
 					<div class="col-md-6">
 						<mat-form-field appearance="outline">
 							<mat-label>Country <span class="asterisk">*</span></mat-label>
-							<input formControlName="country" type="text" matInput placeholder="Country"
+							<input formControlName="country" maxlength="60" type="text" matInput placeholder="Country"
 								(focus)="$event.target.select()">
 						</mat-form-field>
+						<div *ngIf="f.country?.errors?.invalidText && (submittedForm || f.country?.touched)" class="text-danger">{{ f.country?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f?.country?.errors" class="text-danger">
 							<div *ngIf="f?.country?.errors?.required">This field is required</div>
 						</div>
@@ -357,13 +371,13 @@
 					<div class="col-md-6">
 						<mat-form-field appearance="outline">
 							<mat-label>Zip Code / Country Address Code <span class="asterisk">*</span></mat-label>
-							<input formControlName="zip" type="text" matInput
+							<input formControlName="zip" maxlength="10" type="text" matInput
 								placeholder="Zip Code / Country Address Code" (focus)="$event.target.select()">
 						</mat-form-field>
+						<div *ngIf="f.zip?.errors?.invalidText && (submittedForm || f.zip?.touched)" class="text-danger">{{ f.zip?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f?.zip?.errors || f.zip.touched && f.zip.errors"
 							class="text-danger">
 							<div *ngIf="f?.zip?.errors?.required">This field is required</div>
-							<div *ngIf="f?.zip?.errors?.pattern">This field should be a number</div>
 						</div>
 					</div>
 				</div>
@@ -410,9 +424,10 @@
 					<div class="col-md-6">
 						<mat-form-field appearance="outline">
 							<mat-label>Card Holder First & Last Name</mat-label>
-							<input matInput placeholder="Card Holder First & Last Name" formControlName="name"
+							<input matInput placeholder="Card Holder First & Last Name" formControlName="name" maxlength="50"
 								tabindex="1" (focus)="$event.target.select()">
 						</mat-form-field>
+						<div *ngIf="f.name?.errors?.invalidText && (submittedForm || f.name?.touched)" class="text-danger">{{ f.name?.errors?.invalidText }}</div>
 						<div *ngIf="submittedForm && f.name.errors || f.name.touched && f.name.errors"
 							class="text-danger margin-bottom-thin my-mat-hint">
 							<div *ngIf="f.name.errors.required">This field is required</div>
@@ -421,7 +436,7 @@
 					<div class="col-md-6">
 						<mat-form-field appearance="outline">
 							<mat-label>Card No# </mat-label>
-							<input matInput placeholder="Card No#" formControlName="number" tabindex="1"
+							<input matInput placeholder="Card No#" formControlName="number" maxlength="20" tabindex="1"
 								id="card-number" (focus)="$event.target.select()">
 						</mat-form-field>
 						<div *ngIf="submittedForm && f.number.errors || f.number.touched && f.number.errors"
@@ -481,7 +496,7 @@
 									</div>
 									<ng-template #numberLength>
 										<div *ngIf="f.cvc.errors.minlength">Minimum length should be 3</div>
-										<div *ngIf="f.cvc.errors.maxlength">Maximum length should be 3</div>
+										<div *ngIf="f.cvc.errors.maxlength">Maximum length should be 4</div>
 									</ng-template>
 								</ng-template>
 							</ng-template>

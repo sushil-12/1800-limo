@@ -5,9 +5,9 @@
 		<section class="user_information">
 			<h2 class="headinginfo adminbox_shadow">Individual Account</h2>
 
-			<div class="container-fluid mt-1 ">
+			<div class="container-fluid mt-1">
 				<div class="row ">
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>First Name <span class="asterisk">*</span></mat-label>
 							<input formControlName="firstName" type="text" matInput placeholder="First Name"
@@ -17,14 +17,14 @@
 							<div *ngIf="f.firstName.errors.required">This field is required</div>
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>Middle Name</mat-label>
 							<input formControlName="middleName" type="text" matInput placeholder="Middle Name"
 								(focus)="$event.target.select()">
 						</mat-form-field>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>Last Name <span class="asterisk">*</span></mat-label>
 							<input formControlName="lastName" type="text" matInput placeholder="Last Name"
@@ -34,7 +34,7 @@
 							<div *ngIf="f.lastName.errors.required">This field is required</div>
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline" class="mobileField">
 							<mat-label>Mobile<span class="asterisk"> *</span></mat-label>
 							<input pattern="[0-9+]*" maxlength="16" matInput #mobileInput placeholder="Mobile"
@@ -70,7 +70,7 @@
 							</ng-template>
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline" class="mobileField">
 							<mat-label>Work/Home</mat-label>
 							<input pattern="[0-9+]*" maxlength="16" matInput #workInput placeholder="Work/Home"
@@ -107,7 +107,7 @@
 							</ng-template> -->
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>E-mail <span class="asterisk">*</span></mat-label>
 							<input formControlName="email" type="email" matInput placeholder="E-mail"

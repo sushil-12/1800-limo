@@ -6,7 +6,7 @@
 			<h2 class="headinginfo adminbox_shadow">Travel Advisor Account <span>({{countryCodeName}})</span></h2>
 			<div class="container mt-1 ">
 				<div class="row ">
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>First Name <span class="asterisk">*</span></mat-label>
 							<input formControlName="firstName" type="text" matInput placeholder="First Name"
@@ -16,7 +16,7 @@
 							<div *ngIf="f.firstName.errors.required">This field is required</div>
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>Middle Name<span class="asterisk"></span></mat-label>
 							<input formControlName="middleName" type="text" matInput placeholder="Middle Name"
@@ -24,7 +24,7 @@
 						</mat-form-field>
 
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>Last Name <span class="asterisk">*</span></mat-label>
 							<input formControlName="lastName" type="text" matInput placeholder="Last Name"
@@ -35,7 +35,7 @@
 						</div>
 					</div>
 
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline" class="mobileField"
 							[class.is-invalid-input]="submittedForm && f.office.errors || (f.office.touched || f.office.dirty) && f.office.errors">
 							<mat-label>Contact</mat-label>
@@ -67,7 +67,7 @@
 							</ng-template>
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline" class="mobileField"
 							[class.is-invalid-input]="submittedForm && f.mobile.errors || (f.mobile.touched || f.mobile.dirty) && f.mobile.errors">
 							<mat-label>Mobile<span class="asterisk"> *</span></mat-label>
@@ -117,7 +117,7 @@
 						</a>
 					</div>
 
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>E-mail <span class="asterisk">*</span></mat-label>
 							<input formControlName="email" type="text" matInput placeholder="E-mail"
@@ -142,7 +142,7 @@
 			</div>
 		</section>
 		<section class="user_information">
-			<h2 class="headinginfo adminbox_shadow"> Travel Agency Information </h2>
+			<h2 class="headinginfo adminbox_shadow"> Travel Agency Information</h2>
 			<div class="container mt-1 ">
 				<div class="row ">
 					<div class="col-md-6">

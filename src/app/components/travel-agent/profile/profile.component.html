@@ -386,10 +386,10 @@
 		<section class="user_information" *ngIf="!this.currentUser?.is_profile_complete">
 			<h2 class="headinginfo"> Billing Information (Optional)</h2>
 			<div class="container py-2" id="accordionSidebar1">
-				<h3 class="headinginfoH3 mt-3">Credit Card <img class="creditcard_pay"
+				<h3 class="headinginfoH3 mt-3 card-billing-heading">Credit Card <img class="creditcard_pay"
 						src="assets/admin/images/creditcard_pay.png" tabindex="-1"></h3>
-				<div class="row">
-					<div class="col-md-3 pr-0 borderright mobilePadding">
+				<div class="row card-type-toggle">
+					<div class="col-6 col-md-3 pr-0 borderright mobilePadding">
 						<div class="form-group radio-tile-group">
 							<div class="custom-radio input-container btn-shadow">
 								<input class="radio-button" id="personal" type="radio" name="card_type" checked=""
@@ -398,13 +398,9 @@
 									<label class="radio-tile-label" for="personal">Personal</label>
 								</div>
 							</div>
-							<div *ngIf="submittedForm && f.card_type.errors || f.card_type.touched && f.card_type.errors"
-								class="text-danger margin-bottom-thin my-mat-hint">
-								<div *ngIf="f.card_type.errors.required">This field is required</div>
-							</div>
 						</div>
 					</div>
-					<div class="col-md-3 pl-0 mobilePadding">
+					<div class="col-6 col-md-3 pl-0 mobilePadding">
 						<div class="form-group radio-tile-group">
 							<div class="custom-radio input-container btn-shadow">
 								<input class="radio-button" id="business" type="radio" name="card_type"
@@ -412,13 +408,13 @@
 								<div class="radio-tile">
 									<label class="radio-tile-label" for="business">Business</label>
 								</div>
-								<div *ngIf="submittedForm && f.card_type.errors || f.card_type.touched && f.card_type.errors"
-									class="text-danger margin-bottom-thin my-mat-hint">
-									<div *ngIf="f.card_type.errors.required">This field is required</div>
-								</div>
 							</div>
 						</div>
 					</div>
+				</div>
+				<div *ngIf="submittedForm && f.card_type.errors || f.card_type.touched && f.card_type.errors"
+					class="text-danger margin-bottom-thin my-mat-hint">
+					<div *ngIf="f.card_type.errors.required">This field is required</div>
 				</div>
 				<div class="row">
 					<div class="col-md-6">

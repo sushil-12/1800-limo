@@ -1034,3 +1034,56 @@ gmp-basic-place-autocomplete {
 		color: var(--orange, #f47a20);
 	}
 }
+
+/* Billing "Credit Card" section: heading with card logos + Personal/Business card-type toggle */
+.card-billing-heading {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+
+	.creditcard_pay {
+		height: 22px;
+		width: auto;
+		max-width: 100%;
+	}
+}
+
+@media only screen and (max-width: 767px) {
+	/* keep Personal / Business side by side as one joined toggle instead of two stacked full-width boxes */
+	.card-type-toggle {
+		flex-wrap: nowrap;
+		margin-bottom: 8px;
+
+		> .mobilePadding {
+			padding-bottom: 0 !important;
+		}
+
+		> .mobilePadding:first-child {
+			padding-right: 0 !important;
+		}
+
+		> .mobilePadding:last-child {
+			padding-left: 0 !important;
+		}
+
+		.form-group {
+			margin-bottom: 0;
+		}
+
+		.input-container {
+			margin-top: 12px;
+		}
+
+		.borderright .radio-tile {
+			border-right: 0;
+		}
+
+		.radio-tile-label {
+			margin: 0;
+			font-size: 15px;
+			text-align: center;
+			cursor: pointer;
+		}
+	}
+}

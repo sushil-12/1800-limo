@@ -7,7 +7,7 @@
 
 			<div class="container-fluid mt-1 ">
 				<div class="row ">
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>First Name <span class="asterisk">*</span></mat-label>
 							<input formControlName="firstName" type="text" matInput placeholder="First Name">
@@ -16,13 +16,13 @@
 							<div *ngIf="f.firstName.errors.required">This field is required</div>
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>Middle Name</mat-label>
 							<input formControlName="middleName" type="text" matInput placeholder="Middle Name">
 						</mat-form-field>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>Last Name <span class="asterisk">*</span></mat-label>
 							<input formControlName="lastName" type="text" matInput placeholder="Last Name">
@@ -31,7 +31,7 @@
 							<div *ngIf="f.lastName.errors.required">This field is required</div>
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline" class="mobileField">
 							<mat-label>Mobile<span class="asterisk"> *</span></mat-label>
 							<input pattern="[0-9+]*" maxlength="16" matInput #mobileInput placeholder="Mobile"
@@ -82,7 +82,7 @@
 							</svg>
 						</a>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline" class="mobileField">
 							<mat-label>Work</mat-label>
 							<input pattern="[0-9+]*" maxlength="16" matInput #workInput placeholder="Work"
@@ -119,7 +119,7 @@
 							</ng-template> -->
 						</div>
 					</div>
-					<div class="col-md-4">
+					<div class="col-md-6 col-xl-4">
 						<mat-form-field appearance="outline">
 							<mat-label>E-mail <span class="asterisk">*</span></mat-label>
 							<input formControlName="email" type="email" matInput placeholder="E-mail">
@@ -215,10 +215,10 @@
 		<section class="user_information" *ngIf="!type">
 			<h2 class="headinginfo"> Billing Information</h2>
 			<div class="container py-2" id="accordionSidebar1">
-				<h3 class="headinginfoH3 mt-3">Credit Card <img class="creditcard_pay"
+				<h3 class="headinginfoH3 mt-3 card-billing-heading">Credit Card <img class="creditcard_pay"
 						src="assets/admin/images/creditcard_pay.png" tabindex="-1"></h3>
-				<div class="row">
-					<div class="col-md-3 pr-0 borderright mobilePadding">
+				<div class="row card-type-toggle">
+					<div class="col-6 col-md-3 pr-0 borderright mobilePadding">
 						<div class="form-group radio-tile-group">
 							<div class="custom-radio input-container btn-shadow">
 								<input class="radio-button" id="personal" type="radio" name="card_type" checked=""
@@ -234,7 +234,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-md-3 pl-0 mobilePadding">
+					<div class="col-6 col-md-3 pl-0 mobilePadding">
 						<div class="form-group radio-tile-group">
 							<div class="custom-radio input-container btn-shadow">
 								<input class="radio-button" id="business" type="radio" name="card_type"

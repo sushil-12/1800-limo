@@ -204,7 +204,7 @@ export class AddVehicleComponent implements OnInit {
 			model: ['', Validators.required],
 			year: ['', Validators.required],
 			color: ['', Validators.required],
-			licensePlate: [''],
+			licensePlate: ['', Validators.required],
 			numberOfVehicles: [1],
 			seats: [4, [Validators.required, Validators.pattern("^[0-9]*$")]],
 			luggage: [2, [Validators.required, Validators.pattern("^[0-9]*$")]],

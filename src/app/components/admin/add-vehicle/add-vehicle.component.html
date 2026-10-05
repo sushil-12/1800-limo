@@ -222,16 +222,15 @@
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">
 						<mat-label>
-							License plate # or other vehicle identifier
-							<!-- <span *ngIf="affiliateType!='fleet_operator'; else nonFleetOperator"
-								class="asterisk">*</span> -->
-							<ng-template #nonFleetOperator>
-								<span class="theme-color">(optional)</span>
-							</ng-template>
+							License plate # or other vehicle identifier <span class="asterisk">*</span>
 						</mat-label>
 						<input matInput placeholder="License plate # or other vehicle identifier"
 							formControlName="licensePlate" tabindex="1" (focus)="$event.target.select()">
 					</mat-form-field>
+					<div *ngIf="submittedForm && f.licensePlate.errors || f.licensePlate.touched && f.licensePlate.errors"
+						class="text-danger margin-bottom-thin my-mat-hint">
+						<div *ngIf="f.licensePlate.errors.required">The License plate # or vehicle identifier is required</div>
+					</div>
 				</div>
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">

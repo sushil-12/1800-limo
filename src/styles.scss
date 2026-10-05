@@ -1033,6 +1033,23 @@ gmp-basic-place-autocomplete {
 		font-weight: 600;
 		color: var(--orange, #f47a20);
 	}
+
+	.at-more {
+		text-decoration: underline;
+		cursor: pointer;
+	}
+
+	.at-extra,
+	.at-more-hide {
+		display: none;
+	}
+
+	&.at-expanded {
+		.at-changes { max-height: 60vh; }
+		.at-extra { display: block; }
+		.at-more-show { display: none; }
+		.at-more-hide { display: inline; }
+	}
 }
 
 /* Billing "Credit Card" section: heading with card logos + Personal/Business card-type toggle */

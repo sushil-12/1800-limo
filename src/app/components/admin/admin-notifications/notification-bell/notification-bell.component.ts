@@ -55,12 +55,26 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
 	ngOnInit(): void {
 		this.activitySub = this.notifications.newActivity$.subscribe(fresh => this.showToasts(fresh));
 		this.notifications.startPolling();
+		// Capture phase so the "+N more" click is handled before ngx-toastr's tap handler opens the booking.
+		document.addEventListener('click', this.onToastMoreClick, true);
 	}
 
 	ngOnDestroy(): void {
 		this.activitySub?.unsubscribe();
 		this.notifications.stopPolling();
+		document.removeEventListener('click', this.onToastMoreClick, true);
 	}
+
+	/** "+N more changes" in a toast expands it in place instead of navigating to the booking. */
+	private onToastMoreClick = (event: MouseEvent): void => {
+		const more = (event.target as HTMLElement | null)?.closest?.('.activity-toast .at-more');
+		if (!more) {
+			return;
+		}
+		event.stopPropagation();
+		event.preventDefault();
+		more.closest('.activity-toast')?.classList.toggle('at-expanded');
+	};
 
 	private showToasts(fresh: AdminNotification[]): void {
 		const options = {
@@ -101,19 +115,25 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
 			+ ` · ${escapeHtml(sourceLabel(n))}</div>`;
 
 		const changes = changesOf(n);
-		const rows = changes.slice(0, TOAST_CHANGES).map(c => {
+		// Every change is rendered; the ones past TOAST_CHANGES stay hidden until "+N more" expands the toast.
+		const rows = changes.map((c, i) => {
+			const cls = i < TOAST_CHANGES ? 'at-change' : 'at-change at-extra';
 			const label = `<div class="at-label">${escapeHtml(c.label)}</div>`;
 			if (isNewBooking(n) || c.old === null) {
-				return `<div class="at-change">${label}<div class="at-value">${escapeHtml(clip(c.new))}</div></div>`;
+				return `<div class="${cls}">${label}<div class="at-value">${escapeHtml(clip(c.new))}</div></div>`;
 			}
-			return `<div class="at-change">${label}`
+			return `<div class="${cls}">${label}`
 				+ `<div class="at-line at-was"><span class="at-sign">Was</span><span>${escapeHtml(clip(c.old) || 'empty')}</span></div>`
 				+ `<div class="at-line at-now"><span class="at-sign">Now</span><span>${escapeHtml(clip(c.new) || 'empty')}</span></div>`
 				+ `</div>`;
 		}).join('');
 
 		const more = changes.length - TOAST_CHANGES;
-		const footer = `<div class="at-hint">${more > 0 ? `+${more} more change${more === 1 ? '' : 's'} · ` : ''}Click to open booking</div>`;
+		const moreToggle = more > 0
+			? `<span class="at-more"><span class="at-more-show">+${more} more change${more === 1 ? '' : 's'}</span>`
+				+ `<span class="at-more-hide">Show less</span></span> · `
+			: '';
+		const footer = `<div class="at-hint">${moreToggle}Click to open booking</div>`;
 
 		return who + (rows ? `<div class="at-changes">${rows}</div>` : '') + footer;
 	}

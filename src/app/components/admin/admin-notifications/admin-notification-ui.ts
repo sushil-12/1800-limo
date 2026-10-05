@@ -70,8 +70,11 @@ export function isNewBooking(n: AdminNotification): boolean {
 	return n.event === 'created';
 }
 
+/** Internal IDs that aren't useful to admins reading the activity feed. */
+const HIDDEN_CHANGE_LABELS = new Set(['affiliate id', 'vehicle id', 'driver id']);
+
 export function changesOf(n: AdminNotification): AdminNotificationChange[] {
-	return n.changes || [];
+	return (n.changes || []).filter(c => !HIDDEN_CHANGE_LABELS.has((c.label || '').trim().toLowerCase()));
 }
 
 /** One-line summary of the first few changes (toasts). */

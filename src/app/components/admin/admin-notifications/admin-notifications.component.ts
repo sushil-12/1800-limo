@@ -42,6 +42,8 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
 	lastPage = 1;
 	loading = false;
 	error = '';
+	// Ids of cards showing their change details. The newest card is always opened on load.
+	private expanded = new Set<number>();
 
 	private search$ = new Subject<string>();
 	private subs = new Subscription();
@@ -94,6 +96,13 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
 		this.error = '';
 		this.notifications.list(this.filters).subscribe({
 			next: page => {
+				// A full reload starts fresh; a silent refresh keeps whatever the admin had open.
+				if (showLoading) {
+					this.expanded.clear();
+				}
+				if (page.data.length) {
+					this.expanded.add(page.data[0].id);
+				}
 				this.items = page.data;
 				this.total = page.total;
 				this.lastPage = page.last_page || 1;
@@ -126,6 +135,16 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
 		}
 		const link = bookingLink(n);
 		this.router.navigate(link.commands, { queryParams: link.queryParams });
+	}
+
+	isExpanded(n: AdminNotification): boolean {
+		return this.expanded.has(n.id);
+	}
+
+	toggle(n: AdminNotification): void {
+		if (!this.expanded.delete(n.id)) {
+			this.expanded.add(n.id);
+		}
 	}
 
 	trackById(_: number, n: AdminNotification): number {

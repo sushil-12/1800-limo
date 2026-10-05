@@ -49,8 +49,8 @@
 	<div class="an-state" *ngIf="!loading && !error && !items.length">No booking activity matches these filters.</div>
 
 	<div class="an-list" *ngIf="!loading && items.length">
-		<article class="an-card" *ngFor="let n of items; trackBy: trackById" [class.unread]="!n.read_at">
-			<div class="an-card-head">
+		<article class="an-card" *ngFor="let n of items; trackBy: trackById" [class.unread]="!n.read_at" [class.open]="isExpanded(n)">
+			<div class="an-card-head" (click)="toggle(n)">
 				<div class="an-avatar" [attr.data-event]="n.event" aria-hidden="true">{{ initials(actorName(n)) }}</div>
 
 				<div class="an-who">
@@ -70,38 +70,47 @@
 				<div class="an-actions">
 					<button type="button" class="an-btn an-btn-sm" *ngIf="!n.read_at" (click)="markRead(n, $event)">Mark read</button>
 					<button type="button" class="an-btn an-btn-sm an-btn-primary" (click)="openBooking(n, $event)">Open booking</button>
+					<button type="button" class="an-toggle" [attr.aria-expanded]="isExpanded(n)"
+						[attr.aria-label]="isExpanded(n) ? 'Collapse details' : 'Expand details'">
+						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+							stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<polyline points="6 9 12 15 18 9"></polyline>
+						</svg>
+					</button>
 				</div>
 			</div>
 
-			<div class="an-changes" *ngIf="changesOf(n).length; else noChanges">
-				<div class="an-changes-title">
-					{{ isNewBooking(n) ? 'Booking details' : changesOf(n).length + ' field' + (changesOf(n).length === 1 ? '' : 's') + ' changed' }}
-				</div>
-				<div class="an-diff">
-					<div class="an-diff-head" *ngIf="!isNewBooking(n)">
-						<span>Field</span><span>Before</span><span>After</span>
+			<ng-container *ngIf="isExpanded(n)">
+				<div class="an-changes" *ngIf="changesOf(n).length; else noChanges">
+					<div class="an-changes-title">
+						{{ isNewBooking(n) ? 'Booking details' : changesOf(n).length + ' field' + (changesOf(n).length === 1 ? '' : 's') + ' changed' }}
 					</div>
-					<div class="an-diff-row" *ngFor="let c of changesOf(n)" [class.single]="isNewBooking(n)">
-						<div class="an-label">{{ c.label }}</div>
-						<ng-container *ngIf="!isNewBooking(n); else valueOnly">
-							<div class="an-cell an-was">
-								<span class="an-mobile-tag">Before</span>
-								<span *ngIf="c.old; else emptyVal">{{ c.old }}</span>
-							</div>
-							<div class="an-cell an-now">
-								<span class="an-mobile-tag">After</span>
-								<span *ngIf="c.new; else emptyVal">{{ c.new }}</span>
-							</div>
-						</ng-container>
-						<ng-template #valueOnly>
-							<div class="an-cell an-value">{{ c.new }}</div>
-						</ng-template>
+					<div class="an-diff">
+						<div class="an-diff-head" *ngIf="!isNewBooking(n)">
+							<span>Field</span><span>Before</span><span>After</span>
+						</div>
+						<div class="an-diff-row" *ngFor="let c of changesOf(n)" [class.single]="isNewBooking(n)">
+							<div class="an-label">{{ c.label }}</div>
+							<ng-container *ngIf="!isNewBooking(n); else valueOnly">
+								<div class="an-cell an-was">
+									<span class="an-mobile-tag">Before</span>
+									<span *ngIf="c.old; else emptyVal">{{ c.old }}</span>
+								</div>
+								<div class="an-cell an-now">
+									<span class="an-mobile-tag">After</span>
+									<span *ngIf="c.new; else emptyVal">{{ c.new }}</span>
+								</div>
+							</ng-container>
+							<ng-template #valueOnly>
+								<div class="an-cell an-value">{{ c.new }}</div>
+							</ng-template>
+						</div>
 					</div>
 				</div>
-			</div>
-			<ng-template #noChanges>
-				<div class="an-nochanges">No field details were recorded for this entry.</div>
-			</ng-template>
+				<ng-template #noChanges>
+					<div class="an-nochanges">No field details were recorded for this entry.</div>
+				</ng-template>
+			</ng-container>
 		</article>
 	</div>
 

@@ -295,6 +295,34 @@
 	align-items: flex-start;
 	gap: 12px;
 	padding: 14px 16px;
+	cursor: pointer;
+}
+
+.an-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: none;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--an-muted);
+	cursor: pointer;
+
+	&:hover {
+		background: #f3f4f6;
+		color: var(--an-text);
+	}
+
+	svg {
+		transition: transform 0.15s ease;
+	}
+
+	.an-card.open & svg {
+		transform: rotate(180deg);
+	}
 }
 
 .an-avatar {
@@ -495,6 +523,10 @@
 	.an-actions {
 		width: 100%;
 		padding-left: 52px;
+	}
+
+	.an-toggle {
+		margin-left: auto;
 	}
 
 	.an-changes,

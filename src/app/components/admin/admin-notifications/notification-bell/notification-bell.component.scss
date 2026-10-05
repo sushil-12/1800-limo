@@ -137,7 +137,8 @@
 	top: calc(100% + 10px);
 	right: -8px;
 	z-index: 1050;
-	width: min(440px, calc(100vw - 32px));
+	// Wide on desktop so changes fit a Field / Before / After table.
+	width: min(760px, calc(100vw - 32px));
 	background: #fff;
 	border: 1px solid var(--nb-line);
 	border-radius: 12px;
@@ -307,55 +308,63 @@
 	line-height: 18px;
 }
 
-// ---- Changes (diff style) ----
+// ---- Changes (Field / Before / After table, as on the activity page) ----
 
-.nb-changes {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
+.nb-diff {
 	margin-top: 10px;
-}
-
-.nb-change {
 	border: 1px solid var(--nb-line);
 	border-radius: 8px;
 	overflow: hidden;
 	background: #fff;
 }
 
-.nb-label {
-	padding: 5px 10px;
-	background: #f3f4f6;
-	color: #374151;
-	font-size: 11px;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
+.nb-diff-head,
+.nb-diff-row {
+	display: grid;
+	grid-template-columns: 130px 1fr 1fr;
 }
 
-.nb-line {
-	display: flex;
-	align-items: flex-start;
-	gap: 8px;
-	padding: 6px 10px;
+.nb-diff-row.single {
+	grid-template-columns: 130px 1fr;
+}
+
+.nb-diff-head {
+	background: #f3f4f6;
+	border-bottom: 1px solid var(--nb-line);
+
+	span {
+		padding: 6px 10px;
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--nb-muted);
+	}
+}
+
+.nb-diff-row + .nb-diff-row {
+	border-top: 1px solid var(--nb-line);
+}
+
+.nb-label {
+	padding: 8px 10px;
+	color: #374151;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.nb-cell {
+	min-width: 0;
+	padding: 8px 10px;
 	font-size: 13px;
 	line-height: 1.45;
 }
 
-.nb-sign {
-	flex: 0 0 34px;
-	margin-top: 1px;
-	padding: 1px 0;
-	border-radius: 4px;
-	font-size: 10px;
-	font-weight: 700;
-	text-align: center;
-	text-transform: uppercase;
-	letter-spacing: 0.03em;
+.nb-tag {
+	display: none;
 }
 
 .nb-val {
-	min-width: 0;
 	overflow-wrap: anywhere;
 	white-space: pre-line;
 	display: -webkit-box;
@@ -364,30 +373,55 @@
 	overflow: hidden;
 }
 
+.nb-empty-val {
+	color: #9aa0a6;
+	font-style: italic;
+	font-weight: 400;
+}
+
 .nb-was {
 	background: #fef2f2;
 	color: #7f1d1d;
-
-	.nb-sign {
-		background: #fecaca;
-		color: #991b1b;
-	}
 }
 
 .nb-now {
 	background: #f0fdf4;
 	color: #14532d;
 	font-weight: 600;
-
-	.nb-sign {
-		background: #bbf7d0;
-		color: #166534;
-	}
 }
 
 .nb-value {
 	color: var(--nb-text);
 	font-weight: 600;
+}
+
+// Narrow screens: stack each row (label, then Before, then After).
+@media (max-width: 599px) {
+	.nb-diff-head {
+		display: none;
+	}
+
+	.nb-diff-row,
+	.nb-diff-row.single {
+		grid-template-columns: 1fr;
+	}
+
+	.nb-label {
+		padding-bottom: 4px;
+		background: #f3f4f6;
+		font-size: 11px;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	.nb-tag {
+		display: block;
+		font-size: 10px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		opacity: 0.7;
+	}
 }
 
 .nb-more {

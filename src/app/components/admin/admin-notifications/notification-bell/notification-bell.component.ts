@@ -162,10 +162,6 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
 		this.notifications.soundEnabled = !this.notifications.soundEnabled;
 	}
 
-	async toggleDesktop(): Promise<void> {
-		await this.notifications.setDesktopEnabled(!this.notifications.desktopEnabled);
-	}
-
 	trackById(_: number, n: AdminNotification): number {
 		return n.id;
 	}

@@ -524,3 +524,40 @@
 		opacity: 0.7;
 	}
 }
+
+// Phones and iPads: larger type for readability. Inputs at 16px also stop iOS zooming on focus.
+@media (max-width: 1199px) {
+	.an-title { font-size: 26px; }
+	.an-sub { font-size: 15px; }
+
+	.an-btn { height: 40px; font-size: 15px; }
+	.an-btn-sm { height: 36px; font-size: 14px; }
+	.an-btn-ghost { height: 36px; }
+
+	.an-input,
+	.an-search::placeholder { font-size: 16px; }
+	.an-input { height: 44px; }
+	.an-date { line-height: 42px; }
+	.an-f-foot { height: auto; }
+
+	.an-field > span { font-size: 13px; }
+	.an-check { font-size: 16px; }
+
+	.an-avatar { font-size: 16px; }
+	.an-headline { font-size: 17px; }
+	.an-tag { font-size: 13px; }
+	.an-actor { font-size: 15px; }
+	.an-chip { font-size: 13px; line-height: 20px; }
+	.an-exact { font-size: 14px; }
+
+	.an-changes-title { font-size: 14px; }
+	.an-diff-head span { font-size: 13px; }
+	.an-label { font-size: 15px; }
+	.an-cell { font-size: 16px; }
+	.an-mobile-tag { font-size: 12px; }
+	.an-nochanges { font-size: 15px; }
+
+	.an-error,
+	.an-state { font-size: 16px; }
+	.an-pager { font-size: 15px; }
+}

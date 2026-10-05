@@ -308,7 +308,7 @@ mat-progress-bar.my-color .mat-progress-bar-fill::after {
     }
 
     .topnav .navbar-brand img {
-        height: 3rem !important;
+        height: 2.5rem !important;
     }
 }
 
@@ -674,7 +674,7 @@ mat-progress-bar.my-color .mat-progress-bar-fill::after {
 }
 
 .topnav .navbar-brand img {
-    height: 3rem;
+    height: 2.5rem;
 }
 
 .topnav .dropdown {
@@ -2997,15 +2997,20 @@ table #navbarDropdownUserImage {
    let the logo shrink instead of widening the page. */
 @media (max-width: 430px) {
     .admin-wrapper .topnav .navbar-brand {
+        display: flex;
+        align-items: center;
         width: auto;
-        flex: 0 1 14rem;
+        flex: 1 1 auto;
         min-width: 0;
+        margin-right: 0.5rem;
     }
 
+    /* Scale by width so the logo keeps its proportions instead of a fixed
+       3rem height squeezed into a narrow box. */
     .admin-wrapper .topnav .navbar-brand img {
-        width: 100%;
-        object-fit: contain;
-        object-position: left center;
+        width: auto;
+        max-width: 100%;
+        height: auto !important;
     }
 
     .admin-wrapper .topnav .navbar-nav {

@@ -91,14 +91,7 @@
 				<button type="button" class="nb-toggle" [class.on]="notifications.soundEnabled"
 					(click)="toggleSound()" title="Play a sound for new activity">
 					Sound {{ notifications.soundEnabled ? 'on' : 'off' }}
-				</button>
-				<button type="button" class="nb-toggle" [class.on]="notifications.desktopEnabled"
-					*ngIf="notifications.desktopPermission !== 'unsupported'"
-					[disabled]="notifications.desktopPermission === 'denied'"
-					(click)="toggleDesktop()"
-					[title]="notifications.desktopPermission === 'denied' ? 'Blocked in browser settings' : 'Show a desktop notification for new activity'">
-					Desktop {{ notifications.desktopEnabled ? 'on' : 'off' }}
-				</button>
+			    </button>
 			</div>
 		</div>
 	</div>

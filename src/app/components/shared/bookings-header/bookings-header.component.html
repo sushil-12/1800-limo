@@ -1,0 +1,90 @@
+<section class="bh-card">
+	<header class="bh-head">
+		<div class="bh-titles">
+			<h2 class="bh-title">{{ title }}</h2>
+		</div>
+		<div class="bh-tabs" role="tablist" aria-label="Booking period">
+			<button type="button" role="tab" class="bh-tab" *ngFor="let tab of tabs" [class.active]="isActive(tab.key)"
+				[attr.aria-selected]="isActive(tab.key)" (click)="tabChange.emit(tab.key)">
+				<ng-container [ngSwitch]="tab.key">
+					<svg *ngSwitchCase="'past'" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none"
+						stroke="currentColor" stroke-width="2" stroke-linecap="round">
+						<circle cx="12" cy="12" r="8.5" />
+						<path d="M12 7.5V12l3 2" />
+					</svg>
+					<svg *ngSwitchDefault aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none"
+						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+						<path d="M3.5 10h17M8 3v4M16 3v4" />
+						<path *ngIf="tab.key == 'upcoming'" d="M8 14h.01M12 14h.01M16 14h.01" stroke-width="2.6" />
+					</svg>
+				</ng-container>
+				<span>{{ tab.label }}</span>
+				<span class="bh-count" *ngIf="countFor(tab.key) !== null">{{ countFor(tab.key) }}</span>
+			</button>
+		</div>
+		<div class="bh-head-end">
+			<div class="bh-toolbar">
+				<ng-content select="[bhToolbar]"></ng-content>
+			</div>
+			<div class="bh-actions">
+				<ng-content select="[bhActions]"></ng-content>
+			</div>
+		</div>
+	</header>
+
+	<form class="bh-search" role="search" (submit)="$event.preventDefault(); searchSubmit.emit(searchBox.value)">
+		<svg class="bh-search-icon" aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none"
+			stroke="currentColor" stroke-width="2" stroke-linecap="round">
+			<circle cx="11" cy="11" r="7" />
+			<path d="m20 20-3.5-3.5" />
+		</svg>
+		<input #searchBox id="keyword" class="bh-search-input" type="text" autocomplete="off"
+			[attr.aria-label]="searchPlaceholder" [placeholder]="searchPlaceholder" [value]="searchText"
+			(focus)="searchBox.select()" (input)="searchInput.emit(searchBox.value)">
+		<button type="button" class="bh-filters-btn" *ngIf="hasFilters" [class.open]="filtersOpen"
+			[attr.aria-expanded]="filtersOpen" (click)="filtersOpen = !filtersOpen">
+			<svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+				stroke-width="2" stroke-linejoin="round">
+				<path d="M4 5h16l-6.2 7.4V19l-3.6-1.8v-4.8L4 5Z" />
+			</svg>
+			<span>Filters</span>
+			<svg class="bh-chevron" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none"
+				stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="m6 9 6 6 6-6" />
+			</svg>
+		</button>
+		<button type="submit" class="bh-search-btn">
+			<svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+				stroke-width="2.2" stroke-linecap="round">
+				<circle cx="11" cy="11" r="7" />
+				<path d="m20 20-3.5-3.5" />
+			</svg>
+			<span>Search</span>
+		</button>
+	</form>
+
+	<div class="bh-filters-panel" *ngIf="hasFilters" [hidden]="!filtersOpen">
+		<ng-content select="[bhFilters]"></ng-content>
+	</div>
+
+	<ng-content select="[bhCustomRange]"></ng-content>
+
+	<button type="button" class="bh-banner" *ngIf="needsActionCount > 0" (click)="needsActionToggle.emit()">
+		<span class="bh-banner-icon" aria-hidden="true">!</span>
+		<span class="bh-banner-text">
+			<strong *ngIf="!showNeedsAction">
+				{{ needsActionCount == 1 ? '1 booking needs your response' : needsActionCount + ' bookings need your response' }}
+			</strong>
+			<strong *ngIf="showNeedsAction">Showing bookings that need your response</strong>
+			<span>{{ showNeedsAction ? 'Accept or reject each one below.' : 'Please review and take action to keep your schedule up to date.' }}</span>
+		</span>
+		<span class="bh-banner-cta">
+			{{ showNeedsAction ? 'Show all' : 'Review' }}
+			<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+				stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+				<path d="m9 6 6 6-6 6" />
+			</svg>
+		</span>
+	</button>
+</section>

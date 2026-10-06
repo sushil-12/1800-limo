@@ -3,18 +3,45 @@
 <main>
 	<!-- Main page content-->
 	<section class="adminbox_shadow user_information" id="daily_bookings_table">
-		<div class="row">
-			<!-- <div class="col-md-7">
-				<h2 class="headinginfo">See All booking on all Accounts </h2>
-			</div> -->
-			<div class="col-md-5 d-flex justify-content-end" style="gap: 10px;"
-				*ngIf="(currentUser?.created_by_role == 'subscriber' && currentUser?.roleName == 'admin') && !isCancelled ">
-				<button class="custom-filled-button green-button invite-agent-button" data-toggle="modal"
-					data-target="#cancelModal">
-					Cancel Subscription
-				</button>
+		<app-bookings-header class="no-print" title="Bookings" [searchText]="searchText" [listTab]="listTab"
+			[tabCounts]="tabCounts" [hasFilters]="true" (searchInput)="searchInBookings($event)"
+			(searchSubmit)="submitSearch($event)" (tabChange)="selectTab($event)">
+			<button bhActions type="button" class="bh-cta bh-cta--plain" data-toggle="modal" data-target="#cancelModal"
+				*ngIf="(currentUser?.created_by_role == 'subscriber' && currentUser?.roleName == 'admin') && !isCancelled">
+				Cancel Subscription
+			</button>
+			<mat-form-field bhFilters appearance="outline" class="m-0">
+				<mat-label>Filter by Status</mat-label>
+				<mat-select [value]="selectedStatus" (selectionChange)="applyStatusFilter($event.value)">
+					<mat-option [value]="null">All Statuses</mat-option>
+					<mat-option *ngFor="let item of status_list" [value]="item.value">
+						{{item.status}}
+					</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<ng-container bhToolbar>
+				<button type="button" class="bh-ghost-btn" (click)="reset()">Reset</button>
+				<button type="button" class="bh-ghost-btn" (click)="printDailyBookings()">Print</button>
+			</ng-container>
+			<div bhCustomRange class="bh-range" *ngIf="listTab == 'custom'">
+				<mat-form-field appearance="outline">
+					<mat-label>Start Date</mat-label>
+					<input matInput [matDatepicker]="picker1" placeholder="Start Date"
+						(dateInput)="changeDate('startDate', $event.value)" (click)="picker1.open()"
+						[value]="startDate" readonly />
+					<mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+					<mat-datepicker #picker1></mat-datepicker>
+				</mat-form-field>
+				<mat-form-field appearance="outline">
+					<mat-label>End Date</mat-label>
+					<input matInput [matDatepicker]="picker2" placeholder="End Date"
+						(dateInput)="changeDate('endDate', $event.value)" (click)="picker2.open()"
+						[value]="endDate" [min]="startDate" readonly />
+					<mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+					<mat-datepicker #picker2></mat-datepicker>
+				</mat-form-field>
 			</div>
-		</div>
+		</app-bookings-header>
 		<div class="containeredd mt-1 ">
 			<div class="print-report-header">
 				<div class="print-report-header__meta">{{ printGeneratedAt }}</div>
@@ -28,113 +55,6 @@
 					NOTE: {{stripeErroMsg}}
 					<a (click)="addBank()" style="text-decoration: underline !important;">Click Here</a></label>
 			</h3>
-			<div class="d-flex flex-wrap align-items-center justify-content-between no-print" style="gap: 12px;">
-				<div class="booking-tabs m-0" role="tablist">
-					<button type="button" role="tab" class="booking-tab" *ngFor="let tab of listTabs"
-						[class.active]="listTab == tab.key" [attr.aria-selected]="listTab == tab.key"
-						(click)="selectTab(tab.key)">
-						{{tab.label}}
-					</button>
-				</div>
-				<div class="d-flex align-items-center button-group" style="gap: 20px;">
-					<div>
-						<button class="custom-filled-back-button"
-							style="white-space: nowrap;color:#fff;padding: 5px 12px !important; background-color: #000 !important;"
-							(click)="reset()">
-							Reset
-						</button>
-					</div>
-					<div>
-						<button class="custom-filled-button print-button"
-							style="white-space: nowrap;color:#fff;padding: 5px 12px !important;"
-							(click)="printDailyBookings()">
-							Print
-						</button>
-					</div>
-				</div>
-			</div>
-			<div class="row my-2" *ngIf="listTab == 'custom'">
-				<div class="col-12 d-flex flex-wrap align-items-center search-container-wrapper">
-					<div class="d-flex date-fields-wrapper">
-						<!-- Start Date -->
-						<div class="flex-grow-1">
-							<mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
-								<mat-label>Start Date</mat-label>
-								<input matInput [matDatepicker]="picker1" placeholder="Start Date"
-									(dateInput)="changeDate('startDate', $event.value)" (click)="picker1.open()"
-									[value]="startDate" readonly />
-								<mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
-								<mat-datepicker #picker1></mat-datepicker>
-							</mat-form-field>
-						</div>
-						<!-- End Date -->
-						<div class="flex-grow-1">
-							<mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
-								<mat-label>End Date</mat-label>
-								<input matInput [matDatepicker]="picker2" placeholder="End Date"
-									(dateInput)="changeDate('endDate', $event.value)" (click)="picker2.open()"
-									[value]="endDate" [min]="startDate" readonly />
-								<mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
-								<mat-datepicker #picker2></mat-datepicker>
-							</mat-form-field>
-						</div>
-					</div>
-
-					<!-- Search Button -->
-					<div class="d-flex align-items-center button-group no-print" style="gap: 20px;">
-						<div class="mr-2">
-							<button class="custom-filled-button orange-button"
-								style="color:#fff;padding: 5px 12px !important;" (click)="runBookingsSearch()">
-								Search
-							</button>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="row my-2 mb-3">
-				<!-- <div class="col-md-3">
-						<div id="filter-type">
-							<mat-form-field appearance="outline" class="m-0">
-								<mat-label>
-									Filter Type
-								</mat-label>
-								<mat-select [value]="filtertype" (selectionChange)="changeFilterType($event.value)">
-									<mat-option value="bookingid"> Booking Id </mat-option>
-									<mat-option value="paxname"> Pax Name </mat-option>
-									<mat-option value="paxphone"> Pax Phone </mat-option>
-									<mat-option value="drivername"> Driver Name </mat-option>
-									<mat-option value="driverphone"> Driver Phone </mat-option>
-									<mat-option value="pickup"> Pickup </mat-option>
-									<mat-option value="dropoff"> Dropoff </mat-option>
-								</mat-select>
-							</mat-form-field>
-						</div>
-					</div> -->
-				<div class="col-md-4 col-lg-3 mb-2 mb-md-0">
-					<div id="status-filter">
-						<mat-form-field appearance="outline" class="m-0 w-100">
-							<mat-label>Filter by Status</mat-label>
-							<mat-select [value]="selectedStatus" (selectionChange)="applyStatusFilter($event.value)">
-								<mat-option [value]="null">All Statuses</mat-option>
-								<mat-option *ngFor="let item of status_list" [value]="item.value">
-									{{item.status}}
-								</mat-option>
-							</mat-select>
-						</mat-form-field>
-					</div>
-				</div>
-				<div class="col-md-8 col-lg-9">
-					<div id="search-field">
-						<mat-form-field appearance="outline" class="m-0 w-100">
-							<input matInput type="text" class="search-uppercase-input"
-								(keypress)="handleKeypressEvents()" (focus)="$event.target.select()"
-								(input)="searchInBookings($event.target.value)" [value]="searchText"
-								placeholder="Search by booking number, status, name, cell phone, vehicle type"
-								id="keyword" autofocus style="font-size:18px !important">
-						</mat-form-field>
-					</div>
-				</div>
-			</div>
 		</div>
 		<div class="containeredd driverside_table">
 			<div class="row">

@@ -934,6 +934,15 @@ mat-progress-bar.my-color .mat-progress-bar-fill::after {
     .sidenav-toggled #layoutSidenav #layoutSidenav_content:before {
         display: none;
     }
+
+    /* Collapsed: hide the footer Logout label too, or it keeps the 3rem nav stretched wide */
+    .sidenav-toggled .sidenav-footer .logout-link span {
+        display: none;
+    }
+
+    .sidenav-toggled .sidenav-footer .logout-link .logout-icon {
+        margin-right: 0 !important;
+    }
 }
 
 .nav-fixed .topnav {

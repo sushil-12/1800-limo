@@ -30,6 +30,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { EmbeddedQuoteComponent } from './embedded-quote/embedded-quote.component';
+import { BookingsHeaderComponent } from './bookings-header/bookings-header.component';
 
 
 export const DATE_FORMATS = {
@@ -46,7 +47,7 @@ export const DATE_FORMATS = {
 
 
 @NgModule({
-	declarations: [ScrollToTopComponent, FloatIconsComponent, SignatureDirectiveDirective, InvalidControlScrollDirective, ImageModalComponent, DeleteConfirmationComponent, PhotoInstructionsComponent, DateFormatDirective, DatePickerComponent, PhotoGuideModalComponent, CameraAngleDiagramComponent, EmbeddedQuoteComponent],
+	declarations: [ScrollToTopComponent, FloatIconsComponent, SignatureDirectiveDirective, InvalidControlScrollDirective, ImageModalComponent, DeleteConfirmationComponent, PhotoInstructionsComponent, DateFormatDirective, DatePickerComponent, PhotoGuideModalComponent, CameraAngleDiagramComponent, EmbeddedQuoteComponent, BookingsHeaderComponent],
 	imports: [
 		CommonModule,
 		MatAutocompleteModule,
@@ -75,6 +76,7 @@ export const DATE_FORMATS = {
 		PhotoGuideModalComponent,
 		CameraAngleDiagramComponent,
 		EmbeddedQuoteComponent,
+		BookingsHeaderComponent,
 		MatAutocompleteModule,
 		MatDatepickerModule,
 		MatNativeDateModule,

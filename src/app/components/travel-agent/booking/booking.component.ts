@@ -1,4 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { BookingTabCounts } from '../../shared/bookings-header/bookings-header.component';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ThemePalette } from '@angular/material/core';
 import { Router } from '@angular/router';
@@ -87,12 +88,8 @@ export class BookingComponent implements OnInit {
 	total_amount: any;
 	ta_share_total: any;
 	// Upcoming / Past / Custom tabs (Custom = the date-range pickers).
-	readonly listTabs = [
-		{ key: 'upcoming', label: 'Upcoming' },
-		{ key: 'past', label: 'Past' },
-		{ key: 'custom', label: 'Custom' },
-	];
 	listTab: string = 'upcoming';
+	tabCounts: BookingTabCounts | null = null;
 
 
 	constructor(
@@ -218,6 +215,8 @@ export class BookingComponent implements OnInit {
 		this.travelAgentService.loadBookings(pageUrl, this.searchText, startDate, endDate, this.useDateFilter, this.listFilter()).then(result => {
 			this.cancelMessage = ''
 			this.bookingsRes = result;
+			// Only sent for tab requests; keep the last badges while searching.
+			this.tabCounts = this.bookingsRes?.data?.tab_counts ?? this.tabCounts;
 			this.bookings = this.bookingsRes?.data?.reservations?.data;
 			this.total_amount = this.bookingsRes?.data?.total_amount
 			this.ta_share_total = this.bookingsRes?.data?.travel_agent_total
@@ -249,6 +248,14 @@ export class BookingComponent implements OnInit {
 		}
 		return m.format("ll");
 	}
+	/** Search button / Enter: skip the typing debounce. */
+	submitSearch(search_value: string) {
+		clearTimeout(this.timer);
+		this.searchText = search_value ?? "";
+		this.saveCookie('ta_search', this.searchText);
+		this.loadBookings(null, true);
+	}
+
 	searchInBookings(search_value: string) {
 		this.searchText = search_value ?? ""
 		console.log('--->>>>>', search_value)

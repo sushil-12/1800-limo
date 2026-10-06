@@ -1,4 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { BookingTabCounts } from '../../shared/bookings-header/bookings-header.component';
 import { AffiliateService } from '../../../services/affiliate.service';
 import { Router } from '@angular/router';
 import { NgxSpinnerService } from "ngx-spinner";
@@ -63,12 +64,8 @@ export class MyBookingsComponent implements OnInit {
 	useDateFilter: boolean = false;
 	// Upcoming / Past / Custom tabs (Custom = the date-range pickers), plus the
 	// driver-side "Needs action" queue of upcoming bookings awaiting accept/reject.
-	readonly listTabs = [
-		{ key: 'upcoming', label: 'Upcoming' },
-		{ key: 'past', label: 'Past' },
-		{ key: 'custom', label: 'Custom' },
-	];
 	listTab: string = 'upcoming';
+	tabCounts: BookingTabCounts | null = null;
 	showNeedsAction: boolean = false;
 	needsActionCount: number = 0;
 	currencySymbol: any;
@@ -194,6 +191,8 @@ export class MyBookingsComponent implements OnInit {
 			console.log('result------------------------->>>', result)
 			this.bookingsRes = result;
 			this.needsActionCount = this.bookingsRes?.data?.needs_action_count ?? 0;
+			// Only sent for tab requests; keep the last badges while searching.
+			this.tabCounts = this.bookingsRes?.data?.tab_counts ?? this.tabCounts;
 			// Leave "Needs action" once the last pending booking is answered.
 			if (this.showNeedsAction && this.needsActionCount == 0) {
 				this.showNeedsAction = false;
@@ -276,6 +275,17 @@ export class MyBookingsComponent implements OnInit {
 				localStorage.setItem('farmInuseDateFilter', 'false');
 			}
 		}
+		this.loadBookings(null, true);
+	}
+
+	/** Search button / Enter: skip the typing debounce. */
+	submitSearch(search_value: string) {
+		clearTimeout(this.timer);
+		this.searchText = search_value ?? "";
+		if (this.searchText) {
+			this.showNeedsAction = false;
+		}
+		this.saveCookie('affiliate_search', this.searchText);
 		this.loadBookings(null, true);
 	}
 

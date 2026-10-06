@@ -1,4 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { BookingTabCounts } from '../../shared/bookings-header/bookings-header.component';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ThemePalette } from '@angular/material/core';
 import { Router } from '@angular/router';
@@ -86,12 +87,8 @@ export class BookingsComponent implements OnInit {
 	currencySymbol: any;
 	is_family_member: any = false;
 	// Upcoming / Past / Custom tabs (Custom = the date-range pickers).
-	readonly listTabs = [
-		{ key: 'upcoming', label: 'Upcoming' },
-		{ key: 'past', label: 'Past' },
-		{ key: 'custom', label: 'Custom' },
-	];
 	listTab: string = 'upcoming';
+	tabCounts: BookingTabCounts | null = null;
 
 	constructor(
 		private affiliateService: AffiliateService,
@@ -213,6 +210,8 @@ export class BookingsComponent implements OnInit {
 			this.cancelMessage = ''
 			this.spinner.hide()
 			this.bookingsRes = result;
+			// Only sent for tab requests; keep the last badges while searching.
+			this.tabCounts = this.bookingsRes?.data?.tab_counts ?? this.tabCounts;
 			this.bookings = (this.bookingsRes?.data?.data || []).map((booking: any) => {
 
 				return {
@@ -371,6 +370,14 @@ export class BookingsComponent implements OnInit {
 			return 'Today';
 		}
 		return m.format("ll");
+	}
+
+	/** Search button / Enter: skip the typing debounce. */
+	submitSearch(search_value: string) {
+		clearTimeout(this.timer);
+		this.searchText = search_value ?? "";
+		this.saveCookie('indv_search', this.searchText);
+		this.loadBookings(null, true);
 	}
 
 	searchInBookings(search_value: string) {

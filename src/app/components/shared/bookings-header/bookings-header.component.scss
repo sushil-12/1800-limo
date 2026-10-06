@@ -1,0 +1,576 @@
+// Not encapsulated (see the component): every rule is scoped under .bh-card,
+// or under a bh-* class for the buttons/fields pages project into the slots.
+
+.bh-card {
+	--bh-ink: #141a2e;
+	--bh-text: #1d2a4a;
+	--bh-muted: #5b6478;
+	--bh-line: #e3e8f2;
+	--bh-surface: #ffffff;
+	--bh-tint: #eef3fd;
+	--bh-blue: #2f7cf6;
+	--bh-blue-dark: #1f63e0;
+	--bh-orange: #f57c1f;
+	--bh-orange-dark: #e8650c;
+	// Selected tab: white on #166534 is ~7:1 contrast (WCAG AA needs 4.5:1).
+	--bh-active: #166534;
+	--bh-active-ink: #ffffff;
+	--bh-active-badge: #dcfce7;
+	--bh-active-badge-ink: #14532d;
+
+	position: relative;
+	overflow: hidden;
+	margin-bottom: 18px;
+	padding: 0px 23px 18px;
+	font-family: inherit;
+	color: var(--bh-text);
+
+	&,
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
+	> * {
+		position: relative;
+		z-index: 1;
+	}
+
+	button {
+		font-family: inherit;
+	}
+
+	// ---- decorative skyline ----
+	.bh-skyline {
+		position: absolute;
+		z-index: 0;
+		top: 0;
+		right: 0;
+		width: 52%;
+		max-width: 620px;
+		height: 128px; // ends above the search bar
+		pointer-events: none;
+	}
+
+	.bh-skyline-car {
+		fill: #1b2338;
+		opacity: .18;
+	}
+
+	.bh-skyline-wheel {
+		fill: #1b2338;
+		opacity: .22;
+	}
+
+	// ---- title row ----
+	.bh-head {
+		background-color: transparent !important;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 14px 24px;
+		margin-bottom: 18px;
+	}
+
+	// Reset/Print + the role button, pushed to the right end of the title row.
+	.bh-head-end {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px;
+		margin-left: auto;
+	}
+
+	.bh-icon {
+		flex: 0 0 auto;
+		display: grid;
+		place-items: center;
+		width: 64px;
+		height: 64px;
+		border-radius: 18px;
+		background: linear-gradient(160deg, #263049 0%, var(--bh-ink) 100%);
+		color: #fff;
+		box-shadow: 0 8px 18px rgba(20, 26, 46, .28), 0 2px 0 rgba(140, 115, 242, .5);
+	}
+
+	.bh-titles {
+		flex: 0 1 auto;
+		min-width: 0;
+	}
+
+	.bh-title {
+		margin: 0;
+		color: var(--bh-ink);
+		font-size: 28px;
+		font-weight: 700;
+		line-height: 1.2;
+		text-transform: capitalize;
+	}
+
+	.bh-subtitle {
+		margin: 4px 0 0;
+		color: var(--bh-muted);
+		font-size: 16px;
+	}
+
+	.bh-actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		align-items: center;
+		gap: 12px;
+
+		&:empty {
+			display: none;
+		}
+	}
+
+	// ---- search bar ----
+	.bh-search {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin: 0;
+		padding: 8px 8px 8px 20px;
+		border: 1px solid var(--bh-line);
+		border-radius: 20px;
+		background: var(--bh-surface);
+		box-shadow: 0 6px 18px rgba(31, 56, 104, .06);
+	}
+
+	.bh-search-icon {
+		flex: 0 0 auto;
+		color: var(--bh-text);
+	}
+
+	.bh-search-input {
+		flex: 1 1 auto;
+		min-width: 0;
+		height: 48px;
+		padding: 0 6px;
+		border: 0;
+		outline: 0;
+		background: transparent;
+		color: var(--bh-ink);
+		font-size: 17px;
+		box-shadow: none;
+
+		&::placeholder {
+			color: #7a8399;
+		}
+	}
+
+	.bh-filters-btn,
+	.bh-search-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		height: 50px;
+		padding: 0 20px;
+		border-radius: 14px;
+		font-size: 16px;
+		font-weight: 600;
+		white-space: nowrap;
+		cursor: pointer;
+	}
+
+	.bh-filters-btn {
+		margin-left: 4px;
+		border: 1px solid #dde6f7;
+		background: var(--bh-tint);
+		color: var(--bh-text);
+		position: relative;
+
+		&::before {
+			content: '';
+			position: absolute;
+			left: -12px;
+			top: 10px;
+			bottom: 10px;
+			width: 1px;
+			background: var(--bh-line);
+		}
+
+		.bh-chevron {
+			transition: transform .15s ease;
+		}
+
+		&.open .bh-chevron {
+			transform: rotate(180deg);
+		}
+	}
+
+	.bh-search-btn {
+		border: 0;
+		background: linear-gradient(180deg, var(--bh-blue) 0%, var(--bh-blue-dark) 100%);
+		color: #fff;
+		box-shadow: 0 6px 14px rgba(47, 124, 246, .35);
+
+		&:hover {
+			filter: brightness(1.05);
+		}
+	}
+
+	.bh-filters-panel {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px;
+		margin-top: 12px;
+		padding: 14px 16px 2px;
+		border: 1px solid var(--bh-line);
+		border-radius: 16px;
+		background: var(--bh-surface);
+
+		&[hidden] {
+			display: none;
+		}
+	}
+
+	// ---- tabs (in the title row) ----
+	.bh-tabs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+	.bh-tabs span{
+		font-weight: 600;
+	}
+
+	.bh-tab {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		min-height: 46px;
+		padding: 0 18px;
+		border: 1px solid var(--bh-line);
+		border-radius: 14px;
+		background: var(--bh-surface);
+		color: var(--bh-ink);
+		font-size: 16px;
+		font-weight: 600;
+		cursor: pointer;
+		box-shadow: 0 4px 12px rgba(31, 56, 104, .05);
+		transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
+
+		&:hover {
+			border-color: #c9d4ea;
+		}
+
+		// Solid deep green: a gradient's lighter top made white text hard to read.
+		&.active {
+			border-color: var(--bh-active);
+			background: var(--bh-active);
+			color: var(--bh-active-ink);
+			box-shadow: 0 6px 14px rgba(22, 101, 52, .28);
+
+			.bh-count {
+				background: var(--bh-active-badge);
+				color: var(--bh-active-badge-ink);
+			}
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--bh-blue);
+			outline-offset: 3px;
+		}
+	}
+
+	.bh-count {
+		min-width: 34px;
+		padding: 3px 9px;
+		border-radius: 10px;
+		background: #eef1f6;
+		color: var(--bh-text);
+		font-size: 15px;
+		font-weight: 700;
+		text-align: center;
+	}
+
+	.bh-toolbar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 10px;
+
+		&:empty {
+			display: none;
+		}
+	}
+
+	// ---- needs-action banner ----
+	.bh-banner {
+		display: flex;
+		align-items: center;
+		gap: 18px;
+		width: 100%;
+		margin-top: 16px;
+		padding: 16px 18px 16px 22px;
+		border: 1px solid #f9d8ad;
+		border-radius: 18px;
+		background: linear-gradient(90deg, #fff6ea 0%, #fff1e0 100%);
+		text-align: left;
+		cursor: pointer;
+
+		&:focus-visible {
+			outline: 2px solid var(--bh-orange);
+			outline-offset: 3px;
+		}
+	}
+
+	.bh-banner-icon {
+		flex: 0 0 auto;
+		display: grid;
+		place-items: center;
+		width: 46px;
+		height: 46px;
+		border-radius: 50%;
+		background: linear-gradient(180deg, #ff9a3d 0%, var(--bh-orange-dark) 100%);
+		color: #fff;
+		font-size: 24px;
+		font-weight: 800;
+		box-shadow: 0 6px 14px rgba(232, 101, 12, .35);
+	}
+
+	.bh-banner-text {
+		flex: 1 1 auto;
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+
+		strong {
+			color: #8a4300;
+			font-size: 18px;
+			font-weight: 700;
+		}
+
+		span {
+			color: #6b5a48;
+			font-size: 15px;
+		}
+	}
+
+	.bh-banner-cta {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 12px 26px;
+		border-radius: 50px;
+		background: linear-gradient(180deg, #ff8a2b 0%, var(--bh-orange-dark) 100%);
+		color: #fff;
+		font-size: 17px;
+		font-weight: 700;
+		white-space: nowrap;
+		box-shadow: 0 6px 14px rgba(232, 101, 12, .3);
+	}
+
+	// ---- Custom tab date range (projected) ----
+	.bh-range {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px;
+		margin-top: 16px;
+		padding: 14px 16px 0;
+		border: 1px solid var(--bh-line);
+		border-radius: 16px;
+		background: var(--bh-surface);
+
+		.mat-mdc-form-field {
+			flex: 1 1 200px;
+			max-width: 280px;
+		}
+	}
+
+	// ---- responsive ----
+	// Not enough room for title + tabs + buttons: tabs get their own line.
+	@media (max-width: 1299.98px) {
+		.bh-tabs {
+			order: 3;
+			flex-basis: 100%;
+		}
+	}
+
+	@media (max-width: 991.98px) {
+		padding: 20px 18px;
+
+		.bh-skyline {
+			display: none;
+		}
+
+		.bh-head {
+			background-color: transparent !important;
+			flex-wrap: wrap;
+		}
+
+		.bh-head-end {
+			flex-basis: 100%;
+			margin-left: 0;
+		}
+	}
+
+	@media (max-width: 767.98px) {
+		padding: 16px;
+		border-radius: 18px;
+
+		.bh-icon {
+			width: 52px;
+			height: 52px;
+			border-radius: 14px;
+		}
+
+		.bh-title {
+			font-size: 22px;
+		}
+
+		.bh-subtitle {
+			font-size: 14px;
+		}
+
+		.bh-search {
+			flex-wrap: wrap;
+			padding: 8px 8px 8px 14px;
+		}
+
+		.bh-search-input {
+			flex: 1 1 calc(100% - 46px);
+		}
+
+		.bh-filters-btn,
+		.bh-search-btn {
+			flex: 1 1 0;
+			justify-content: center;
+			height: 46px;
+		}
+
+		.bh-filters-btn {
+			margin-left: 0;
+
+			&::before {
+				display: none;
+			}
+		}
+
+		// One swipeable row rather than wrapping tabs onto two lines.
+		.bh-tabs {
+			flex-wrap: nowrap;
+			gap: 8px;
+			flex-basis: calc(100% + 32px);
+			margin: 0 -16px;
+			padding: 4px 16px;
+			overflow-x: auto;
+			scrollbar-width: none;
+
+			&::-webkit-scrollbar {
+				display: none;
+			}
+		}
+
+		.bh-tab {
+			flex: 0 0 auto;
+			gap: 8px;
+			min-height: 46px;
+			padding: 0 16px;
+			font-size: 15px;
+
+			> svg {
+				width: 18px;
+				height: 18px;
+			}
+		}
+
+		.bh-count {
+			min-width: 26px;
+			padding: 2px 6px;
+			font-size: 13px;
+		}
+
+		.bh-banner {
+			flex-wrap: wrap;
+			gap: 12px;
+			padding: 14px;
+		}
+
+		.bh-banner-icon {
+			width: 38px;
+			height: 38px;
+			font-size: 20px;
+		}
+
+		.bh-banner-text {
+			flex-basis: calc(100% - 56px);
+
+			strong {
+				font-size: 16px;
+			}
+
+			span {
+				font-size: 14px;
+			}
+		}
+
+		.bh-banner-cta {
+			width: 100%;
+			justify-content: center;
+			padding: 10px 20px;
+		}
+	}
+}
+
+// ---- buttons pages project into [bhActions] / [bhToolbar] ----
+.bh-cta {
+	display: inline-flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 22px 8px 8px;
+	border: 0;
+	border-radius: 50px;
+	background: linear-gradient(180deg, var(--bh-blue, #2f7cf6) 0%, var(--bh-blue-dark, #1f63e0) 100%);
+	color: #fff !important;
+	font-size: 17px;
+	font-weight: 600;
+	white-space: nowrap;
+	cursor: pointer;
+	box-shadow: 0 0 0 4px rgba(47, 124, 246, .18), 0 10px 22px rgba(31, 99, 224, .35);
+
+	.bh-cta-plus {
+		display: grid;
+		place-items: center;
+		width: 40px;
+		height: 40px;
+		border: 2px solid rgba(255, 255, 255, .55);
+		border-radius: 50%;
+		background: rgba(255, 255, 255, .14);
+		font-size: 24px;
+		font-weight: 400;
+		line-height: 1;
+	}
+
+	&.bh-cta--plain {
+		padding: 12px 24px;
+	}
+
+	&:hover {
+		filter: brightness(1.05);
+	}
+}
+
+.bh-ghost-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 10px 18px;
+	border: 1px solid var(--bh-line, #e3e8f2);
+	border-radius: 14px;
+	background: #fff;
+	color: var(--bh-ink, #141a2e) !important;
+	font-size: 15px;
+	font-weight: 600;
+	white-space: nowrap;
+	cursor: pointer;
+
+	&:hover {
+		border-color: #c9d4ea;
+	}
+}

@@ -2,104 +2,36 @@
 <main>
 	<!-- Main page content-->
 	<section class="adminbox_shadow user_information" id="bookings_affiliate">
-		<div class="row mb-2">
-			<div class="col-12 col-md-4 col-lg-3">
-				<h2 class="booking_title headinginfo">{{company_name | titlecase}} Bookings</h2>
-			</div>
-			<div class="col-12 col-md-8 col-lg-9 add-member-div" *ngIf="currentUser?.roleName == 'driver' ">
-				<button class="three-d-button" (click)="upgradePlan()" style="margin-right: 10px !important;">Buy
-					Chauffeur Select
-				</button>
-			</div>
-			<!-- <div class="col-md-12 mb-2 ml-2"
-				*ngIf="currentUser?.roleName == 'driver' && !bookingsRes?.data?.accepted_auto_deduct ">
-				<label class="alert alert-danger" style="padding: 0.55rem 0.75rem;font-size: 1.2rem;">Enable advance
-					payment feature from step 2 for charter
-					bookings.</label>
-			</div> -->
-		</div>
-		<div class="containeredd mt-1 ">
-			<div class="row my-2 mb-1">
-				<div class="col-md-12">
-					<div id="search-field-my-booking">
-						<mat-form-field appearance="outline" class="m-0">
-							<input matInput type="text" (keypress)="handleKeypressEvents()"
-								(focus)="$event.target.select()" (input)="searchInBookings($event.target.value)"
-								[value]="searchText"
-								placeholder="Search by booking number, status, name, cell phone, vehicle type"
-								id="keyword" autofocus>
-						</mat-form-field>
-					</div>
-				</div>
-			</div>
-			<div class="booking-tabs" role="tablist">
-				<button type="button" role="tab" class="booking-tab" *ngFor="let tab of listTabs"
-					[class.active]="listTab == tab.key && !showNeedsAction"
-					[attr.aria-selected]="listTab == tab.key && !showNeedsAction" (click)="selectTab(tab.key)">
-					{{tab.label}}
-				</button>
-			</div>
-			<ng-container *ngIf="listTab == 'custom' && !showNeedsAction">
-			<div class="row my-2">
-				<div class="col-12 d-flex flex-wrap align-items-center search-container-wrapper">
-					<!-- Date Fields Wrapper -->
-					<div class="d-flex date-fields-wrapper">
-						<!-- Start Date -->
-						<div class="flex-grow-1">
-							<mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
-								<mat-label>Start Date <span class="asterisk"> * </span></mat-label>
-								<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker1"
-									placeholder="Start Date" id="id_4"
-									(dateChangeWithFormat)="changeDate('startDate', $event)" (click)="picker1.open()"
-									[value]="startDate" readonly />
-								<mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
-								<mat-datepicker #picker1></mat-datepicker>
-							</mat-form-field>
-						</div>
-
-						<!-- End Date -->
-						<div class="flex-grow-1">
-							<mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
-								<mat-label>End Date <span class="asterisk"> * </span></mat-label>
-								<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker2"
-									placeholder="End Date" id="id_5"
-									(dateChangeWithFormat)="changeDate('endDate',$event)" (click)="picker2.open()"
-									[value]="endDate" [min]="startDate" readonly />
-								<mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
-								<mat-datepicker #picker2></mat-datepicker>
-							</mat-form-field>
-						</div>
-					</div>
-
-					<!-- Search & Reset Buttons -->
-					<div class="d-flex align-items-center button-group" style="gap: 20px;">
-						<div class="mr-2 ml-2">
-							<button class="custom-filled-button orange-button"
-								style="color:#fff;padding: 5px 12px !important;" (click)="runBookingsSearch()">
-								Search
-							</button>
-						</div>
-						<div>
-							<button class="custom-filled-back-button"
-								style="white-space: nowrap;color:#fff;padding: 5px 12px !important;  background-color: #000 !important;"
-								(click)="reset()">
-								Reset
-							</button>
-						</div>
-					</div>
-				</div>
-			</div>
-			</ng-container>
-			<button type="button" class="needs-action-banner" *ngIf="needsActionCount > 0"
-				(click)="toggleNeedsAction()">
-				<i class="fa" [ngClass]="showNeedsAction ? 'fa-list' : 'fa-exclamation-circle'"></i>
-				<span class="needs-action-text">
-					{{ showNeedsAction ? 'Showing bookings that need action'
-					: (needsActionCount == 1 ? '1 booking needs your response' : needsActionCount + ' bookings need your response') }}
-				</span>
-				<span class="needs-action-cta">{{ showNeedsAction ? 'Show all' : 'Review' }}</span>
+		<app-bookings-header [title]="(company_name | titlecase) + ' Bookings'" [searchText]="searchText"
+			[listTab]="listTab" [tabCounts]="tabCounts" [needsActionCount]="needsActionCount"
+			[showNeedsAction]="showNeedsAction" (searchInput)="searchInBookings($event)"
+			(searchSubmit)="submitSearch($event)" (tabChange)="selectTab($event)"
+			(needsActionToggle)="toggleNeedsAction()">
+			<button bhActions type="button" class="bh-cta" *ngIf="currentUser?.roleName == 'driver'"
+				(click)="upgradePlan()">
+				<span class="bh-cta-plus" aria-hidden="true">+</span>
+				Buy Chauffeur Select
 			</button>
-		</div>
+			<button bhToolbar type="button" class="bh-ghost-btn" (click)="reset()">Reset</button>
+			<div bhCustomRange class="bh-range" *ngIf="listTab == 'custom' && !showNeedsAction">
+				<mat-form-field appearance="outline">
+					<mat-label>Start Date</mat-label>
+					<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker1"
+						placeholder="Start Date" id="id_4" (dateChangeWithFormat)="changeDate('startDate', $event)"
+						(click)="picker1.open()" [value]="startDate" readonly />
+					<mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+					<mat-datepicker #picker1></mat-datepicker>
+				</mat-form-field>
+				<mat-form-field appearance="outline">
+					<mat-label>End Date</mat-label>
+					<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker2"
+						placeholder="End Date" id="id_5" (dateChangeWithFormat)="changeDate('endDate', $event)"
+						(click)="picker2.open()" [value]="endDate" [min]="startDate" readonly />
+					<mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+					<mat-datepicker #picker2></mat-datepicker>
+				</mat-form-field>
+			</div>
+		</app-bookings-header>
 		<div class="containeredd driverside_table">
 			<div class="row">
 				<div class="col-md-12 custom_table">

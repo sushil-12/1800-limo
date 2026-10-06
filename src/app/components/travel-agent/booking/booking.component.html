@@ -2,133 +2,57 @@
 <main>
 	<!-- Main page content-->
 	<section class="adminbox_shadow user_information" id="ta_bookings_table">
-		<div class="row bookings-header-row">
-			<div class="col-md-7" *ngIf="currentUser?.roleName == 'travel_agent'">
-				<h2 class="headinginfo" style="font-weight: 600 !important; font-size: 22px !important;">Super Travel
-					Agent Bookings
-					<!-- <span style="text-transform: capitalize; font-weight: 400;"
-						*ngIf="agency_name">({{agency_name}})</span> -->
-				</h2>
-
-			</div>
-			<div class="col-md-12" *ngIf="currentUser?.roleName == 'sub_travel_agent'">
-				<h2 class="headinginfo" style="font-weight: 600 !important; font-size: 22px !important;">Sub Travel
-					Agent Bookings
-					<span style="text-transform: capitalize; font-weight: 400;">
-						({{currentUser?.agency_name + ' / ' + currentUser?.name}})
-					</span>
-				</h2>
-			</div>
-			<div class="col-md-5 bookings-invite-actions" *ngIf="invite_link">
+		<app-bookings-header
+			[title]="currentUser?.roleName == 'sub_travel_agent' ? 'Sub Travel Agent Bookings' : 'Super Travel Agent Bookings'"
+			[subtitle]="currentUser?.roleName == 'sub_travel_agent'
+				? (currentUser?.agency_name + ' / ' + currentUser?.name)
+				: (agency_name ? (agency_name + ' / ' + currentUser?.name) : currentUser?.name)"
+			[searchText]="searchText" [listTab]="listTab" [tabCounts]="tabCounts"
+			(searchInput)="searchInBookings($event)" (searchSubmit)="submitSearch($event)"
+			(tabChange)="selectTab($event)">
+			<ng-container bhActions *ngIf="invite_link">
 				<textarea id="clipboard-example-textarea" cols="30" rows="10" [(ngModel)]="invite_link"
 					hidden></textarea>
-				<button type="button" class="close x-copy-btn" style="float: left" [cdkCopyToClipboard]="invite_link"
-					(click)="copyInviteLink()">
-					<svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor"
-						class="bi bi-check2" viewBox="0 0 16 16" *ngIf="showCopyIcon">
-						<path
-							d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z" />
-					</svg>
-					<i class="bi bi-clipboard2-check" data-bs-toggle="tooltip" *ngIf="!showCopyIcon"
-						data-bs-placement="top" title="Invite Individual agent"></i>
-
-					<!-- <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor"
-						class="bi bi-copy" viewBox="0 0 16 16" data-bs-toggle="tooltip" *ngIf="!showCopyIcon"
-						data-bs-placement="top" title="Invite Individual agent">
-						<path fill-rule="evenodd"
-							d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z" />
-					</svg> -->
+				<button type="button" class="bh-ghost-btn" [cdkCopyToClipboard]="invite_link" (click)="copyInviteLink()"
+					title="Copy invite link">
+					<i class="bi" [ngClass]="showCopyIcon ? 'bi-check2' : 'bi-clipboard2-check'" aria-hidden="true"></i>
+					{{ showCopyIcon ? 'Copied' : 'Copy invite link' }}
 				</button>
-				<button class="custom-filled-button green-button invite-agent-button" data-target="#inviteAgentModal"
-					data-toggle="modal">
+				<button type="button" class="bh-cta" data-target="#inviteAgentModal" data-toggle="modal">
+					<span class="bh-cta-plus" aria-hidden="true">+</span>
 					Invite Agent
 				</button>
+			</ng-container>
+			<button bhToolbar type="button" class="bh-ghost-btn" (click)="reset()">Reset</button>
+			<div bhCustomRange class="bh-range" *ngIf="listTab == 'custom'">
+				<mat-form-field appearance="outline">
+					<mat-label>Start Date</mat-label>
+					<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker1"
+						placeholder="Start Date" id="id_4" (dateChangeWithFormat)="changeDate('startDate', $event)"
+						(click)="picker1.open()" [value]="startDate" readonly />
+					<mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+					<mat-datepicker #picker1 [calendarHeaderComponent]="exampleHeader"></mat-datepicker>
+				</mat-form-field>
+				<mat-form-field appearance="outline">
+					<mat-label>End Date</mat-label>
+					<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker2"
+						placeholder="End Date" id="id_5" (dateChangeWithFormat)="changeDate('endDate', $event)"
+						(click)="picker2.open()" [value]="endDate" [min]="startDate" readonly />
+					<mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+					<mat-datepicker #picker2 [calendarHeaderComponent]="exampleHeader"></mat-datepicker>
+				</mat-form-field>
 			</div>
-			<div class="col-md-7" *ngIf="currentUser?.roleName == 'travel_agent'">
-				<h2 class="headinginfo">
-					<span style="text-transform: capitalize; font-weight: 400; font-size: 19px;">
-						({{ agency_name ? (agency_name + ' / ' + currentUser?.name) : currentUser?.name }})
-					</span>
-				</h2>
-			</div>
-			<div class="col-md-12" *ngIf="currentUser?.roleName == 'travel_agent'" data-target="#inviteAgentModal"
-				data-toggle="modal">
-				<h3 class="addveh_top d-md-flex mt-2 justify-content-between align-items-center mb-0">
-					<label class="alert alert-danger" style="padding :0.25rem 1.25rem; ">NOTE: To invite
-						agents, Click on Invite agent and then click on upload
-						file button and upload the spreadsheet!</label>
-					<!-- <label class="alert alert-danger my-2 mx-2">Choose nearest major city or airport
-						location</label> -->
-					<label></label>
-				</h3>
-			</div>
-		</div>
-		<div class="containeredd mt-1 bookings-filter-panel">
-			<div class="row my-2 mb-1 bookings-search-row">
-				<div class="col-12">
-					<div id="search-field-my-booking">
-						<mat-form-field appearance="outline" class="m-0">
-							<input matInput type="text" (keypress)="handleKeypressEvents()"
-								(focus)="$event.target.select()" (input)="searchInBookings($event.target.value)"
-								[value]="searchText"
-								placeholder="Search by booking number, status, name, cell phone, vehicle type"
-								id="keyword" autofocus>
-						</mat-form-field>
-					</div>
-				</div>
-			</div>
-			<div class="booking-tabs" role="tablist">
-				<button type="button" role="tab" class="booking-tab" *ngFor="let tab of listTabs"
-					[class.active]="listTab == tab.key" [attr.aria-selected]="listTab == tab.key"
-					(click)="selectTab(tab.key)">
-					{{tab.label}}
-				</button>
-			</div>
-			<div class="row my-2 align-items-end bookings-filter-row" *ngIf="listTab == 'custom'">
-				<div class="col-12 col-xl-6">
-					<div class="bookings-date-fields">
-						<div class="bookings-date-field">
-							<mat-form-field appearance="outline" class="m-0 w-100">
-								<mat-label>
-									Start Date <span class="asterisk"> * </span>
-								</mat-label>
-								<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker1"
-									placeholder="Start Date" id="id_4" (dateChangeWithFormat)="changeDate('startDate', $event)"
-									(click)="picker1.open()" [value]="startDate" readonly />
-								<mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
-								<mat-datepicker #picker1 [calendarHeaderComponent]="exampleHeader"></mat-datepicker>
-							</mat-form-field>
-						</div>
-
-						<div class="bookings-date-field">
-							<mat-form-field appearance="outline" class="m-0 w-100">
-								<mat-label>
-									End Date <span class="asterisk"> * </span>
-								</mat-label>
-								<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker2"
-									placeholder="End Date" id="id_5" (dateChangeWithFormat)="changeDate('endDate',$event)"
-									(click)="picker2.open()" [value]="endDate" [min]="startDate" readonly />
-								<mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
-								<mat-datepicker #picker2 [calendarHeaderComponent]="exampleHeader"></mat-datepicker>
-							</mat-form-field>
-						</div>
-					</div>
-				</div>
-
-				<div class="col-12 col-xl-6 mt-3 mt-xl-0">
-					<div class="bookings-action-row">
-						<button class="custom-filled-button orange-button bookings-action-btn search-btn"
-							(click)="runBookingsSearch()">
-							Search
-						</button>
-
-						<button class="custom-filled-back-button bookings-action-btn reset-btn"
-							(click)="reset()">
-							Reset
-						</button>
-					</div>
-				</div>
-			</div>
+		</app-bookings-header>
+		<div class="mb-3" *ngIf="currentUser?.roleName == 'travel_agent'" data-target="#inviteAgentModal"
+			data-toggle="modal">
+			<h3 class="addveh_top d-md-flex mt-2 justify-content-between align-items-center mb-0">
+				<label class="alert alert-danger" style="padding :0.25rem 1.25rem; ">NOTE: To invite
+					agents, Click on Invite agent and then click on upload
+					file button and upload the spreadsheet!</label>
+				<!-- <label class="alert alert-danger my-2 mx-2">Choose nearest major city or airport
+					location</label> -->
+				<label></label>
+			</h3>
 		</div>
 		<div class="containeredd driverside_table">
 			<div class="row">

@@ -1,4 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild, AfterViewInit, OnDestroy } from "@angular/core";
+import { BookingTabCounts } from "../../shared/bookings-header/bookings-header.component";
 import { AdminService } from "../../../services/admin.service";
 import { ActivatedRoute, Router } from "@angular/router";
 import { NgxSpinnerService } from "ngx-spinner";
@@ -89,12 +90,8 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 	subModules: any = localStorage.getItem("sub_modules") || "";
 	useDateFilter: boolean = false;
 	// Upcoming / Past / Custom tabs (Custom = the date-range pickers).
-	readonly listTabs = [
-		{ key: 'upcoming', label: 'Upcoming' },
-		{ key: 'past', label: 'Past' },
-		{ key: 'custom', label: 'Custom' },
-	];
 	listTab: string = 'upcoming';
+	tabCounts: BookingTabCounts | null = null;
 	use_created_at: boolean = false;
 	rates_preview: any;
 	quotebotNewData: any;
@@ -1155,6 +1152,8 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 						this.noError = true;
 					}
 					this.bookingsRes = result;
+					// Only sent for tab requests; keep the last badges while searching.
+					this.tabCounts = this.bookingsRes?.data?.tab_counts ?? this.tabCounts;
 					this.bookings_Original = this.bookingsRes?.data?.reservations?.data || [];
 					this.sortBookings();
 					this.filterBookingsByStatus();
@@ -1193,6 +1192,8 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 						this.noError = true;
 					}
 					this.bookingsRes = result;
+					// Only sent for tab requests; keep the last badges while searching.
+					this.tabCounts = this.bookingsRes?.data?.tab_counts ?? this.tabCounts;
 					this.bookings_Original = this.bookingsRes?.data?.reservations?.data || [];
 					this.sortBookings();
 					this.filterBookingsByStatus();
@@ -1748,6 +1749,12 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 			this.selectedStatus
 		);
    }
+
+	/** Search button / Enter: skip the typing debounce. */
+	submitSearch(search_value: string) {
+		clearTimeout(this.timer);
+		this.runBookingsSearch(search_value);
+	}
 
 	searchInBookings(search_value: string) {
 		this.searchText = search_value ?? "";

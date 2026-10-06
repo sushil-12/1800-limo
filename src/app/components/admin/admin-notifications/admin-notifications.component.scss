@@ -418,7 +418,7 @@
 
 .an-actions {
 	display: flex;
-	gap: 6px;
+	gap: 15px;
 	flex: 0 0 auto;
 }
 
@@ -537,10 +537,7 @@
 	.an-actions {
 		width: 100%;
 		padding-left: 52px;
-	}
-
-	.an-toggle {
-		margin-left: auto;
+		justify-content: flex-end;
 	}
 
 	.an-changes,

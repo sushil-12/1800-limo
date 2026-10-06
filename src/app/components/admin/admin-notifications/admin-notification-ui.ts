@@ -94,10 +94,11 @@ const HIDDEN_CHANGE_FIELDS = new Set([
 	'is_transferred',
 	'created_at',
 	'updated_at',
+	'is_pending_affiliate'
 ]);
 
-/** Any column ending in one of these (affiliate_id, account_type, pickup_latitude, …) is hidden too. */
-const HIDDEN_CHANGE_SUFFIXES = ['_id', '_type', '_latitude', '_longitude'];
+/** Any column ending in one of these (affiliate_id, account_type) is hidden too. */
+const HIDDEN_CHANGE_SUFFIXES = ['_id', '_type'];
 
 /** Normalises "Affiliate id" / "affiliate_id" to "affiliate_id". */
 function fieldKey(c: AdminNotificationChange): string {

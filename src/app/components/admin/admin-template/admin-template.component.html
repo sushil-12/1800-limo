@@ -165,6 +165,16 @@
 								<span style="font-weight: 500;">View Farm Out Bookings </span>
 							</a>
 						</li>
+						<li class="nav-item sidebar_admin_li" *ngIf="role=='admin' || role == 'sub_admin'">
+							<a class="nav-link collapsed" [routerLinkActive]="['active']"
+								routerLink="/admin/notifications" (click)="closeSidebarFunc(false)" tabIndex="-1">
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+									<title>notifications</title>
+									<path
+										d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Zm-2 1H7v-6a5 5 0 0 1 10 0v6Z" />
+								</svg> <span style="font-weight: 500;">Notifications</span>
+							</a>
+						</li>
 						<li class="nav-item sidebar_admin_li">
 							<a class="nav-link collapsed" [routerLinkActive]="['active']" routerLink="/quotebot_section"
 								tabIndex="-1" (click)="closeSidebarFunc(false)">

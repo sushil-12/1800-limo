@@ -22,7 +22,7 @@
 		</label>
 		<label class="an-field an-f-event">
 			<span>Event</span>
-			<select class="an-input" [(ngModel)]="filters.event" (ngModelChange)="applyFilters()">
+			<select class="an-input an-select"[(ngModel)]="filters.event" (ngModelChange)="applyFilters()">
 				<option value="">All events</option>
 				<option *ngFor="let o of eventOptions" [value]="o.value">{{ o.label }}</option>
 			</select>

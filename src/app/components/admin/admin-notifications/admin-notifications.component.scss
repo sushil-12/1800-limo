@@ -130,6 +130,19 @@
 	}
 }
 
+// The native select arrow hugs the right edge; draw our own with a proper inset.
+.an-select {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	padding-right: 40px;
+	background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 14px center;
+	background-size: 16px 16px;
+	cursor: pointer;
+
+	&::-ms-expand { display: none; }
+}
+
 // iOS Safari gives date inputs an intrinsic width and centres the value.
 .an-date {
 	-webkit-appearance: none;

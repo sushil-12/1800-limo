@@ -70,11 +70,47 @@ export function isNewBooking(n: AdminNotification): boolean {
 	return n.event === 'created';
 }
 
-/** Internal IDs that aren't useful to admins reading the activity feed. */
-const HIDDEN_CHANGE_LABELS = new Set(['affiliate id', 'vehicle id', 'driver id']);
+/** Internal reservation columns that aren't useful to admins reading the activity feed. */
+const HIDDEN_CHANGE_FIELDS = new Set([
+	'id',
+	'related_to',
+	'min_rate_involved',
+	'farmout_affiliate',
+	'referral_affiliate',
+	'lose_affiliate',
+	'status_change_flag',
+	'email_token',
+	'created_by',
+	'created_by_role',
+	'reservation_shares',
+	'share_array',
+	'reminder_before_one_hour',
+	'reminder_before_one_day',
+	'reminder_email_sent',
+	'reminder_sms_sent',
+	'cancellation_reminder_sms_sent',
+	'changed_fields',
+	'booking_related_to',
+	'is_transferred',
+	'created_at',
+	'updated_at',
+]);
+
+/** Any column ending in one of these (affiliate_id, account_type, pickup_latitude, …) is hidden too. */
+const HIDDEN_CHANGE_SUFFIXES = ['_id', '_type', '_latitude', '_longitude'];
+
+/** Normalises "Affiliate id" / "affiliate_id" to "affiliate_id". */
+function fieldKey(c: AdminNotificationChange): string {
+	return (c.field || c.label || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+}
+
+function isHiddenChange(c: AdminNotificationChange): boolean {
+	const key = fieldKey(c);
+	return HIDDEN_CHANGE_FIELDS.has(key) || HIDDEN_CHANGE_SUFFIXES.some(s => key.endsWith(s));
+}
 
 export function changesOf(n: AdminNotification): AdminNotificationChange[] {
-	return (n.changes || []).filter(c => !HIDDEN_CHANGE_LABELS.has((c.label || '').trim().toLowerCase()));
+	return (n.changes || []).filter(c => !isHiddenChange(c));
 }
 
 /** One-line summary of the first few changes (toasts). */

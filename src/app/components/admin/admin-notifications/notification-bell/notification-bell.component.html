@@ -12,7 +12,7 @@
 		</span>
 	</button>
 
-	<div class="nb-panel" *ngIf="open" role="dialog" aria-label="Booking activity">
+	<div class="nb-panel" *ngIf="open" [ngStyle]="panelStyle" role="dialog" aria-label="Booking activity">
 		<div class="nb-head">
 			<div>
 				<div class="nb-title">Booking activity</div>

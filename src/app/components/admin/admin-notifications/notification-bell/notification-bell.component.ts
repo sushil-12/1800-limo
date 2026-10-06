@@ -16,6 +16,9 @@ const MAX_TOASTS_PER_POLL = 3;
 const TOAST_CHANGES = 3;
 /** Changes listed per item before "Show all". */
 export const COLLAPSED_CHANGES = 3;
+/** Panel width on wide screens, and the minimum gap kept to the viewport edges. */
+const PANEL_MAX_WIDTH = 760;
+const PANEL_GUTTER = 16;
 
 /**
  * Header bell for the admin layout: unread badge, latest 10 booking-activity
@@ -42,6 +45,7 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
 	readonly isNewBooking = isNewBooking;
 	readonly collapsedChanges = COLLAPSED_CHANGES;
 	expanded = new Set<number>();
+	panelStyle: Record<string, string> = {};
 
 	private activitySub: Subscription | null = null;
 
@@ -141,10 +145,40 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
 	toggle(event: MouseEvent): void {
 		event.stopPropagation();
 		this.open = !this.open;
+		if (this.open) {
+			this.positionPanel();
+		}
+	}
+
+	/**
+	 * Pins the panel under the bell in viewport coordinates, right-aligned to the bell but
+	 * shifted so it never runs off either edge (the bell sits mid-screen on tablets).
+	 */
+	@HostListener('window:resize')
+	@HostListener('window:scroll')
+	positionPanel(): void {
+		if (!this.open) {
+			return;
+		}
+		const trigger = this.elementRef.nativeElement.querySelector('.nb-trigger') as HTMLElement | null;
+		if (!trigger) {
+			return;
+		}
+		const rect = trigger.getBoundingClientRect();
+		const viewport = document.documentElement.clientWidth || window.innerWidth;
+		const width = Math.min(PANEL_MAX_WIDTH, viewport - 2 * PANEL_GUTTER);
+		const right = Math.min(Math.max(PANEL_GUTTER, viewport - rect.right - 8), viewport - width - PANEL_GUTTER);
+		this.panelStyle = {
+			top: `${Math.max(PANEL_GUTTER, rect.bottom + 10)}px`,
+			right: `${right}px`,
+			width: `${width}px`,
+		};
 	}
 
 	@HostListener('document:click', ['$event'])
-	onDocumentClick(event: MouseEvent): void {
+	// iOS Safari doesn't fire click on non-interactive elements, so taps outside wouldn't close the panel.
+	@HostListener('document:touchstart', ['$event'])
+	onDocumentClick(event: Event): void {
 		if (this.open && !this.elementRef.nativeElement.contains(event.target)) {
 			this.open = false;
 		}

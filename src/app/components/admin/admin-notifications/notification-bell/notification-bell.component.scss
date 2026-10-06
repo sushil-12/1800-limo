@@ -132,13 +132,19 @@
 
 // ---- Panel ----
 
+// Fixed to the viewport; top / right / width are set from the bell's position
+// in positionPanel() so the panel never spills off-screen (iPad, narrow windows).
 .nb-panel {
-	position: absolute;
-	top: calc(100% + 10px);
-	right: -8px;
+	position: fixed;
+	top: 70px;
+	right: 16px;
 	z-index: 1050;
 	// Wide on desktop so changes fit a Field / Before / After table.
 	width: min(760px, calc(100vw - 32px));
+	display: flex;
+	flex-direction: column;
+	max-height: calc(100vh - 90px);
+	max-height: calc(100dvh - 90px);
 	background: #fff;
 	border: 1px solid var(--nb-line);
 	border-radius: 12px;
@@ -204,8 +210,12 @@
 // ---- Items ----
 
 .nb-list {
+	flex: 1 1 auto;
+	min-height: 0;
 	max-height: min(520px, 70vh);
 	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior: contain;
 }
 
 .nb-item {
@@ -480,15 +490,5 @@
 	&:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
-	}
-}
-
-@media (max-width: 480px) {
-	.nb-panel {
-		position: fixed;
-		top: 60px;
-		left: 16px;
-		right: 16px;
-		width: auto;
 	}
 }

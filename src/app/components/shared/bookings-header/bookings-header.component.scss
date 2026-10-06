@@ -436,7 +436,10 @@
 		.bh-search-btn {
 			flex: 1 1 0;
 			justify-content: center;
-			height: 46px;
+			height: 44px;
+			padding: 0 14px;
+			border-radius: 12px;
+			font-size: 15px;
 		}
 
 		.bh-filters-btn {
@@ -447,38 +450,83 @@
 			}
 		}
 
-		// One swipeable row rather than wrapping tabs onto two lines.
-		.bh-tabs {
+		.bh-head {
+			flex-wrap: wrap;
+			gap: 14px 12px;
+			margin-bottom: 14px;
+		}
+
+		.bh-titles {
+			flex: 1 1 auto;
+		}
+
+		.bh-head-end {
+			gap: 8px;
+		}
+
+		.bh-toolbar {
 			flex-wrap: nowrap;
 			gap: 8px;
-			flex-basis: calc(100% + 32px);
-			margin: 0 -16px;
-			padding: 4px 16px;
-			overflow-x: auto;
-			scrollbar-width: none;
+		}
 
-			&::-webkit-scrollbar {
-				display: none;
-			}
+		.bh-ghost-btn {
+			padding: 8px 14px;
+			border-radius: 12px;
+			font-size: 14px;
+		}
+
+		// A full-width segmented control: every tab visible, no sideways scroll.
+		.bh-tabs {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 6px;
+			flex-basis: 100%;
+			padding: 5px;
+			border: 1px solid var(--bh-line);
+			border-radius: 16px;
+			background: var(--bh-tint);
 		}
 
 		.bh-tab {
-			flex: 0 0 auto;
-			gap: 8px;
-			min-height: 46px;
-			padding: 0 16px;
+			justify-content: center;
+			gap: 6px;
+			min-width: 0;
+			min-height: 44px;
+			padding: 0 8px;
+			border-color: transparent;
+			border-radius: 12px;
+			background: transparent;
+			box-shadow: none;
 			font-size: 15px;
 
 			> svg {
+				flex: 0 0 auto;
 				width: 18px;
 				height: 18px;
+			}
+
+			&.active {
+				box-shadow: 0 4px 10px rgba(22, 101, 52, .25);
 			}
 		}
 
 		.bh-count {
-			min-width: 26px;
-			padding: 2px 6px;
-			font-size: 13px;
+			min-width: 0;
+			padding: 1px 7px;
+			border-radius: 8px;
+			background: #fff;
+			font-size: 12px;
+		}
+
+		.bh-search {
+			gap: 8px;
+			padding: 6px 6px 6px 14px;
+			border-radius: 16px;
+		}
+
+		.bh-search-input {
+			height: 44px;
+			font-size: 15px !important;
 		}
 
 		.bh-banner {
@@ -509,6 +557,32 @@
 			width: 100%;
 			justify-content: center;
 			padding: 10px 20px;
+		}
+	}
+
+	// Phones: drop the tab icons and put the count under the label so three
+	// tabs fit side by side.
+	@media (max-width: 479.98px) {
+		.bh-tab {
+			flex-direction: column;
+			gap: 8px;
+			min-height: 26px;
+			padding: 4px;
+			font-size: 14px;
+			line-height: 1.15;
+
+			> svg {
+				display: none;
+			}
+		}
+
+		.bh-count {
+			padding: 0 6px;
+			font-size: 14px;
+		}
+
+		.bh-search-input::placeholder {
+			font-size: 15px;
 		}
 	}
 }

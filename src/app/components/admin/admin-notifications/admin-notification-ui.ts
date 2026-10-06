@@ -100,14 +100,26 @@ const HIDDEN_CHANGE_FIELDS = new Set([
 /** Any column ending in one of these (affiliate_id, account_type) is hidden too. */
 const HIDDEN_CHANGE_SUFFIXES = ['_id', '_type'];
 
-/** Normalises "Affiliate id" / "affiliate_id" to "affiliate_id". */
-function fieldKey(c: AdminNotificationChange): string {
-	return (c.field || c.label || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+/**
+ * Normalises "Affiliate id", "affiliate_id", "affiliateId" and "reservation.affiliate_id"
+ * to "affiliate_id".
+ */
+function toKey(value: string | null | undefined): string {
+	return (value || '')
+		.trim()
+		.split('.').pop()!
+		.replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+		.toLowerCase()
+		.replace(/[\s-]+/g, '_');
 }
 
+function isHiddenKey(key: string): boolean {
+	return !!key && (HIDDEN_CHANGE_FIELDS.has(key) || HIDDEN_CHANGE_SUFFIXES.some(s => key.endsWith(s)));
+}
+
+/** Checks both the raw field and the human label, since either may be the one that matches. */
 function isHiddenChange(c: AdminNotificationChange): boolean {
-	const key = fieldKey(c);
-	return HIDDEN_CHANGE_FIELDS.has(key) || HIDDEN_CHANGE_SUFFIXES.some(s => key.endsWith(s));
+	return isHiddenKey(toKey(c.field)) || isHiddenKey(toKey(c.label));
 }
 
 export function changesOf(n: AdminNotification): AdminNotificationChange[] {

@@ -534,6 +534,11 @@
 		flex-wrap: wrap;
 	}
 
+	// Zero basis keeps the text beside the avatar instead of wrapping under it; only the actions wrap.
+	.an-who {
+		flex: 1 1 0;
+	}
+
 	.an-actions {
 		width: 100%;
 		padding-left: 52px;

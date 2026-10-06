@@ -374,11 +374,6 @@ input::-webkit-input-placeholder {
 	background-color: #000 !important;
 }
 
-.past-bookings-btn {
-	color: #fff !important;
-	background-color: #5373aa !important;
-	border-color: #5373aa !important;
-}
 
 .bookings-search-row {
 	margin-top: 0.25rem !important;
@@ -392,9 +387,6 @@ input::-webkit-input-placeholder {
 	width: 100%;
 }
 
-.bookings-checkbox-row p {
-	margin-bottom: 0;
-}
 
 @media (max-width: 1199.98px) {
 	.bookings-action-row {
@@ -467,14 +459,7 @@ input::-webkit-input-placeholder {
 		width: auto;
 	}
 
-	.past-bookings-btn {
-		flex-basis: 100%;
-		width: 100%;
-	}
 
-	.bookings-checkbox-row {
-		padding-left: 0 !important;
-	}
 }
 
 

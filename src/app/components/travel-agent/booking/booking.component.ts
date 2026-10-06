@@ -86,7 +86,13 @@ export class BookingComponent implements OnInit {
 	currencySymbol: any;
 	total_amount: any;
 	ta_share_total: any;
-	isPastBookingView: boolean = false;
+	// Upcoming / Past / Custom tabs (Custom = the date-range pickers).
+	readonly listTabs = [
+		{ key: 'upcoming', label: 'Upcoming' },
+		{ key: 'past', label: 'Past' },
+		{ key: 'custom', label: 'Custom' },
+	];
+	listTab: string = 'upcoming';
 
 
 	constructor(
@@ -144,6 +150,8 @@ export class BookingComponent implements OnInit {
 			localStorage.setItem('traveluseDateFilter', 'false')
 		}
 		console.log('traveluseDateFilter-->', this.useDateFilter)
+		this.listTab = this.useDateFilter ? 'custom' :
+			(localStorage.getItem('travelBookingsTab') == 'past' ? 'past' : 'upcoming');
 
 		//save currency symbol
 		this.currencySymbol = this.stateManagementService.getCurrencySymbol();
@@ -207,7 +215,7 @@ export class BookingComponent implements OnInit {
 		const shouldSendDates = includeDatesInPayload || this.useDateFilter || !!this.searchText?.trim();
 		const startDate = shouldSendDates ? fallbackStartDate : fallbackStartDate;
 		const endDate = shouldSendDates ? fallbackEndDate : fallbackEndDate;
-		this.travelAgentService.loadBookings(pageUrl, this.searchText, startDate, endDate, this.useDateFilter).then(result => {
+		this.travelAgentService.loadBookings(pageUrl, this.searchText, startDate, endDate, this.useDateFilter, this.listFilter()).then(result => {
 			this.cancelMessage = ''
 			this.bookingsRes = result;
 			this.bookings = this.bookingsRes?.data?.reservations?.data;
@@ -312,41 +320,27 @@ export class BookingComponent implements OnInit {
 		this.saveCookie('ta_startDate', this.startDate);
 		this.saveCookie('ta_endDate', this.endDate);
 		this.saveCookie('ta_search', this.searchText ?? "");
+		this.listTab = 'upcoming';
+		localStorage.removeItem('travelBookingsTab');
 		this.loadBookings(null, true);
-		this.isPastBookingView = false;
 	}
 
 
-	viewPastBookings() {
-		if (this.isPastBookingView) {
-			this.reset();
-		} else {
-			this.startDate = moment('2021-01-01').format('YYYY-MM-DD');
-			this.endDate = moment().format('YYYY-MM-DD');
-			this.useDateFilter = true;
-			localStorage.setItem('traveluseDateFilter', 'true');
-			this.saveCookie('ta_startDate', this.startDate);
-			this.saveCookie('ta_endDate', this.endDate);
-			this.loadBookings(null, true);
-			this.isPastBookingView = true;
-		}
+	/** The `filter` sent to the API: '' while on Custom, which uses the date range instead. */
+	listFilter(): string {
+		return this.listTab == 'custom' ? '' : this.listTab;
 	}
 
-
-
-	handleChangeCheckbox(value: any) {
-		console.log('event---->> ', value)
-		this.useDateFilter = value
-		localStorage.setItem('traveluseDateFilter', value)
+	selectTab(tab: string) {
+		this.listTab = tab;
+		localStorage.setItem('travelBookingsTab', tab);
+		this.useDateFilter = tab == 'custom';
+		localStorage.setItem('traveluseDateFilter', String(this.useDateFilter));
 		if (!this.startDate || !this.endDate) {
-			const date = new Date();
-			this.startDate = date.toISOString().substring(0, 10);
-			date.setDate(date.getDate() + 7);
-			this.endDate = date.toISOString().substring(0, 10);
+			this.startDate = moment().format('YYYY-MM-DD');
+			this.endDate = moment().add(7, 'day').format('YYYY-MM-DD');
 		}
-		if (this.useDateFilter) {
-			this.runBookingsSearch();
-		}
+		this.loadBookings(null, true);
 	}
 
 	textFormatter(text: string) {

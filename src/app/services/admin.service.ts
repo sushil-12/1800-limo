@@ -1018,23 +1018,29 @@ export class AdminService {
 		}
 		return this.httpClient.get(path).toPromise();
 	}
-	loadBookings(url, startDate, endDate, useDateFilter, keyword = '', orderBy, status = '') {
+	loadBookings(url, startDate, endDate, useDateFilter, keyword = '', orderBy, status = '', filter = '') {
+		// filter: 'upcoming' | 'past' tab; '' = date range (Custom tab).
+		const now = moment();
+		const clock = '&current_date=' + now.format('YYYY-MM-DD') + '&current_time=' + now.format('HH:mm:ss');
 		var path;
 		if (url) {
-			path = url + '&from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&orderBy=' + orderBy + '&current_date=' + this.current_date + '&current_time=' + this.current_time + '&booking_status=' + status + '&v1=1';
+			path = url + '&from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&orderBy=' + orderBy + clock + '&booking_status=' + status + '&filter=' + filter + '&v1=1';
 		}
 		else {
-			path = this.serverUrl + 'reservations' + '?from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&order_by=' + orderBy + '&current_date=' + this.current_date + '&current_time=' + this.current_time + '&booking_status=' + status + '&v1=1';
+			path = this.serverUrl + 'reservations' + '?from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&order_by=' + orderBy + clock + '&booking_status=' + status + '&filter=' + filter + '&v1=1';
 		}
 		return this.httpClient.get(path).toPromise();
 	}
-	loadFarmInBookings(url, startDate, endDate, useDateFilter, keyword = '', orderBy, status = '') {
+	loadFarmInBookings(url, startDate, endDate, useDateFilter, keyword = '', orderBy, status = '', filter = '') {
+		// filter: 'upcoming' | 'past' tab; '' = date range (Custom tab).
+		const now = moment();
+		const clock = '&current_date=' + now.format('YYYY-MM-DD') + '&current_time=' + now.format('HH:mm:ss');
 		var path;
 		if (url) {
-			path = url + '&from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&orderBy=' + orderBy + '&current_date=' + this.current_date + '&current_time=' + this.current_time + '&booking_status=' + status;
+			path = url + '&from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&orderBy=' + orderBy + clock + '&booking_status=' + status + '&filter=' + filter;
 		}
 		else {
-			path = this.serverUrl + 'subscribers/get-farmin-reservations' + '?from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&order_by=' + orderBy + '&current_date=' + this.current_date + '&current_time=' + this.current_time + '&booking_status=' + status;
+			path = this.serverUrl + 'subscribers/get-farmin-reservations' + '?from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&order_by=' + orderBy + clock + '&booking_status=' + status + '&filter=' + filter;
 		}
 		return this.httpClient.get(path).toPromise();
 	}

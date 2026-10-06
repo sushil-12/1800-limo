@@ -88,6 +88,13 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 	currentUser: any = JSON.parse(localStorage.getItem("currentUser")) || "";
 	subModules: any = localStorage.getItem("sub_modules") || "";
 	useDateFilter: boolean = false;
+	// Upcoming / Past / Custom tabs (Custom = the date-range pickers).
+	readonly listTabs = [
+		{ key: 'upcoming', label: 'Upcoming' },
+		{ key: 'past', label: 'Past' },
+		{ key: 'custom', label: 'Custom' },
+	];
+	listTab: string = 'upcoming';
 	use_created_at: boolean = false;
 	rates_preview: any;
 	quotebotNewData: any;
@@ -191,7 +198,10 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 			(localStorage.getItem('useDateFilter') == 'true' ? true : false)
 			: false;
 		console.log("useDateFilter-->", this.useDateFilter);
-		this.orderBy = localStorage.getItem("orderByCreatedAt") ? localStorage.getItem("orderByCreatedAt") : "pickup_date_asc"
+		this.listTab = this.useDateFilter ? 'custom' :
+			(localStorage.getItem('DBListTab') == 'past' ? 'past' : 'upcoming');
+		this.orderBy = localStorage.getItem("orderByCreatedAt") ? localStorage.getItem("orderByCreatedAt") :
+			(this.listTab == 'past' ? "pickup_date_desc" : "pickup_date_asc")
 		this.use_created_at = localStorage.getItem("orderByCreatedAt") ? true : false
 
 
@@ -512,10 +522,16 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 	}
 
 
-	handleChangeCheckbox(value: any) {
-		console.log("event---->> ", value);
-		this.useDateFilter = value;
-		this.saveCookie("useDateFilter", value);
+	/** The `filter` sent to the API: '' while on Custom, which uses the date range instead. */
+	listFilter(): string {
+		return this.listTab == 'custom' ? '' : this.listTab;
+	}
+
+	selectTab(tab: string) {
+		this.listTab = tab;
+		localStorage.setItem('DBListTab', tab);
+		this.useDateFilter = tab == 'custom';
+		this.saveCookie("useDateFilter", this.useDateFilter);
 
 		if (!this.startDate || !this.endDate) {
 			const date = new Date();
@@ -530,11 +546,10 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 			startDate: dayjs(this.startDate),
 			endDate: dayjs(this.endDate)
 		};
-		
-		// ALWAYS call search, regardless of checkbox state
+
 		this.runBookingsSearch();
-  }
-	
+	}
+
 	handleCheckboxSort(value: any) {
 		if (value) {
 			this.orderBy = "pickup_date_asc";
@@ -616,6 +631,7 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 		// this.adminService.deleteCookie('search')
 		localStorage.removeItem("DBSearch");
 		localStorage.removeItem("useDateFilter");
+		localStorage.removeItem("DBListTab");
 		localStorage.removeItem("DBS_Status");
 		// Clear pinned bookings
 		this.pinnedBookingIds = [];
@@ -623,6 +639,7 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 		localStorage.removeItem('pinnedBookingIds');
 		localStorage.removeItem('pinnedBookings');
 		this.useDateFilter = false;
+		this.listTab = 'upcoming';
 		// this.adminService.deleteCookie('filtertype')
 		this.searchText = "";
 		this.selectedStatus = null;
@@ -1130,7 +1147,8 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 					this.useDateFilter,
 					search_value ?? "",
 					this.orderBy,
-					// Don't pass status to backend
+					'', // Don't pass status to backend
+					this.listFilter(),
 				)
 				.then((result: any) => {
 					if (result?.data?.reservations?.data == 0) {
@@ -1167,6 +1185,8 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 					this.useDateFilter,
 					search_value ?? "",
 					this.orderBy,
+					'',
+					this.listFilter(),
 				)
 				.then((result: any) => {
 					if (result?.data?.reservations?.data == 0) {
@@ -1227,6 +1247,8 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 				this.useDateFilter,
 				search_value ?? "",
 				this.orderBy,
+				'',
+				this.listFilter(),
 			)
 			.then((result: any) => {
 				if (result?.data?.reservations?.data == 0) {
@@ -1701,7 +1723,9 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 		if (this.searchText?.trim()) {
 			this.orderBy = "pickup_date_desc";
 		} else {
-			this.orderBy = localStorage.getItem("orderByCreatedAt") || "pickup_date_asc";
+			// The table re-sorts client-side; keep Past newest-first like the API returns it.
+			this.orderBy = localStorage.getItem("orderByCreatedAt") ||
+				(this.listTab == 'past' ? "pickup_date_desc" : "pickup_date_asc");
 		}
 	}
 

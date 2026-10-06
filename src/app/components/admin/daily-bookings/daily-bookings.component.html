@@ -28,9 +28,33 @@
 					NOTE: {{stripeErroMsg}}
 					<a (click)="addBank()" style="text-decoration: underline !important;">Click Here</a></label>
 			</h3>
-			<div class="row my-2">
+			<div class="d-flex flex-wrap align-items-center justify-content-between no-print" style="gap: 12px;">
+				<div class="booking-tabs m-0" role="tablist">
+					<button type="button" role="tab" class="booking-tab" *ngFor="let tab of listTabs"
+						[class.active]="listTab == tab.key" [attr.aria-selected]="listTab == tab.key"
+						(click)="selectTab(tab.key)">
+						{{tab.label}}
+					</button>
+				</div>
+				<div class="d-flex align-items-center button-group" style="gap: 20px;">
+					<div>
+						<button class="custom-filled-back-button"
+							style="white-space: nowrap;color:#fff;padding: 5px 12px !important; background-color: #000 !important;"
+							(click)="reset()">
+							Reset
+						</button>
+					</div>
+					<div>
+						<button class="custom-filled-button print-button"
+							style="white-space: nowrap;color:#fff;padding: 5px 12px !important;"
+							(click)="printDailyBookings()">
+							Print
+						</button>
+					</div>
+				</div>
+			</div>
+			<div class="row my-2" *ngIf="listTab == 'custom'">
 				<div class="col-12 d-flex flex-wrap align-items-center search-container-wrapper">
-					<!-- Date Fields Wrapper -->
 					<div class="d-flex date-fields-wrapper">
 						<!-- Start Date -->
 						<div class="flex-grow-1">
@@ -56,7 +80,7 @@
 						</div>
 					</div>
 
-					<!-- Search & Reset Buttons -->
+					<!-- Search Button -->
 					<div class="d-flex align-items-center button-group no-print" style="gap: 20px;">
 						<div class="mr-2">
 							<button class="custom-filled-button orange-button"
@@ -64,39 +88,8 @@
 								Search
 							</button>
 						</div>
-						<div>
-							<button class="custom-filled-back-button"
-								style="white-space: nowrap;color:#fff;padding: 5px 12px !important; background-color: #000 !important;"
-								(click)="reset()">
-								Reset
-							</button>
-						</div>
-						<div class="ml-2">
-							<button class="custom-filled-button print-button"
-								style="white-space: nowrap;color:#fff;padding: 5px 12px !important;"
-								(click)="printDailyBookings()">
-								Print
-							</button>
-						</div>
 					</div>
 				</div>
-			</div>
-			<div class="row d-flex justify-content-between">
-				<div class="col-md-12 m-0 p-0 pl-2">
-					<p style="margin: 0;">
-						<mat-checkbox (change)="handleChangeCheckbox($event.checked)" [checked]="useDateFilter">
-							{{useDateFilter ? 'Uncheck the box to view all bookings.' : 'Check the box to apply the date
-							filter.' }}
-						</mat-checkbox>
-					</p>
-				</div>
-
-				<!-- <div class="col-md-6 sortCheckBox"> -->
-				<!-- <p><mat-checkbox (change)="handleCheckboxSort($event.checked,'use_pickup_date')"
-							[checked]="use_pickup_date">Order by pickup date</mat-checkbox></p> -->
-				<!-- <p><mat-checkbox (change)="handleCheckboxSort($event.checked)" [checked]="use_created_at">Order by
-							Booking id</mat-checkbox></p>
-				</div> -->
 			</div>
 			<div class="row my-2 mb-3">
 				<!-- <div class="col-md-3">

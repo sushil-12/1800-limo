@@ -19,6 +19,27 @@
 			</div> -->
 		</div>
 		<div class="containeredd mt-1 ">
+			<div class="row my-2 mb-1">
+				<div class="col-md-12">
+					<div id="search-field-my-booking">
+						<mat-form-field appearance="outline" class="m-0">
+							<input matInput type="text" (keypress)="handleKeypressEvents()"
+								(focus)="$event.target.select()" (input)="searchInBookings($event.target.value)"
+								[value]="searchText"
+								placeholder="Search by booking number, status, name, cell phone, vehicle type"
+								id="keyword" autofocus>
+						</mat-form-field>
+					</div>
+				</div>
+			</div>
+			<div class="booking-tabs" role="tablist">
+				<button type="button" role="tab" class="booking-tab" *ngFor="let tab of listTabs"
+					[class.active]="listTab == tab.key && !showNeedsAction"
+					[attr.aria-selected]="listTab == tab.key && !showNeedsAction" (click)="selectTab(tab.key)">
+					{{tab.label}}
+				</button>
+			</div>
+			<ng-container *ngIf="listTab == 'custom' && !showNeedsAction">
 			<div class="row my-2">
 				<div class="col-12 d-flex flex-wrap align-items-center search-container-wrapper">
 					<!-- Date Fields Wrapper -->
@@ -68,25 +89,16 @@
 					</div>
 				</div>
 			</div>
-			<div class="row my-2 mb-1">
-				<div class="col-md-12">
-					<div id="search-field-my-booking">
-						<mat-form-field appearance="outline" class="m-0">
-							<input matInput type="text" (keypress)="handleKeypressEvents()"
-								(focus)="$event.target.select()" (input)="searchInBookings($event.target.value)"
-								[value]="searchText"
-								placeholder="Search by booking number, status, name, cell phone, vehicle type"
-								id="keyword" autofocus>
-						</mat-form-field>
-					</div>
-				</div>
-			</div>
-			<div class="row pl-2">
-				<p><mat-checkbox (change)="handleChangeCheckbox($event.checked)" [checked]="useDateFilter">
-						{{useDateFilter ? 'Uncheck the box to view all bookings.' : 'Check the box to apply the date
-						filter.' }}
-					</mat-checkbox></p>
-			</div>
+			</ng-container>
+			<button type="button" class="needs-action-banner" *ngIf="needsActionCount > 0"
+				(click)="toggleNeedsAction()">
+				<i class="fa" [ngClass]="showNeedsAction ? 'fa-list' : 'fa-exclamation-circle'"></i>
+				<span class="needs-action-text">
+					{{ showNeedsAction ? 'Showing bookings that need action'
+					: (needsActionCount == 1 ? '1 booking needs your response' : needsActionCount + ' bookings need your response') }}
+				</span>
+				<span class="needs-action-cta">{{ showNeedsAction ? 'Show all' : 'Review' }}</span>
+			</button>
 		</div>
 		<div class="containeredd driverside_table">
 			<div class="row">

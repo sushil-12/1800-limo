@@ -85,7 +85,13 @@ export class BookingsComponent implements OnInit {
 	cancelMessage: any;
 	currencySymbol: any;
 	is_family_member: any = false;
-	isPastBookingView: boolean = false;
+	// Upcoming / Past / Custom tabs (Custom = the date-range pickers).
+	readonly listTabs = [
+		{ key: 'upcoming', label: 'Upcoming' },
+		{ key: 'past', label: 'Past' },
+		{ key: 'custom', label: 'Custom' },
+	];
+	listTab: string = 'upcoming';
 
 	constructor(
 		private affiliateService: AffiliateService,
@@ -137,6 +143,8 @@ export class BookingsComponent implements OnInit {
 			(localStorage.getItem('indvUseDateFilter') == 'true' ? true : false)
 			: false;
 		console.log('indvUseDateFilter-->', this.useDateFilter)
+		this.listTab = this.useDateFilter ? 'custom' :
+			(localStorage.getItem('indvBookingsTab') == 'past' ? 'past' : 'upcoming');
 
 		//save currency symbol
 		this.currencySymbol = this.stateManagementService.getCurrencySymbol();
@@ -201,7 +209,7 @@ export class BookingsComponent implements OnInit {
 		console.log("startstart.staert", start)
 
 
-		this.individualService.loadBookings(pageUrl, this.searchText, start, end, this.useDateFilter).then(result => {
+		this.individualService.loadBookings(pageUrl, this.searchText, start, end, this.useDateFilter, this.listFilter()).then(result => {
 			this.cancelMessage = ''
 			this.spinner.hide()
 			this.bookingsRes = result;
@@ -424,53 +432,31 @@ export class BookingsComponent implements OnInit {
 		this.saveCookie('indv_startDate', this.startDate);
 		this.saveCookie('indv_endDate', this.endDate);
 		this.saveCookie('indv_search', this.searchText ?? "");
+		this.listTab = 'upcoming';
+		localStorage.removeItem('indvBookingsTab');
 		this.loadBookings(null, true);
-		this.isPastBookingView = false;
 	}
 
 
-	viewPastBookings() {
-		if (this.isPastBookingView) {
-			this.reset();
-		} else {
-			this.startDate = moment('2021-01-01').toDate();
-			this.endDate = new Date();
-			this.useDateFilter = true;
-			this.selectedDateRange = {
-				startDate: dayjs(this.startDate),
-				endDate: dayjs(this.endDate)
-			};
-			localStorage.setItem('indvUseDateFilter', 'true');
-			this.saveCookie('indv_startDate', this.startDate);
-			this.saveCookie('indv_endDate', this.endDate);
-			this.loadBookings(null, true);
-			this.isPastBookingView = true;
-		}
+	/** The `filter` sent to the API: '' while on Custom, which uses the date range instead. */
+	listFilter(): string {
+		return this.listTab == 'custom' ? '' : this.listTab;
 	}
 
-
-
-	handleChangeCheckbox(value: any) {
-		console.log('event---->> ', value)
-		this.useDateFilter = value
-		localStorage.setItem('indvUseDateFilter', value)
+	selectTab(tab: string) {
+		this.listTab = tab;
+		localStorage.setItem('indvBookingsTab', tab);
+		this.useDateFilter = tab == 'custom';
+		localStorage.setItem('indvUseDateFilter', String(this.useDateFilter));
 		if (!this.startDate || !this.endDate) {
-			const date = new Date();
-			this.startDate = date;
-			date.setDate(date.getDate() + 7);
-			this.endDate = new Date(date);
+			this.startDate = new Date();
+			this.endDate = moment().add(7, 'day').toDate();
 		}
-
 		this.selectedDateRange = {
 			startDate: dayjs(this.startDate),
 			endDate: dayjs(this.endDate)
 		};
-
-		console.log('this.startDate', this.startDate)
-		console.log('this.endDate', this.endDate)
-		if (this.useDateFilter) {
-			this.runBookingsSearch();
-		}
+		this.loadBookings(null, true);
 	}
 
 	textFormatter(text: string) {

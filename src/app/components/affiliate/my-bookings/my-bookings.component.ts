@@ -61,6 +61,16 @@ export class MyBookingsComponent implements OnInit {
 	company_name: string = this.current?.affiliate_company || this.current?.name || '';
 	cancelBookingId: any = null
 	useDateFilter: boolean = false;
+	// Upcoming / Past / Custom tabs (Custom = the date-range pickers), plus the
+	// driver-side "Needs action" queue of upcoming bookings awaiting accept/reject.
+	readonly listTabs = [
+		{ key: 'upcoming', label: 'Upcoming' },
+		{ key: 'past', label: 'Past' },
+		{ key: 'custom', label: 'Custom' },
+	];
+	listTab: string = 'upcoming';
+	showNeedsAction: boolean = false;
+	needsActionCount: number = 0;
 	currencySymbol: any;
 	currentUser: any;
 	vehiclesRes: any;
@@ -116,6 +126,8 @@ export class MyBookingsComponent implements OnInit {
 			(localStorage.getItem('farmInuseDateFilter') == 'true' ? true : false)
 			: false;
 		console.log('farmInuseDateFilter-->', this.useDateFilter)
+		this.listTab = this.useDateFilter ? 'custom' :
+			(localStorage.getItem('affiliateBookingsTab') == 'past' ? 'past' : 'upcoming');
 
 		//save currency symbol
 		this.currencySymbol = this.stateManagementService.getCurrencySymbol();
@@ -178,9 +190,16 @@ export class MyBookingsComponent implements OnInit {
 		const shouldSendDates = includeDatesInPayload || this.useDateFilter || !!this.searchText?.trim();
 		const startDate = shouldSendDates ? fallbackStartDate : fallbackStartDate;
 		const endDate = shouldSendDates ? fallbackEndDate : fallbackEndDate;
-		this.affiliateService.loadBookings(pageUrl, this.searchText, startDate, endDate, this.useDateFilter).then(result => {
+		this.affiliateService.loadBookings(pageUrl, this.searchText, startDate, endDate, this.useDateFilter, this.listFilter()).then(result => {
 			console.log('result------------------------->>>', result)
 			this.bookingsRes = result;
+			this.needsActionCount = this.bookingsRes?.data?.needs_action_count ?? 0;
+			// Leave "Needs action" once the last pending booking is answered.
+			if (this.showNeedsAction && this.needsActionCount == 0) {
+				this.showNeedsAction = false;
+				this.loadBookings(null, true);
+				return;
+			}
 			this.bookings = this.bookingsRes?.data?.reservations?.data;
 			this.totalRecords = this.bookingsRes?.data?.reservations?.total;
 			this.total_amount = this.bookingsRes?.data?.total_amount
@@ -224,8 +243,48 @@ export class MyBookingsComponent implements OnInit {
 		return m.format("ll");
 	}
 
+	/** The `filter` sent to the API: '' while on Custom, which uses the date range instead. */
+	listFilter(): string {
+		if (this.listTab == 'custom') {
+			return '';
+		}
+		return this.showNeedsAction ? 'needs_action' : this.listTab;
+	}
+
+	selectTab(tab: string) {
+		this.showNeedsAction = false;
+		this.listTab = tab;
+		localStorage.setItem('affiliateBookingsTab', tab);
+		this.useDateFilter = tab == 'custom';
+		localStorage.setItem('farmInuseDateFilter', String(this.useDateFilter));
+		if (!this.startDate || !this.endDate) {
+			this.startDate = moment().format('YYYY-MM-DD');
+			this.endDate = moment().add(7, 'day').format('YYYY-MM-DD');
+		}
+		this.loadBookings(null, true);
+	}
+
+	toggleNeedsAction() {
+		this.showNeedsAction = !this.showNeedsAction;
+		if (this.showNeedsAction) {
+			// The queue spans every date; a search would override it server-side.
+			this.searchText = "";
+			this.saveCookie('affiliate_search', "");
+			if (this.listTab == 'custom') {
+				this.listTab = 'upcoming';
+				this.useDateFilter = false;
+				localStorage.setItem('farmInuseDateFilter', 'false');
+			}
+		}
+		this.loadBookings(null, true);
+	}
+
 	searchInBookings(search_value: string) {
 		this.searchText = search_value ?? ""
+		// Typing searches the normal list, so leave "Needs action".
+		if (this.searchText) {
+			this.showNeedsAction = false;
+		}
 		console.log('--->>>>>', search_value)
 		clearTimeout(this.timer);
 		this.timer = setTimeout(() => {
@@ -267,22 +326,10 @@ export class MyBookingsComponent implements OnInit {
 		}
 		return ph;
 	}
-	handleChangeCheckbox(value: any) {
-		console.log('event---->> ', value)
-		this.useDateFilter = value
-		localStorage.setItem('farmInuseDateFilter', value)
-		if (!this.startDate || !this.endDate) {
-			const date = new Date();
-			this.startDate = date.toISOString().substring(0, 10);
-			date.setDate(date.getDate() + 7);
-			this.endDate = date.toISOString().substring(0, 10);
-		}
-		if (this.useDateFilter) {
-			this.runBookingsSearch();
-		}
-	}
-
 	reset() {
+		this.listTab = 'upcoming';
+		this.showNeedsAction = false;
+		localStorage.removeItem('affiliateBookingsTab');
 		let date = new Date();
 		this.startDate = date.toISOString().substring(0, 10);
 		date.setDate(date.getDate() + 7);

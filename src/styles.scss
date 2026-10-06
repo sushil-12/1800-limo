@@ -1104,3 +1104,75 @@ gmp-basic-place-autocomplete {
 		}
 	}
 }
+
+/* ---------- My Bookings: Upcoming / Past / Custom tabs + Needs-action banner ---------- */
+.booking-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 8px 0 12px;
+
+    .booking-tab {
+        min-width: 110px;
+        padding: 8px 20px;
+        border: 1px solid #d6d6d6;
+        border-radius: 50px;
+        background: #fff;
+        color: #333;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color .15s ease, color .15s ease;
+
+        &:hover {
+            border-color: #000;
+        }
+
+        &.active {
+            background: #000;
+            border-color: #000;
+            color: #fff;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--orange);
+            outline-offset: 2px;
+        }
+    }
+}
+
+.needs-action-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border: 1px solid rgba(243, 147, 61, .35);
+    border-radius: 14px;
+    background: #fff4e5;
+    color: #8a4b00;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+
+    > .fa {
+        color: var(--orange);
+        font-size: 18px;
+    }
+
+    .needs-action-text {
+        flex: 1;
+    }
+
+    .needs-action-cta {
+        padding: 5px 14px;
+        border-radius: 50px;
+        background: var(--orange);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+}

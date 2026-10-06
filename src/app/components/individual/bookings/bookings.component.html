@@ -22,7 +22,27 @@
             </div>
         </div>
         <div class="containeredd mt-1 bookings-filter-panel">
-            <div class="row my-2 align-items-end bookings-filter-row">
+            <div class="row my-2 mb-2 bookings-search-row">
+                <div class="col-12">
+                    <div id="search-field-my-booking">
+                        <mat-form-field appearance="outline" class="m-0">
+                            <input matInput type="text" (keypress)="handleKeypressEvents()"
+                                (focus)="$event.target.select()" (input)="searchInBookings($event.target.value)"
+                                [value]="searchText"
+                                placeholder="Search by booking number, status, name, cell phone, vehicle type"
+                                id="keyword" autofocus>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+            <div class="booking-tabs" role="tablist">
+                <button type="button" role="tab" class="booking-tab" *ngFor="let tab of listTabs"
+                    [class.active]="listTab == tab.key" [attr.aria-selected]="listTab == tab.key"
+                    (click)="selectTab(tab.key)">
+                    {{tab.label}}
+                </button>
+            </div>
+            <div class="row my-2 align-items-end bookings-filter-row" *ngIf="listTab == 'custom'">
                 <div class="col-12 col-xl-7">
                     <div class="bookings-date-fields">
                         <div class="bookings-date-field">
@@ -58,33 +78,8 @@
                         <button class="custom-filled-back-button bookings-action-btn reset-btn" (click)="reset()">
                             Reset
                         </button>
-
-                        <button class="custom-filled-button bookings-action-btn past-bookings-btn"
-                            (click)="viewPastBookings()">
-                            {{ isPastBookingView ? 'See Future Bookings' : 'See past bookings' }}
-                        </button>
                     </div>
                 </div>
-            </div>
-            <div class="row my-2 mb-2 bookings-search-row">
-                <div class="col-12">
-                    <div id="search-field-my-booking">
-                        <mat-form-field appearance="outline" class="m-0">
-                            <input matInput type="text" (keypress)="handleKeypressEvents()"
-                                (focus)="$event.target.select()" (input)="searchInBookings($event.target.value)"
-                                [value]="searchText"
-                                placeholder="Search by booking number, status, name, cell phone, vehicle type"
-                                id="keyword" autofocus>
-                        </mat-form-field>
-                    </div>
-                </div>
-            </div>
-            <div class="row pl-2 bookings-checkbox-row">
-                <p><mat-checkbox (change)="handleChangeCheckbox($event.checked)" [checked]="useDateFilter">
-                        {{useDateFilter ? 'Uncheck the box to view all bookings.' : 'Check the box to apply the date
-                        filter.' }}
-                    </mat-checkbox>
-                </p>
             </div>
         </div>
         <div class="containeredd driverside_table">

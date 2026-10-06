@@ -888,7 +888,7 @@ gmp-basic-place-autocomplete {
 .toast-container .ngx-toastr.activity-toast {
 	width: 440px;
 	max-width: calc(100vw - 32px);
-	padding: 14px 40px 12px 18px;
+	padding: 14px 48px 12px 18px;
 	background: #fff;
 	background-image: none;
 	color: #1f2328;
@@ -910,16 +910,25 @@ gmp-basic-place-autocomplete {
 
 	.toast-close-button {
 		position: absolute;
-		top: 8px;
-		right: 12px;
+		top: 4px;
+		right: 6px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		padding: 0;
+		border-radius: 50%;
 		color: #6b7280;
 		text-shadow: none;
 		opacity: 1;
-		font-size: 22px;
+		font-size: 32px;
 		font-weight: 400;
+		line-height: 1;
 
 		&:hover {
 			color: #111827;
+			background: #f3f4f6;
 		}
 	}
 

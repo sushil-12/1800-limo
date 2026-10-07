@@ -362,14 +362,13 @@ export class AffiliateService {
 			: this.serverUrl + 'get-bookings?' + query;
 		return this.httpClient.get(path).toPromise();
 	}
-	loadFarmoutBookings(url, keyword, startDate, endDate, useDateFilter) {
-		var path;
-		if (url) {
-			path = url + '?from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&current_date=' + this.current_date + '&current_time=' + this.current_time + '&v1=1';
-		}
-		else {
-			path = this.serverUrl + 'get-farm-out-bookings' + '?from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&current_date=' + this.current_date + '&current_time=' + this.current_time + '&v1=1';
-		}
+	loadFarmoutBookings(url, keyword, startDate, endDate, useDateFilter, filter = '') {
+		// filter: 'upcoming' | 'past' tab; '' = date range (Custom tab).
+		const query = 'from=' + startDate + '&to=' + endDate + '&search=' + encodeURIComponent(keyword ?? '') + '&useDateFilter=' + useDateFilter + '&filter=' + filter + '&current_date=' + this.current_date + '&current_time=' + this.current_time + '&v1=1';
+		// Paginator links already carry `?page=N`.
+		const path = url
+			? url + (url.includes('?') ? '&' : '?') + query
+			: this.serverUrl + 'get-farm-out-bookings?' + query;
 		return this.httpClient.get(path).toPromise();
 	}
 	//change booking status such as accept/reject

@@ -1,92 +1,32 @@
 <ngx-spinner type="ball-scale-multiple"></ngx-spinner>
 
 <section class="adminbox_shadow user_information" id="farmout_bookings">
-	<h2 class="headinginfo">
-		Farm Out Bookings
-	</h2>
-	<!-- DIVISION: SEARCH PARAMETERS -->
-	<div class="containeredd mt-1 ">
-		<div class="row my-2">
-			<div class="col-12 d-flex flex-wrap align-items-center search-container-wrapper">
-				<!-- Date Fields Wrapper -->
-				<div class="d-flex date-fields-wrapper">
-					<!-- Start Date -->
-					<div class="flex-grow-1">
-						<mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
-							<mat-label>Start Date <span class="asterisk"> * </span></mat-label>
-							<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker1"
-								placeholder="Start Date" id="id_4"
-								(dateChangeWithFormat)="changeDate('startDate', $event)" (click)="picker1.open()"
-								[(ngModel)]="startDateModel" readonly />
-							<mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
-							<mat-datepicker #picker1></mat-datepicker>
-						</mat-form-field>
-					</div>
-
-					<!-- End Date -->
-					<div class="flex-grow-1">
-						<mat-form-field appearance="outline" class="w-100" subscriptSizing="dynamic">
-							<mat-label>End Date <span class="asterisk"> * </span></mat-label>
-							<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker2"
-								placeholder="End Date" id="id_5" (dateChangeWithFormat)="changeDate('endDate',$event)"
-								(click)="picker2.open()" [(ngModel)]="endDateModel" [min]="startDateModel" readonly />
-							<mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
-							<mat-datepicker #picker2></mat-datepicker>
-						</mat-form-field>
-					</div>
-				</div>
-
-				<!-- Search & Reset Buttons -->
-				<div class="d-flex align-items-center button-group">
-					<div class="mr-2 ml-2">
-						<button class="custom-filled-button orange-button"
-							style="color:#fff;padding: 5px 12px !important;"
-							(click)="runBookingsSearch()">
-							Search
-						</button>
-					</div>
-					<div>
-						<button class="custom-filled-back-button"
-							style="white-space: nowrap;color:#fff;padding: 5px 12px !important;  background-color: #000 !important;"
-							(click)="reset()">
-							Reset
-						</button>
-					</div>
-				</div>
-			</div>
+	<app-bookings-header title="Farm Out Bookings" [searchText]="searchText" [listTab]="listTab"
+		(searchInput)="searchInBookings($event)" (searchSubmit)="submitSearch($event)" (tabChange)="selectTab($event)">
+		<button bhActions type="button" class="bh-cta" [routerLink]="['/']">
+			<span class="bh-cta-plus" aria-hidden="true">+</span>
+			Create New Farm Out
+		</button>
+		<button bhToolbar type="button" class="bh-ghost-btn" (click)="reset()">Reset</button>
+		<div bhCustomRange class="bh-range" *ngIf="listTab == 'custom'">
+			<mat-form-field appearance="outline">
+				<mat-label>Start Date</mat-label>
+				<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker1"
+					placeholder="Start Date" id="id_4" (dateChangeWithFormat)="changeDate('startDate', $event)"
+					(click)="picker1.open()" [(ngModel)]="startDateModel" readonly />
+				<mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+				<mat-datepicker #picker1></mat-datepicker>
+			</mat-form-field>
+			<mat-form-field appearance="outline">
+				<mat-label>End Date</mat-label>
+				<input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker2"
+					placeholder="End Date" id="id_5" (dateChangeWithFormat)="changeDate('endDate', $event)"
+					(click)="picker2.open()" [(ngModel)]="endDateModel" [min]="startDateModel" readonly />
+				<mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+				<mat-datepicker #picker2></mat-datepicker>
+			</mat-form-field>
 		</div>
-	</div>
-	<div class="row my-2 mb-1 pl-3 pr-3">
-		<div class="col-md-12">
-			<div id="search-field-farmout">
-				<mat-form-field appearance="outline" class="m-0">
-					<input matInput type="text" (keypress)="handleKeypressEvents()" (focus)="$event.target.select()"
-						(input)="searchInBookings($event.target.value)" [value]="searchText"
-						placeholder="Search by booking number, status, name, cell phone, vehicle type" id="keyword"
-						autofocus>
-				</mat-form-field>
-			</div>
-		</div>
-	</div>
-	<div class="row pl-4">
-		<p><mat-checkbox (change)="handleChangeCheckbox($event.checked)" [checked]="useDateFilter">
-				{{useDateFilter ? 'Uncheck the box to view all bookings.' : 'Check the box to apply the date filter.' }}
-			</mat-checkbox></p>
-	</div>
-	<!-- DIVISION: SEARCH PARAMETERS ENDS -->
-
-	<!-- DIVISION: CREATE NEW FARMOUT BUTTON -->
-	<div class="row px-4 mt-3">
-		<div class="col-auto">
-			<div id="create-new-btn" class="my-3">
-				<button id="farmout-btn" class="custom-filled-button" [routerLink]="['/']" style="font-size: 1.1rem">
-					<i class="bi bi-plus-lg"></i>
-					Create New Farm out
-				</button>
-			</div>
-		</div>
-	</div>
-	<!-- DIVISION: CREATE NEW FARMOUT BUTTON ENDS -->
+	</app-bookings-header>
 
 	<!-- DIVISION: TABLE -->
 	<div class="containeredd driverside_table">

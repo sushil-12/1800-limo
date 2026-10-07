@@ -216,11 +216,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 12px;
-		margin-top: 12px;
-		padding: 14px 16px 2px;
-		border: 1px solid var(--bh-line);
-		border-radius: 16px;
-		background: var(--bh-surface);
+		margin-top: 16px;
 
 		&[hidden] {
 			display: none;
@@ -369,17 +365,14 @@
 	.bh-range {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: center;
-		gap: 12px;
-		margin-top: 16px;
-		padding: 14px 16px 0;
-		border: 1px solid var(--bh-line);
-		border-radius: 16px;
-		background: var(--bh-surface);
+		align-items: flex-start;
+		justify-content: flex-start;
+		gap: 16px;
+		margin-top: 5px;
 
 		.mat-mdc-form-field {
 			flex: 1 1 200px;
-			max-width: 280px;
+			max-width: 260px;
 		}
 	}
 
@@ -543,6 +536,17 @@
 			font-size: 15px !important;
 		}
 
+		// Filters and dates stack one per row, each spanning the full width.
+		.bh-range,
+		.bh-filters-panel {
+			gap: 0 12px;
+
+			.mat-mdc-form-field {
+				flex: 1 1 100%;
+				max-width: none;
+			}
+		}
+
 		.bh-banner {
 			flex-wrap: wrap;
 			gap: 12px;
@@ -606,7 +610,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 12px;
-	padding: 8px 22px 8px 8px;
+	padding: 4px 10px 4px 3px;
 	border: 0;
 	border-radius: 50px;
 	background: linear-gradient(180deg, var(--bh-blue, #2f7cf6) 0%, var(--bh-blue-dark, #1f63e0) 100%);

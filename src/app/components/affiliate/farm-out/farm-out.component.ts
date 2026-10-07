@@ -66,6 +66,8 @@ export class FarmOutComponent implements OnInit {
 	start_date: string
 	end_date: string
 	useDateFilter: boolean = false;
+	// Upcoming / Past / Custom tabs (Custom = the date-range pickers).
+	listTab: string = 'upcoming';
 	currencySymbol: any;
 	currentUser: any;
 
@@ -118,6 +120,8 @@ export class FarmOutComponent implements OnInit {
 			(localStorage.getItem('farmOutuseDateFilter') == 'true' ? true : false)
 			: false;
 		console.log('farmOutuseDateFilter-->', this.useDateFilter)
+		this.listTab = this.useDateFilter ? 'custom' :
+			(localStorage.getItem('farmOutBookingsTab') == 'past' ? 'past' : 'upcoming');
 
 		this.changeStatusForm = this.formBuilder.group({
 			reservation_id: ['', Validators.required],
@@ -176,7 +180,7 @@ export class FarmOutComponent implements OnInit {
 		const shouldSendDates = includeDatesInPayload || this.useDateFilter || !!this.searchText?.trim();
 		let start = shouldSendDates ? moment(fallbackStartDate).format('YYYY-MM-DD') : moment(fallbackStartDate).format('YYYY-MM-DD');
 		let end = shouldSendDates ? moment(fallbackEndDate).format('YYYY-MM-DD') : moment(fallbackEndDate).format('YYYY-MM-DD');
-		this.$affiliateService.loadFarmoutBookings(pageUrl, this.searchText, start, end, this.useDateFilter).then(result => {
+		this.$affiliateService.loadFarmoutBookings(pageUrl, this.searchText, start, end, this.useDateFilter, this.listFilter()).then(result => {
 			this.$spinner.hide();//hide spinner
 			console.log('result---->>>', result)
 			this.bookingsRes = result;
@@ -225,6 +229,28 @@ export class FarmOutComponent implements OnInit {
 			this.loadBookings();
 		}, 400)
 	}
+	/** Search button / Enter: skip the typing debounce. */
+	submitSearch(search_value: string) {
+		clearTimeout(this.timer);
+		this.searchText = search_value ?? "";
+		this.saveCookie('farmout_search', this.searchText);
+		this.loadBookings(null, true);
+	}
+
+	/** The `filter` sent to the API: '' while on Custom, which uses the date range instead. */
+	listFilter(): string {
+		return this.listTab == 'custom' ? '' : this.listTab;
+	}
+
+	selectTab(tab: string) {
+		this.listTab = tab;
+		localStorage.setItem('farmOutBookingsTab', tab);
+		this.handleChangeCheckbox(tab == 'custom');
+		if (!this.useDateFilter) {
+			this.loadBookings(null, true);
+		}
+	}
+
 	saveCookie(key: string, value: string) {
 		console.log('in function set cookies for', key, value)
 		this.$affiliateService.setCookie(key, value, 30);
@@ -248,9 +274,11 @@ export class FarmOutComponent implements OnInit {
 		localStorage.removeItem('farmout_startDate')
 		localStorage.removeItem('farmout_endDate')
 		localStorage.removeItem('farmOutuseDateFilter')
+		localStorage.removeItem('farmOutBookingsTab')
 
 		this.searchText = "";
 		this.useDateFilter = false
+		this.listTab = 'upcoming';
 
 		console.log('Reset Successfully. ');
 		if (this.startDate) {

@@ -8,7 +8,7 @@
 			(searchSubmit)="submitSearch($event)" (tabChange)="selectTab($event)"
 			(needsActionToggle)="toggleNeedsAction()">
 			<button bhActions type="button" class="bh-cta" *ngIf="currentUser?.roleName == 'driver'"
-				(click)="upgradePlan()" style="background: #f3933c;">
+				(click)="upgradePlan()" style="background: #f3933c; box-shadow: 0 0 0 4px rgba(243, 147, 60, .20), 0 10px 22px rgba(243, 147, 60, .35);">
 				<span class="bh-cta-plus" aria-hidden="true">+</span>
 				Buy Chauffeur Select
 			</button>

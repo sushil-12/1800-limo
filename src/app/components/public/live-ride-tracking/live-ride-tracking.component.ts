@@ -23,7 +23,7 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   chatOpen = false;
   chatUnread = 0;
 
-  readonly socketUrl = environment.production ? 'https://limortservice.1800limo.com' : 'https://limortservice.infodevbox.com';
+  readonly socketUrl = environment.production ? 'https://limortservice.1800limo.com' : 'https://limortservice.1800limo.com';
   readonly socketSecret = 'limoapi_notifications_secret_2024_xyz789';
 
   socket: Socket | null = null;

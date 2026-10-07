@@ -185,6 +185,50 @@
   border-radius: 4px;
 }
 
+.driver-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-button {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background-color: #f97316;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+  color: white;
+  cursor: pointer;
+}
+
+.chat-button:hover {
+  background-color: #ea580c;
+  transform: scale(1.05);
+}
+
+.chat-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background-color: #dc2626;
+  border: 2px solid white;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+}
+
 .phone-button {
   width: 40px;
   height: 40px;

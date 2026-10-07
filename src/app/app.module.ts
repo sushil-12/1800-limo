@@ -85,6 +85,7 @@ import { AddDriverSubscriberComponent } from './components/subscription/add-driv
 import { FarmOutBookingsComponent } from './components/subscription/farm-out-bookings/farm-out-bookings.component';
 import { TutorialsComponent } from './components/website/tutorials/tutorials.component';
 import { LiveRideTrackingComponent } from './components/public/live-ride-tracking/live-ride-tracking.component';
+import { RideChatComponent } from './components/public/live-ride-tracking/ride-chat/ride-chat.component';
 import { StatesTestComponent } from './components/public/states-test/states-test.component';
 import { AppLinkFallbackComponent } from './components/public/app-link-fallback/app-link-fallback.component';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
@@ -153,6 +154,7 @@ import { NotificationBellComponent } from './components/admin/admin-notification
 		FarmOutBookingsComponent,
 		TutorialsComponent,
 		LiveRideTrackingComponent,
+		RideChatComponent,
 		StatesTestComponent,
 		AppLinkFallbackComponent,
 		PrivacyPolicyComponent,

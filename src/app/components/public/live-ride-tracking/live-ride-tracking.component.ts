@@ -20,8 +20,14 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   error: string | null = null;
   estimatedTimeToPickup: string | null = null;
   estimatedDistanceToPickup: string | null = null;
+  chatOpen = false;
+  chatUnread = 0;
 
-  private socket: Socket | null = null;
+  readonly socketUrl = environment.production ? 'https://limortservice.1800limo.com' : 'https://limortservice.infodevbox.com';
+  readonly socketSecret = 'limoapi_notifications_secret_2024_xyz789';
+
+  socket: Socket | null = null;
+  currentUserId: number | null = null;
   private googleMap: any = null;
   private markers: { driver: any; pickup: any; dropoff: any } = { driver: null, pickup: null, dropoff: null };
   private directionsRenderer: any = null;
@@ -30,7 +36,6 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   private lastRouteUpdate = 0;
   private routeCalculated = false;
   private pickupToDropoffRouteCalculated = false;
-  private currentUserId: number | null = null;
   private currentBookingId: string | number | null = null;
   private currentCustomerId: string | number | null = null;
   private connectionCheckInterval: any = null;
@@ -147,7 +152,7 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
     //@ts-ignore
     this.currentUserId = userId;
 
-    const socketUrl = environment.production ? 'https://limortservice.1800limo.com' : 'https://limortservice.infodevbox.com';
+    const socketUrl = this.socketUrl;
     console.log('Connecting to socket URL:', socketUrl);
 
     try {
@@ -157,7 +162,7 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
         auth: { 
           userId: userId, 
           userType: 'customer', 
-          secret: 'limoapi_notifications_secret_2024_xyz789' 
+          secret: this.socketSecret
         },
         reconnection: true,
         reconnectionAttempts: 5,
@@ -177,6 +182,13 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
         // Join customerId room immediately on connect (backend requirement)
         // This ensures we receive driver.location.update events
         this.joinRoom(this.currentUserId?.toString() || null, 'customerId');
+
+        // 'connect' also fires after every automatic reconnect (socket.io v4 emits
+        // 'reconnect' on the Manager, not the socket), so rejoin the booking room here too —
+        // otherwise location updates and chat messages stop after the first network blip.
+        if (this.currentBookingId) {
+          this.joinRoom(this.currentBookingId.toString(), 'bookingId');
+        }
       });
 
       this.socket.on('disconnect', (reason: any) => {
@@ -278,12 +290,10 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
         handleData(d, 'notification');
       });
 
-      // STEP 3d: chat_message - Optional chat support
-      this.socket.on('chat_message', (d: any) => {
-        console.log('Received chat_message event:', d);
-        handleData(d, 'chat_message');
-      });
-      
+      // STEP 3d: chat — handled by <app-ride-chat>, which listens for 'chat.message' on this
+      // same socket. (A chat payload must not go through processRideData: it would rebuild
+      // rideData from the message and blank out the ride panel.)
+
       // Production-safe connection monitoring (only log warnings, not every status check)
       this.connectionCheckInterval = setInterval(() => {
         if (!this.socket?.connected) {
@@ -369,6 +379,9 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
     this.rideData = {
       booking_id: data.booking_id || data.bookingId,
       status: data.status || incomingData.type || 'In Progress',
+      // Keep the last known id: status notifications don't always carry the driver block,
+      // and losing it would flip the chat to read-only mid-ride.
+      driver_id: driver.id ?? data.driver_id ?? data.driverId ?? this.rideData?.driver_id ?? null,
       driver_name: driver.name || `${driver.first_name || ''} ${driver.last_name || ''}`.trim() || 'Assigned Driver',
       driver_phone: driver.phone || driver.mobile,
       vehicle_info: vehicle.vehicle_type || vehicle.type || data.vehicle_info || 'Vehicle',

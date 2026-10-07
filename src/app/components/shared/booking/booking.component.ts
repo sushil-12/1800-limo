@@ -326,6 +326,9 @@ export class BookingComponent implements OnInit, OnDestroy {
 	// Bumped on explicit vehicle/affiliate picks so rates-form re-fetches even when
 	// every other booking_data field is unchanged (e.g. re-selecting the same vehicle).
 	rateRefreshToken: number = 0;
+	/** Debounce before an hours edit refetches rates, so typing "12" fires one request, not two. */
+	private readonly hoursRateRefreshDebounceMs = 500;
+	private hoursRateRefreshTimer: any = null;
 	extraStops_rate: any = 0
 	/** Outbound stops beyond this count make the trip charter work rather than a transfer. */
 	private readonly charterTourStopThreshold: number = 2;
@@ -540,6 +543,9 @@ export class BookingComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
+		if (this.hoursRateRefreshTimer) {
+			clearTimeout(this.hoursRateRefreshTimer);
+		}
 		if (this.bookingAutocompleteRetryTimeout) {
 			clearTimeout(this.bookingAutocompleteRetryTimeout);
 		}
@@ -3291,6 +3297,33 @@ export class BookingComponent implements OnInit, OnDestroy {
 		if (!isNaN(value) && value >= 2) {
 			this.returnNumberOfHr.emit(value);
 		}
+		this.scheduleHoursRateRefresh(value);
+	}
+
+	/**
+	 * An hours edit only recalculated rates locally; rebuild booking_data so
+	 * rates-form calls the booking rate API with the new no_of_hours. The token
+	 * bump marks it as an explicit user change, so it also refetches on
+	 * edit/repeat/return/round before the hydration baseline is captured.
+	 */
+	private scheduleHoursRateRefresh(hours: any): void {
+		const value = Number(hours);
+		if (this.hoursRateRefreshTimer) {
+			clearTimeout(this.hoursRateRefreshTimer);
+			this.hoursRateRefreshTimer = null;
+		}
+		if (isNaN(value) || value < 2) {
+			return;
+		}
+		this.hoursRateRefreshTimer = setTimeout(() => {
+			this.hoursRateRefreshTimer = null;
+			this.number_of_hours = value;
+			if (Number(this.booking_data?.no_of_hours) === value) {
+				return;
+			}
+			this.rateRefreshToken++;
+			this.buildBookingData();
+		}, this.hoursRateRefreshDebounceMs);
 	}
 
 	// Force minimum 2 when user clicks away (perfect for 0, 1, empty)
@@ -3306,6 +3339,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 		}
 
 		this.returnNumberOfHr.emit(value);
+		this.scheduleHoursRateRefresh(value);
 	}
 
 	private syncNumberOfHoursValidation(serviceType: string): void {
@@ -10554,6 +10588,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 	HandleReturnNumberOfHr(data: any) {
 		this.BookingForm.get('number_of_hours').setValue(data);
 		this.numberOfHoursError = false;
+		this.scheduleHoursRateRefresh(data);
 	}
 
 	checkUniqueness() {

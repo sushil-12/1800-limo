@@ -70,7 +70,7 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
     'Thank you!'
   ];
 
-  /** Chime + read the driver's message aloud. Remembered per browser. */
+  /** Chime on incoming driver messages. Remembered per browser. */
   voiceEnabled = true;
 
   private unread = 0;
@@ -80,7 +80,7 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
   private static readonly VOICE_PREF_KEY = 'rideChatVoiceEnabled';
 
   /**
-   * Browsers refuse to play audio or speech until the page has had a user gesture. The
+   * Browsers refuse to play audio until the page has had a user gesture. The
    * tracking page is usually opened from an SMS link and then just watched, so unlock on
    * the first tap/keypress anywhere rather than waiting for the chat to be touched.
    */
@@ -89,8 +89,6 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
       const Ctx = window.AudioContext || (window as any).webkitAudioContext;
       if (Ctx && !this.audioCtx) this.audioCtx = new Ctx();
       this.audioCtx?.resume();
-      // Priming with an empty utterance lets later, gesture-less speak() calls through.
-      if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
     } catch { /* audio unsupported — chat still works silently */ }
     document.removeEventListener('pointerdown', this.unlockAudio);
     document.removeEventListener('keydown', this.unlockAudio);
@@ -157,7 +155,6 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
     this.unbindSocket();
     document.removeEventListener('pointerdown', this.unlockAudio);
     document.removeEventListener('keydown', this.unlockAudio);
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     this.audioCtx?.close();
   }
 
@@ -170,7 +167,6 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
     try {
       localStorage.setItem(RideChatComponent.VOICE_PREF_KEY, String(this.voiceEnabled));
     } catch { /* storage blocked — preference lasts for this page only */ }
-    if (!this.voiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
   }
 
   sendMessage(text: string = this.newMessageText): void {
@@ -299,13 +295,13 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
     this.shouldScroll = true;
     if (!bubble.isFromUser) {
       if (!this.open) this.setUnread(this.unread + 1);
-      this.announce(bubble.text);
+      this.announce();
       this.incoming.emit();
     }
   }
 
-  /** Short two-note chime, then the message read aloud in the browser's own voice. */
-  private announce(text: string): void {
+  /** Short two-note notification chime. */
+  private announce(): void {
     if (!this.voiceEnabled) return;
 
     try {
@@ -326,16 +322,6 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
         });
       }
     } catch { /* chime is best-effort */ }
-
-    if (!('speechSynthesis' in window)) return;
-    const utterance = new SpeechSynthesisUtterance(`Message from ${this.driverName || 'your driver'}. ${text}`);
-    utterance.rate = 1;
-    utterance.lang = 'en-US';
-    // Let the chime finish first; drop anything still queued so a burst doesn't pile up.
-    setTimeout(() => {
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    }, 400);
   }
 
   private toBubble(row: ServerChatMessage): ChatBubble {

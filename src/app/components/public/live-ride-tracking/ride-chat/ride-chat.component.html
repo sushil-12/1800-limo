@@ -11,8 +11,8 @@
       <div class="contact-subtitle">Chat</div>
     </div>
     <button type="button" class="icon-btn" (click)="toggleVoice()"
-            [attr.aria-label]="voiceEnabled ? 'Mute message voice' : 'Unmute message voice'"
-            [title]="voiceEnabled ? 'Read messages aloud: on' : 'Read messages aloud: off'">
+            [attr.aria-label]="voiceEnabled ? 'Mute message sound' : 'Unmute message sound'"
+            [title]="voiceEnabled ? 'Message sound: on' : 'Message sound: off'">
       <svg *ngIf="voiceEnabled" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14" />
       </svg>

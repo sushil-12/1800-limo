@@ -125,6 +125,7 @@
     [customerId]="currentUserId"
     [open]="chatOpen"
     (closed)="chatOpen = false"
+    (incoming)="chatOpen = true; chatUnread = 0"
     (unreadChange)="chatUnread = $event">
   </app-ride-chat>
 </div>

@@ -566,19 +566,14 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
               }
             }
             
-            // Center map to show the route on first calculation
+            // On first calculation, zoom to the leg the driver is actually on (its full
+            // polyline, not just the endpoints) — fitting the whole trip left the active
+            // route tiny on longer rides.
             if (isFirstCalculation) {
-              const bounds = new google.maps.LatLngBounds();
-              if (origin) bounds.extend(origin);
-              if (destination) bounds.extend(destination);
-              if (this.rideData.pickup && this.rideData.pickup.lat && !isNaN(this.rideData.pickup.lat)) {
-                bounds.extend(this.rideData.pickup);
-              }
-              if (this.rideData.dropoff && this.rideData.dropoff.lat && !isNaN(this.rideData.dropoff.lat)) {
-                bounds.extend(this.rideData.dropoff);
-              }
-              // Add padding to ensure route is fully visible
-              this.googleMap.fitBounds(bounds, { padding: 50 });
+              const bounds = response.routes[0]?.bounds || new google.maps.LatLngBounds();
+              bounds.extend(origin);
+              bounds.extend(destination);
+              this.fitMapToBounds(bounds);
             }
           } else {
             console.error('Directions request failed:', status);
@@ -594,8 +589,8 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       if (this.rideData.dropoff && this.rideData.dropoff.lat && !isNaN(this.rideData.dropoff.lat)) {
         bounds.extend(this.rideData.dropoff);
       }
-      if (bounds.getNorthEast() && bounds.getSouthWest()) {
-        this.googleMap.fitBounds(bounds, { padding: 50 });
+      if (!bounds.isEmpty()) {
+        this.fitMapToBounds(bounds);
       } else if (this.rideData.pickup && this.rideData.pickup.lat && !isNaN(this.rideData.pickup.lat)) {
         this.googleMap.setCenter(this.rideData.pickup);
         this.googleMap.setZoom(13);
@@ -625,11 +620,45 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
     }
 
     if (hasPoints) {
-      this.googleMap.fitBounds(bounds);
+      this.fitMapToBounds(bounds);
     } else if (this.rideData.pickup.lat) {
       this.googleMap.setCenter(this.rideData.pickup);
       this.googleMap.setZoom(15);
     }
+  }
+
+  /**
+   * Fit the map tightly around `bounds`, padding only the side the info panel covers (left
+   * on desktop, the bottom sheet on mobile) so the route sits in the visible part of the map
+   * instead of underneath the card. Zoom is capped so two nearby points (driver already at
+   * pickup) don't zoom in to street-number level.
+   */
+  private fitMapToBounds(bounds: any): void {
+    if (!this.googleMap || !bounds || bounds.isEmpty()) return;
+
+    const container: HTMLElement | null = this.mapContainer.nativeElement.parentElement;
+    const panel = container?.querySelector('.info-panel') as HTMLElement | null;
+    const isMobile = window.innerWidth <= 640;
+    const edge = 40;
+    const padding = { top: edge + 40, right: edge + 40, bottom: edge, left: edge }; // 40 = recenter button
+
+    if (panel) {
+      if (isMobile) {
+        padding.bottom = Math.min(panel.offsetHeight + edge, window.innerHeight * 0.65);
+        padding.top = edge + 20;
+      } else {
+        // On mid-size windows the panel can be most of the width; padding past half the
+        // map makes fitBounds zoom far *out*, the opposite of what we want.
+        padding.left = Math.min(panel.offsetLeft + panel.offsetWidth + edge, window.innerWidth * 0.5);
+      }
+    }
+
+    this.googleMap.fitBounds(bounds, padding);
+
+    const MAX_ZOOM = 16;
+    google.maps.event.addListenerOnce(this.googleMap, 'idle', () => {
+      if (this.googleMap.getZoom() > MAX_ZOOM) this.googleMap.setZoom(MAX_ZOOM);
+    });
   }
 
   getStatusText(status: string): string {

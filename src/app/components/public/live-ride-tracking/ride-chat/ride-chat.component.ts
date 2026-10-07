@@ -51,6 +51,8 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
 
   @Output() closed = new EventEmitter<void>();
   @Output() unreadChange = new EventEmitter<number>();
+  /** A live (not history) message from the driver just arrived. */
+  @Output() incoming = new EventEmitter<void>();
 
   @ViewChild('messagesList') messagesList?: ElementRef<HTMLElement>;
 
@@ -68,9 +70,31 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
     'Thank you!'
   ];
 
+  /** Chime + read the driver's message aloud. Remembered per browser. */
+  voiceEnabled = true;
+
   private unread = 0;
   private shouldScroll = false;
   private boundSocket: Socket | null = null;
+  private audioCtx: AudioContext | null = null;
+  private static readonly VOICE_PREF_KEY = 'rideChatVoiceEnabled';
+
+  /**
+   * Browsers refuse to play audio or speech until the page has had a user gesture. The
+   * tracking page is usually opened from an SMS link and then just watched, so unlock on
+   * the first tap/keypress anywhere rather than waiting for the chat to be touched.
+   */
+  private readonly unlockAudio = () => {
+    try {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      if (Ctx && !this.audioCtx) this.audioCtx = new Ctx();
+      this.audioCtx?.resume();
+      // Priming with an empty utterance lets later, gesture-less speak() calls through.
+      if ('speechSynthesis' in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+    } catch { /* audio unsupported — chat still works silently */ }
+    document.removeEventListener('pointerdown', this.unlockAudio);
+    document.removeEventListener('keydown', this.unlockAudio);
+  };
 
   private readonly onChatMessage = (d: any) => this.handleIncoming(d?.message || d, d?.clientMessageId);
   private readonly onMessageSent = (d: any) => {
@@ -86,6 +110,14 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
   };
   // Fires on every (re)connect: refill anything missed while the socket was down.
   private readonly onConnect = () => this.loadHistory();
+
+  constructor() {
+    try {
+      this.voiceEnabled = localStorage.getItem(RideChatComponent.VOICE_PREF_KEY) !== 'false';
+    } catch { /* storage blocked — keep default */ }
+    document.addEventListener('pointerdown', this.unlockAudio);
+    document.addEventListener('keydown', this.unlockAudio);
+  }
 
   get isConnected(): boolean {
     return !!this.socket?.connected;
@@ -123,10 +155,22 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
 
   ngOnDestroy(): void {
     this.unbindSocket();
+    document.removeEventListener('pointerdown', this.unlockAudio);
+    document.removeEventListener('keydown', this.unlockAudio);
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    this.audioCtx?.close();
   }
 
   close(): void {
     this.closed.emit();
+  }
+
+  toggleVoice(): void {
+    this.voiceEnabled = !this.voiceEnabled;
+    try {
+      localStorage.setItem(RideChatComponent.VOICE_PREF_KEY, String(this.voiceEnabled));
+    } catch { /* storage blocked — preference lasts for this page only */ }
+    if (!this.voiceEnabled && 'speechSynthesis' in window) window.speechSynthesis.cancel();
   }
 
   sendMessage(text: string = this.newMessageText): void {
@@ -253,9 +297,45 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
 
     this.messages = [...this.messages, bubble];
     this.shouldScroll = true;
-    if (!bubble.isFromUser && !this.open) {
-      this.setUnread(this.unread + 1);
+    if (!bubble.isFromUser) {
+      if (!this.open) this.setUnread(this.unread + 1);
+      this.announce(bubble.text);
+      this.incoming.emit();
     }
+  }
+
+  /** Short two-note chime, then the message read aloud in the browser's own voice. */
+  private announce(text: string): void {
+    if (!this.voiceEnabled) return;
+
+    try {
+      const ctx = this.audioCtx;
+      if (ctx && ctx.state === 'running') {
+        [880, 1320].forEach((freq, i) => {
+          const start = ctx.currentTime + i * 0.15;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.0001, start);
+          gain.gain.exponentialRampToValueAtTime(0.25, start + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.3);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(start);
+          osc.stop(start + 0.32);
+        });
+      }
+    } catch { /* chime is best-effort */ }
+
+    if (!('speechSynthesis' in window)) return;
+    const utterance = new SpeechSynthesisUtterance(`Message from ${this.driverName || 'your driver'}. ${text}`);
+    utterance.rate = 1;
+    utterance.lang = 'en-US';
+    // Let the chime finish first; drop anything still queued so a burst doesn't pile up.
+    setTimeout(() => {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    }, 400);
   }
 
   private toBubble(row: ServerChatMessage): ChatBubble {

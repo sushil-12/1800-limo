@@ -386,7 +386,7 @@
 		</div>
 	</section>
 	<!-- Main page content-->
-	<section class="user_information">
+	<section class="user_information" *ngIf="hasChargeableAmenities">
 		<h2 class="headinginfo">Amenity Rates <span>(Enter an all-inclusive rate in each applicable bucket)</span></h2>
 		<div class="container">
 			<div class="row" [formGroup]="amenities_rates" *ngIf="amenities_rates">

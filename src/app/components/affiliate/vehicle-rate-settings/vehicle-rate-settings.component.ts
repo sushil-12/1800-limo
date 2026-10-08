@@ -665,6 +665,11 @@ export class VehicleRateSettingsComponent implements OnInit {
 		return this.VehicleRateSettingsForm.get("amenities_rates") as FormGroup
 	}
 
+	// show amenity rates only when the vehicle has chargeable amenities selected
+	get hasChargeableAmenities(): boolean {
+		return Object.keys(this.AmenitiesRates?.controls || {}).length > 0
+	}
+
 	createItem(e): FormGroup {
 		return this.$form.group({ ...e });
 	}

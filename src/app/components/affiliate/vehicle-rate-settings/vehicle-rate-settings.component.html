@@ -1080,7 +1080,7 @@
 		<!-- NOTE: GRATUITY ENDS -->
 
 		<!-- AMENITY RATES -->
-		<div>
+		<div *ngIf="hasChargeableAmenities">
 			<div class="field-group__divider"></div>
 			<span class="field-group__title">Amenity rates</span>
 			<p class="field-group__hint">Enter an all-inclusive rate in each applicable bucket.</p>

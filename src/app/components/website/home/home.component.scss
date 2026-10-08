@@ -1923,6 +1923,8 @@ div#google_translate_element_home_mobile {
 	max-width: 100%;
 	height: 120px;
 	object-fit: contain;
+	border: 1px solid #8080803d;
+	border-radius: 10px;
 	width: auto;
 	display: block;
 	margin: 0 auto;
@@ -3266,7 +3268,7 @@ div#google_translate_element_home_mobile {
 		padding: 6px 12px;
 		border-radius: 20px;
 		background: rgba(243, 147, 61, 0.08);
-		border: 1px dashed rgba(243, 147, 61, 0.4);
+		border: 1px solid rgba(243, 147, 61, 0.7);
 		color: #f3933d !important;
 		font-size: 0.78rem !important;
 		font-weight: 600 !important;
@@ -3280,8 +3282,6 @@ div#google_translate_element_home_mobile {
 
 		&:hover {
 			background: rgba(243, 147, 61, 0.16);
-			border-color: rgba(243, 147, 61, 0.7);
-			border-style: solid;
 		}
 	}
 }

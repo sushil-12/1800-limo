@@ -331,6 +331,12 @@ export class EditVehicleRatesFromAffiliateComponent implements OnInit
 		const amenities_rates = this.addVehicleRatesForm.get("amenities_rates") as FormGroup;
 		return amenities_rates;
 	}
+
+	// show amenity rates only when the vehicle has chargeable amenities selected
+	get hasChargeableAmenities(): boolean
+	{
+		return Object.keys(this.amenities_rates?.controls || {}).length > 0
+	}
 	createItem(e): FormGroup
 	{
 		return this.formBuilder.group({ ...e });

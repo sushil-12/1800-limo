@@ -507,6 +507,11 @@ export class EditVehicleRatesComponent implements OnInit {
 		return amenites_rates;
 	}
 
+	// show amenity rates only when the vehicle has chargeable amenities selected
+	get hasChargeableAmenities(): boolean {
+		return Object.keys(this.amenites_rates?.controls || {}).length > 0
+	}
+
 	get form() {
 		return this.addVehicleRatesForm.controls
 	}

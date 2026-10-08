@@ -1,32 +1,5 @@
 <ngx-spinner type="ball-scale-multiple"></ngx-spinner>
 
-<div class="sticky-alert-container" *ngIf="canCharge && !editRate">
-	<div class="finalize-progress" [class.finalized]="isFinalizeButton">
-		<div class="fp-steps">
-			<div class="fp-step" [class.done]="isFinalizeButton" [class.active]="!isFinalizeButton">
-				<span class="fp-circle">
-					<i class="bi bi-check-lg" *ngIf="isFinalizeButton"></i>
-					<ng-container *ngIf="!isFinalizeButton">1</ng-container>
-				</span>
-				<span class="fp-label">Finalize Rates</span>
-			</div>
-			<div class="fp-connector" [class.done]="isFinalizeButton"></div>
-			<div class="fp-step" [class.active]="isFinalizeButton">
-				<span class="fp-circle">2</span>
-				<span class="fp-label">Get Paid</span>
-			</div>
-		</div>
-		<div class="fp-hint" *ngIf="!isFinalizeButton">
-			Review the rates below, then tap <strong>Finalize</strong>
-		</div>
-		<div class="fp-action" *ngIf="isFinalizeButton">
-			<span class="fp-hint-done">Booking finalized — charge now to get paid</span>
-			<button type="button" class="fp-charge-btn" (click)="scroll('paymentOptionsDiv')">
-				Scroll Down <i class="bi bi-arrow-down-short"></i>
-			</button>
-		</div>
-	</div>
-</div>
 <section class="section-container">
 	<h3 class="font-weight-bolder mb-1 text-center">Finalize Booking</h3>
 	<hr>

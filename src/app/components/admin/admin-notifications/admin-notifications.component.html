@@ -83,21 +83,21 @@
 			<ng-container *ngIf="isExpanded(n)">
 				<div class="an-changes" *ngIf="changesOf(n).length; else noChanges">
 					<div class="an-changes-title">
-						{{ isNewBooking(n) ? 'Booking details' : changesOf(n).length + ' field' + (changesOf(n).length === 1 ? '' : 's') + ' changed' }}
+						{{ isNewBooking(n) ? 'Booking details' : changesOf(n).length + ' instruction' + (changesOf(n).length === 1 ? '' : 's') + ' changed' }}
 					</div>
 					<div class="an-diff">
 						<div class="an-diff-head" *ngIf="!isNewBooking(n)">
-							<span>Field</span><span>Before</span><span>After</span>
+							<span>Instruction</span><span>Original</span><span>Updated</span>
 						</div>
 						<div class="an-diff-row" *ngFor="let c of changesOf(n)" [class.single]="isNewBooking(n)">
 							<div class="an-label">{{ c.label }}</div>
 							<ng-container *ngIf="!isNewBooking(n); else valueOnly">
 								<div class="an-cell an-was">
-									<span class="an-mobile-tag">Before</span>
+									<span class="an-mobile-tag">Original</span>
 									<span *ngIf="c.old; else emptyVal">{{ c.old }}</span>
 								</div>
 								<div class="an-cell an-now">
-									<span class="an-mobile-tag">After</span>
+									<span class="an-mobile-tag">Updated</span>
 									<span *ngIf="c.new; else emptyVal">{{ c.new }}</span>
 								</div>
 							</ng-container>
@@ -108,7 +108,7 @@
 					</div>
 				</div>
 				<ng-template #noChanges>
-					<div class="an-nochanges">No field details were recorded for this entry.</div>
+					<div class="an-nochanges">No instruction details were recorded for this entry.</div>
 				</ng-template>
 			</ng-container>
 		</article>

@@ -49,18 +49,18 @@
 
 						<div class="nb-diff" *ngIf="changesOf(n).length">
 							<div class="nb-diff-head" *ngIf="!isNewBooking(n)">
-								<span>Field</span><span>Before</span><span>After</span>
+								<span>Instruction</span><span>Original</span><span>Updated</span>
 							</div>
 							<div class="nb-diff-row" *ngFor="let c of (expanded.has(n.id) ? changesOf(n) : changesOf(n).slice(0, collapsedChanges))"
 								[class.single]="isNewBooking(n) || c.old === null">
 								<div class="nb-label">{{ c.label }}</div>
 								<ng-container *ngIf="!isNewBooking(n) && c.old !== null; else onlyNew">
 									<div class="nb-cell nb-was">
-										<span class="nb-tag">Before</span>
+										<span class="nb-tag">Original</span>
 										<span class="nb-val" [class.nb-empty-val]="!c.old">{{ c.old || 'empty' }}</span>
 									</div>
 									<div class="nb-cell nb-now">
-										<span class="nb-tag">After</span>
+										<span class="nb-tag">Updated</span>
 										<span class="nb-val" [class.nb-empty-val]="!c.new">{{ c.new || 'empty' }}</span>
 									</div>
 								</ng-container>

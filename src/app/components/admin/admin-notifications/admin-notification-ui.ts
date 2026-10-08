@@ -94,7 +94,9 @@ const HIDDEN_CHANGE_FIELDS = new Set([
 	'is_transferred',
 	'created_at',
 	'updated_at',
-	'is_pending_affiliate'
+	'is_pending_affiliate',
+	'dropoff_airline',
+	'pickup_airline'
 ]);
 
 /** Any column ending in one of these (affiliate_id, account_type) is hidden too. */

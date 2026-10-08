@@ -312,3 +312,15 @@ a.dropdown-item {
 		padding: 6px 12px;
 	}
 }
+
+// Pax/Driver info: cap the width so these columns don't soak up all the spare table width;
+// long addresses wrap instead of stretching the column.
+.custom_table table.table {
+	th.info-col,
+	td.info-col {
+		width: 18%;
+		min-width: 240px;
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+}

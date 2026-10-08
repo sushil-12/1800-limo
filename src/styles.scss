@@ -1008,16 +1008,30 @@ gmp-basic-place-autocomplete {
 		color: #111827;
 	}
 
+	.at-line {
+		align-items: flex-start;
+
+		> span:last-child {
+			flex: 1 1 auto;
+			min-width: 0;
+		}
+	}
+
+	// Fixed width so Original/Updated badges line up and values start in the same column.
 	.at-sign {
-		flex: 0 0 32px;
-		height: 16px;
+		flex: 0 0 68px;
+		box-sizing: border-box;
+		height: 18px;
 		margin-top: 1px;
+		padding: 0 6px;
 		border-radius: 4px;
 		font-size: 9px;
 		font-weight: 700;
-		line-height: 16px;
+		line-height: 18px;
+		letter-spacing: 0.04em;
 		text-align: center;
 		text-transform: uppercase;
+		white-space: nowrap;
 	}
 
 	.at-was {

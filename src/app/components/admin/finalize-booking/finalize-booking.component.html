@@ -1,34 +1,6 @@
 <ngx-spinner type="ball-scale-multiple"></ngx-spinner>
 <ngx-spinner type="ball-scale-multiple" name="normalspinner"></ngx-spinner>
 
-<div class="sticky-alert-container" *ngIf="canCharge">
-	<div class="finalize-progress" [class.finalized]="isFinalizeButton">
-		<div class="fp-steps">
-			<div class="fp-step" [class.done]="isFinalizeButton" [class.active]="!isFinalizeButton">
-				<span class="fp-circle">
-					<i class="bi bi-check-lg" *ngIf="isFinalizeButton"></i>
-					<ng-container *ngIf="!isFinalizeButton">1</ng-container>
-				</span>
-				<span class="fp-label">Finalize Rates</span>
-			</div>
-			<div class="fp-connector" [class.done]="isFinalizeButton"></div>
-			<div class="fp-step" [class.active]="isFinalizeButton">
-				<span class="fp-circle">2</span>
-				<span class="fp-label">Charge Payment</span>
-			</div>
-		</div>
-		<div class="fp-hint" *ngIf="!isFinalizeButton">
-			Review the rates below, then tap <strong>Finalize</strong>
-		</div>
-		<div class="fp-action" *ngIf="isFinalizeButton">
-			<span class="fp-hint-done">Booking finalized — charge now to get paid</span>
-			<button type="button" class="fp-charge-btn" (click)="scroll('nextSection')">
-				Scroll Down <i class="bi bi-arrow-down-short"></i>
-			</button>
-		</div>
-	</div>
-</div>
-
 <section class="section-container" *ngIf="BookingDetail">
 	<div class="container" id="print-section">
 		<h3 class="font-weight-bolder mb-1 text-center">Finalize Booking</h3>
@@ -264,7 +236,14 @@
 		<!-- CARD PAYMENT -->
 		<div class="col-md-12 cardSection" *ngIf="paymentMethod=='card'">
 			<div class="methodCard">
-				<p class="saved-cards-title">Saved cards</p>
+				<div class="saved-cards-header">
+					<p class="saved-cards-title">Saved cards</p>
+					<button type="button" class="add-card-btn" [class.open]="isCardFormOpen"
+						(click)="changeDetection(isCardFormOpen ? 'card' : 'new_card')">
+						<i class="bi" [ngClass]="isCardFormOpen ? 'bi-x-lg' : 'bi-plus-lg'"></i>
+						{{ isCardFormOpen ? 'Cancel' : 'Add Credit Card' }}
+					</button>
+				</div>
 				<div class="saved-cards" *ngIf="CardsInformation?.length > 0; else noData">
 					<div class="saved-card" *ngFor="let item of CardsInformation"
 						[class.selected]="selectedCard?.ID == item.ID && !isCardFormOpen">
@@ -294,21 +273,16 @@
 				<ng-template #noData>
 					<div class="saved-cards-empty">
 						<i class="bi bi-credit-card"></i>
-						No saved cards for this customer. Add one below.
+						No saved cards for this customer. Use "Add Credit Card" to add one.
 					</div>
 				</ng-template>
-				<label class="add-card-option" [class.selected]="isCardFormOpen">
-					<input name="selectCard" type="radio" [checked]="isCardFormOpen"
-						(change)="changeDetection('new_card')">
-					<i class="bi bi-plus-circle"></i>
-					Add a credit or debit card
-				</label>
 			</div>
 			<!-- Credit Card Details -->
 
-			<form class="container-fluid" [formGroup]="cardForm" appInvalidControlScroll>
+			<form class="container-fluid px-0" [formGroup]="cardForm" appInvalidControlScroll>
 
-				<div id="credit-card-details" class="px-4" *ngIf="paymentMethod=='card' && isCardFormOpen">
+				<div id="credit-card-details" class="new-card-form" *ngIf="paymentMethod=='card' && isCardFormOpen">
+					<p class="saved-cards-title mb-2">New card details</p>
 					<div class="row">
 						<!-- Card Holder Name -->
 						<div class="col-md-4 my-2">
@@ -404,8 +378,8 @@
 								</p>
 							</div>
 						</div>
-						<div class="col-md-4 my-2 d-flex justify-content-end">
-							<button class="custom-filled-button mr-1 m-3" (click)="saveCardDetails()"> Save </button>
+						<div class="col-12 mb-2 d-flex justify-content-center">
+							<button class="custom-filled-button m-2" (click)="saveCardDetails()"> Save </button>
 						</div>
 						<!-- <div class="col-md-12">
 							<mat-checkbox [color]="primary" formControlName="save_card_detail">Save

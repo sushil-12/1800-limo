@@ -127,8 +127,8 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
 				return `<div class="${cls}">${label}<div class="at-value">${escapeHtml(clip(c.new))}</div></div>`;
 			}
 			return `<div class="${cls}">${label}`
-				+ `<div class="at-line at-was"><span class="at-sign">Was</span><span>${escapeHtml(clip(c.old) || 'empty')}</span></div>`
-				+ `<div class="at-line at-now"><span class="at-sign">Now</span><span>${escapeHtml(clip(c.new) || 'empty')}</span></div>`
+				+ `<div class="at-line at-was"><span class="at-sign">Original</span><span>${escapeHtml(clip(c.old) || 'empty')}</span></div>`
+				+ `<div class="at-line at-now"><span class="at-sign">Updated</span><span>${escapeHtml(clip(c.new) || 'empty')}</span></div>`
 				+ `</div>`;
 		}).join('');
 

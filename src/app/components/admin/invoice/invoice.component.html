@@ -104,8 +104,8 @@
                     <th>Booking #</th>
                     <th>Total</th>
                     <th>Grand Total</th>
-                    <th>Pax Info</th>
-                    <th>Driver Info</th>
+                    <th class="info-col">Pax Info</th>
+                    <th class="info-col">Driver Info</th>
                     <th>Vehicle Type</th>
                     <th>Account Info</th>
                     <th>Status</th>
@@ -144,8 +144,8 @@
                     <td class="text-right font-weight-bolder" style="white-space: nowrap">
                       {{ invoice?.booking_total != null ? (invoice?.currency_symbol || '$') + (invoice.booking_total | number:'1.2-2') : '-' }}
                     </td>
-                    <td>
-                      <p data-target="#sendEmailModal" style="white-space: pre" data-toggle="modal">
+                    <td class="info-col">
+                      <p data-target="#sendEmailModal" style="white-space: nowrap" data-toggle="modal">
                         <span [innerHTML]="highlighText(invoice.passenger_name)"></span> |
                         <span [innerHTML]="highlighText(invoice.passenger_phone)"></span>
                       </p>
@@ -153,8 +153,8 @@
                         <span [innerHTML]="highlighText(invoice.pickup_address )"></span>
                       </span>
                     </td>
-                    <td>
-                      <p data-target="#sendEmailModal" style="white-space: pre" data-toggle="modal">
+                    <td class="info-col">
+                      <p data-target="#sendEmailModal" style="white-space: nowrap" data-toggle="modal">
                         <span
                           [innerHTML]="highlighText(invoice?.driver_name ? invoice?.driver_name : '1800Limo Chauffeurs')"></span>
                         |
@@ -168,7 +168,7 @@
 
                     <td><span [innerHTML]="highlighText(invoice.aff_vehicle_type)"></span></td>
                     <td>
-                      <p style="white-space: pre">
+                      <p style="white-space: nowrap">
                         <span [innerHTML]="highlighText(invoice?.account_first_name)"></span> |
                         <span [innerHTML]="highlighText(invoice?.account_last_name)"></span>
                       </p>

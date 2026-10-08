@@ -76,7 +76,11 @@
 			<div class="text-danger margin-bottom-thin my-mat-hint"
 				style="min-height: 20px; font-size: 16px; margin-top: 5px; font-weight: 700;"
 				[style.visibility]="(f.phone.errors && (f.phone.touched || f.phone.dirty || submitted)) ? 'visible' : 'hidden'">
-				<div *ngIf="f.phone.errors?.invalidIntl">{{f.phone.errors?.invalidIntl}}</div>
+				<div *ngIf="f.phone.errors?.pattern || f.phone.errors?.invalid_Pattern; else intlError">Please enter digits
+					only. Hyphens, spaces and special characters are not allowed</div>
+				<ng-template #intlError>
+					<div *ngIf="f.phone.errors?.invalidIntl">{{f.phone.errors?.invalidIntl}}</div>
+				</ng-template>
 				<div *ngIf="f.phone.errors?.required">The Phone Number is required</div>
 			</div>
 			<div class="row referral_code_div" *ngIf="Role == 'sub_travel_agent'">

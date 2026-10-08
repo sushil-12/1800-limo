@@ -40,7 +40,8 @@ import { NgxSpinnerModule } from "ngx-spinner";
 //maps
 // import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { GoogleMapsModule } from '@angular/google-maps';
-import { QuotebotModule } from './components/quotebot/quotebot.module';
+// QuotebotModule is lazy-loaded on /quotebot (app-routing.module.ts). Do not
+// import it here: it drags the booking form, Quill and html2pdf into main.js.
 import { WebsiteTemplateComponent } from './components/website/website-template/website-template.component';
 import { QuotebotTemplateComponent } from './components/quotebot/quotebot-template/quotebot-template.component';
 import { UserTemplateComponent } from './components/user/user-template/user-template.component';
@@ -88,7 +89,6 @@ import { LiveRideTrackingComponent } from './components/public/live-ride-trackin
 import { RideChatComponent } from './components/public/live-ride-tracking/ride-chat/ride-chat.component';
 import { StatesTestComponent } from './components/public/states-test/states-test.component';
 import { AppLinkFallbackComponent } from './components/public/app-link-fallback/app-link-fallback.component';
-import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
 import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
@@ -171,7 +171,6 @@ import { NotificationBellComponent } from './components/admin/admin-notification
 		BrowserAnimationsModule,
 		ReactiveFormsModule,
 		MatSidenavModule,
-		QuotebotModule,
 		HttpClientModule,
 		GoogleMapsModule,
 		MatDialogModule,
@@ -183,7 +182,6 @@ import { NotificationBellComponent } from './components/admin/admin-notification
 		NgOtpInputModule,
 		MatRadioModule,
 		NgSelectModule,
-		NgxChartsModule,
 		BsDatepickerModule,
 		NgxDaterangepickerMd.forRoot(),
 		NotificationBellComponent,

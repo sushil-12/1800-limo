@@ -35,7 +35,7 @@ export class InvoiceComponent implements OnInit {
   public invoiceRes: any;
   audit_Trail: any;
   searchText: any = '';
-  useDateFilter: boolean = true;
+  dateMode: 'all' | 'custom' = 'all';
   currentUser: any;
 
   constructor(private TravelService: TravelAgentService, private adminService: AdminService, private router: Router,
@@ -53,8 +53,8 @@ export class InvoiceComponent implements OnInit {
     // const localeDateString = date.toLocaleDateString(undefined, options).
     // replace(/(\d+)\/(\d+)\/(\d+)/,'$3-$1-$2');
     // Set Search Filters According to cookies or the intial state
-    this.startDate = this.adminService.checkCookie('startDate_invoice_indc') ?
-      this.adminService.getCookie('startDate_invoice_indc') :
+    this.startDate = this.adminService.checkCookie('startDate_invoice_indv') ?
+      this.adminService.getCookie('startDate_invoice_indv') :
       moment(timestamp).format('YYYY-MM-DD')
 
     date.setDate(date.getDate() + 7);
@@ -63,9 +63,7 @@ export class InvoiceComponent implements OnInit {
       this.adminService.getCookie('endDate_invoice_indv') :
       moment(timestamp).format('YYYY-MM-DD')
 
-    this.useDateFilter = this.adminService.checkCookie('useDateFilterInvoice_indv') ?
-      (this.adminService.getCookie('useDateFilterInvoice_indv') == 'true' ? true : false)
-      : true;
+    this.dateMode = this.adminService.getCookie('date_mode_invoice_indv') == 'custom' ? 'custom' : 'all';
     this.searchText = this.adminService.checkCookie('search_invoice_indv') ?
       this.adminService.getCookie('search_invoice_indv')
       : "";
@@ -143,7 +141,7 @@ export class InvoiceComponent implements OnInit {
     var keyword = ((document.getElementById("keyword3") as HTMLInputElement).value);
     // console.log(keyword);
     // Load Our invoices using API
-    this.IndividualService.invoiceList(pageUrl, this.startDate, this.endDate, this.useDateFilter, keyword).then(result => {
+    this.IndividualService.invoiceList(pageUrl, this.startDate, this.endDate, this.dateMode == 'custom', keyword).then(result => {
       this.spinner.hide()
       this.invoiceRes = result;
       this.invoices = this.invoiceRes.data.data;
@@ -216,21 +214,20 @@ export class InvoiceComponent implements OnInit {
     date.setDate(date.getDate() + 7);
     timestamp = date.getTime()
     this.endDate = moment(timestamp).format('YYYY-MM-DD')
-    this.adminService.deleteCookie('startDate_invoice_indc')
+    this.adminService.deleteCookie('startDate_invoice_indv')
     this.adminService.deleteCookie('endDate_invoice_indv')
     this.adminService.deleteCookie('search_invoice_indv')
-    this.adminService.deleteCookie('useDateFilterInvoice_indv')
-    this.useDateFilter = true
+    this.adminService.deleteCookie('date_mode_invoice_indv')
+    this.dateMode = 'all'
     this.searchText = "";
 
     console.log('Reset Successfully. ');
   }
 
-  //handle use date filter chekbox to apply or remove date filter
-  handleChangeCheckbox(value: any) {
-    console.log('event---->> ', value)
-    this.useDateFilter = value
-    this.saveCookie('useDateFilterInvoice_indv', value)
+  //switch between all invoices and a custom date range
+  changeDateMode(mode: 'all' | 'custom') {
+    this.dateMode = mode
+    this.saveCookie('date_mode_invoice_indv', mode)
     this.loadInvoice();
   }
 

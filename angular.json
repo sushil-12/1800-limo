@@ -25,6 +25,13 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
+              "src/robots.txt",
+              "src/robots-staging.txt",
+              {
+                "glob": ".htaccess",
+                "input": "src",
+                "output": "/"
+              },
               {
                 "glob": "**/*",
                 "input": "src/.well-known",

@@ -34,7 +34,7 @@ export class InvoiceDashComponent implements OnInit {
   public invoiceRes: any;
   audit_Trail: any;
   searchText: any = '';
-  useDateFilter: boolean = true;
+  dateMode: 'all' | 'custom' = 'all';
   currentUser: any;
 
   constructor(private TravelService: TravelAgentService, private adminService: AdminService, private router: Router,
@@ -62,9 +62,7 @@ export class InvoiceDashComponent implements OnInit {
       this.adminService.getCookie('endDate_invoice') :
       moment(timestamp).format('YYYY-MM-DD')
 
-    this.useDateFilter = this.adminService.checkCookie('useDateFilterInvoice') ?
-      (this.adminService.getCookie('useDateFilterInvoice') == 'true' ? true : false)
-      : true;
+    this.dateMode = this.adminService.getCookie('date_mode_invoice_ta') == 'custom' ? 'custom' : 'all';
     this.searchText = this.adminService.checkCookie('search_invoice') ?
       this.adminService.getCookie('search_invoice')
       : "";
@@ -142,7 +140,7 @@ export class InvoiceDashComponent implements OnInit {
     var keyword = ((document.getElementById("keyword3") as HTMLInputElement).value);
     // console.log(keyword);
     // Load Our invoices using API
-    this.TravelService.invoiceList(pageUrl, this.startDate, this.endDate, this.useDateFilter, keyword).then(result => {
+    this.TravelService.invoiceList(pageUrl, this.startDate, this.endDate, this.dateMode == 'custom', keyword).then(result => {
       this.spinner.hide()
       this.invoiceRes = result;
       this.invoices = this.invoiceRes.data.data;
@@ -218,18 +216,17 @@ export class InvoiceDashComponent implements OnInit {
     this.adminService.deleteCookie('startDate_invoice')
     this.adminService.deleteCookie('endDate_invoice')
     this.adminService.deleteCookie('search_invoice')
-    this.adminService.deleteCookie('useDateFilterInvoice')
-    this.useDateFilter = true
+    this.adminService.deleteCookie('date_mode_invoice_ta')
+    this.dateMode = 'all'
     this.searchText = "";
 
     console.log('Reset Successfully. ');
   }
 
-  //handle use date filter chekbox to apply or remove date filter
-  handleChangeCheckbox(value: any) {
-    console.log('event---->> ', value)
-    this.useDateFilter = value
-    this.saveCookie('useDateFilterInvoice', value)
+  //switch between all invoices and a custom date range
+  changeDateMode(mode: 'all' | 'custom') {
+    this.dateMode = mode
+    this.saveCookie('date_mode_invoice_ta', mode)
     this.loadInvoice();
   }
 

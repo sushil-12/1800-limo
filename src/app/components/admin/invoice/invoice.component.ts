@@ -38,7 +38,7 @@ export class InvoiceComponent implements OnInit {
   public endDate: string;
   outputDateFormat = "YYYY-MM-DD";
   searchText: any = '';
-  useDateFilter: boolean = true;
+  dateMode: 'all' | 'custom' = 'all';
   audit_Trail: any;
 
 
@@ -61,9 +61,7 @@ export class InvoiceComponent implements OnInit {
       this.adminService.getCookie('endDate_invoice') :
       moment(timestamp).format('YYYY-MM-DD')
 
-    this.useDateFilter = this.adminService.checkCookie('use_date_filter_invoice') ?
-      (this.adminService.getCookie('use_date_filter_invoice') == 'true' ? true : false)
-      : true;
+    this.dateMode = this.adminService.getCookie('admin_date_mode_invoice') == 'custom' ? 'custom' : 'all';
     this.searchText = this.adminService.checkCookie('search_invoice') ?
       this.adminService.getCookie('search_invoice')
       : "";
@@ -110,7 +108,7 @@ export class InvoiceComponent implements OnInit {
     var keyword = ((document.getElementById("keyword2") as HTMLInputElement).value);
     // console.log(keyword);
     // Load Our invoices using API
-    this.adminService.invoiceList(pageUrl, this.startDate, this.endDate, this.useDateFilter, this.searchText).then(result => {
+    this.adminService.invoiceList(pageUrl, this.startDate, this.endDate, this.dateMode == 'custom', this.searchText).then(result => {
       this.spinner.hide()
       this.invoiceRes = result;
       this.invoices = this.invoiceRes.data.data;
@@ -185,10 +183,9 @@ export class InvoiceComponent implements OnInit {
     }
     return udpArr;
   }
-  handleChangeCheckbox(value: any) {
-    console.log('event---->> ', value)
-    this.useDateFilter = value
-    this.saveCookie('use_date_filter_invoice', value)
+  changeDateMode(mode: 'all' | 'custom') {
+    this.dateMode = mode
+    this.saveCookie('admin_date_mode_invoice', mode)
     this.loadInvoice();
   }
   reset() {
@@ -201,8 +198,8 @@ export class InvoiceComponent implements OnInit {
     this.adminService.deleteCookie('startDate_invoice')
     this.adminService.deleteCookie('endDate_invoice')
     this.adminService.deleteCookie('search_invoice')
-    this.adminService.deleteCookie('use_date_filter_invoice')
-    this.useDateFilter = true
+    this.adminService.deleteCookie('admin_date_mode_invoice')
+    this.dateMode = 'all'
     this.searchText = "";
 
     console.log('Reset Successfully. ');

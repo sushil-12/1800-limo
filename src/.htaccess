@@ -1,0 +1,217 @@
+# ---------------------------------------------------------------------------
+# 1800limo.com - Apache config for the Angular SPA build.
+#
+# This file is copied from src/.htaccess into the build output (angular.json
+# "assets"), so it is deployed with every release. It is the single place that
+# decides HTTP status codes, redirects and crawler headers for the site.
+#
+# What it does, in order:
+#   1. Production hosts only: force HTTPS, non-www -> www (301).
+#   2. /home -> / and trailing-slash -> no-slash (301).  One URL per page.
+#   3. Legacy ColdFusion (.cfm) URLs: 301 to the modern page, else 410 Gone.
+#   4. Non-production hosts (staging / QA / preview): X-Robots-Tag noindex on
+#      every response and a "Disallow: /" robots.txt. Nothing else changes.
+#   5. Pre-compressed assets: serve main.js.br / .gz written at build time by
+#      scripts/precompress.js, so Apache never gzips the bundles per request.
+#   6. SPA routing: known app routes -> index.html (200). Anything else ->
+#      real HTTP 404 (still rendering the Angular 404 page) + noindex header.
+#   7. Cache-Control: hashed bundles 1 year immutable, index.html no-cache.
+#
+# Works unchanged behind a CDN (Cloudflare/CloudFront) as long as the CDN
+# forwards the original Host header - see docs/cdn-setup.md.
+#
+# Requires mod_rewrite + mod_headers and "AllowOverride All" (or at least
+# FileInfo + Options) for the document root.
+# ---------------------------------------------------------------------------
+
+# Apache 2.4: allow the [R=404] + ErrorDocument trick below to serve the SPA
+# shell with a 404 status so the Angular "page not found" screen still renders.
+ErrorDocument 404 /index.html
+
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteBase /
+
+	# Scheme of the *original* request, so redirects below keep https when TLS is
+	# terminated by a proxy/load balancer in front of Apache.
+	RewriteCond %{HTTPS} =on [OR]
+	RewriteCond %{HTTP:X-Forwarded-Proto} =https
+	RewriteRule ^ - [E=PROTO:https]
+	RewriteCond %{ENV:PROTO} =""
+	RewriteRule ^ - [E=PROTO:http]
+
+	# A direct browser/crawler request for /index.html is a duplicate of `/`.
+	# THE_REQUEST is the raw request line, so this does NOT match the internal
+	# rewrites / ErrorDocument that serve index.html for SPA routes.
+	RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+	RewriteRule ^index\.html$ %{ENV:PROTO}://%{HTTP_HOST}/ [R=301,L]
+
+	# Never re-process the SPA shell itself (also stops rewrite loops after the
+	# internal rewrite / ErrorDocument below).
+	RewriteRule ^index\.html$ - [L]
+
+	# /.well-known/ has its own .htaccess (AASA / assetlinks must be served
+	# verbatim, no redirects, on the bare host too). Leave it alone entirely.
+	RewriteRule ^\.well-known/ - [L]
+
+	# ---- 1. Canonical scheme + host (production only) ------------------------
+	# Staging/QA hosts must NOT be redirected to production, so every rule here
+	# is scoped to (www.)1800limo.com.
+
+	# http -> https (honours X-Forwarded-Proto when behind a load balancer/CDN)
+	RewriteCond %{HTTP_HOST} ^(www\.)?1800limo\.com$ [NC]
+	RewriteCond %{HTTPS} !=on
+	RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+	RewriteRule ^ https://www.1800limo.com%{REQUEST_URI} [R=301,L]
+
+	# 1800limo.com -> www.1800limo.com
+	RewriteCond %{HTTP_HOST} ^1800limo\.com$ [NC]
+	RewriteRule ^ https://www.1800limo.com%{REQUEST_URI} [R=301,L]
+
+	# ---- 2. One URL per page -------------------------------------------------
+	# /home -> /  (the SPA renders the homepage at / now)
+	RewriteRule ^home/?$ %{ENV:PROTO}://%{HTTP_HOST}/ [R=301,L]
+
+	# Strip trailing slashes from non-directory paths: /fleet/ -> /fleet
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteRule ^(.+)/$ %{ENV:PROTO}://%{HTTP_HOST}/$1 [R=301,L]
+
+	# ---- 3. Legacy ColdFusion URLs ------------------------------------------
+	# Known mappings first. Extend this list from the GSC "Pages" report.
+	RewriteRule ^common/VehicleTypes\.cfm$ %{ENV:PROTO}://%{HTTP_HOST}/fleet [R=301,L,NC]
+	RewriteRule ^common/Fleet\.cfm$ %{ENV:PROTO}://%{HTTP_HOST}/fleet [R=301,L,NC]
+	RewriteRule ^common/AboutUs\.cfm$ %{ENV:PROTO}://%{HTTP_HOST}/about-us [R=301,L,NC]
+	RewriteRule ^common/ContactUs\.cfm$ %{ENV:PROTO}://%{HTTP_HOST}/contact-us [R=301,L,NC]
+	RewriteRule ^common/FAQ\.cfm$ %{ENV:PROTO}://%{HTTP_HOST}/customer-faq [R=301,L,NC]
+	RewriteRule ^(index|default|home)\.cfm$ %{ENV:PROTO}://%{HTTP_HOST}/ [R=301,L,NC]
+	# Any other .cfm URL is permanently gone (410 drops out of the index faster
+	# than a soft 404 or a blanket redirect to the homepage would).
+	RewriteRule \.cfm$ - [G,L,NC]
+
+	# ---- 4. Non-production hosts: robots.txt says "Disallow: /" -------------
+	RewriteCond %{HTTP_HOST} !^www\.1800limo\.com$ [NC]
+	RewriteRule ^robots\.txt$ /robots-staging.txt [L]
+
+	# ---- 5. Pre-compressed assets -------------------------------------------
+	# scripts/precompress.js writes foo.js.br / foo.js.gz next to every bundle.
+	# Hand those out directly; compressing 6 MB on each request starves the CPU
+	# (measured: main.js took ~50s via mod_deflate vs ~9s uncompressed).
+	RewriteCond %{HTTP:Accept-Encoding} \bbr\b
+	RewriteCond %{REQUEST_FILENAME}.br -f
+	RewriteRule ^(.+\.(?:js|mjs|css|svg|json))$ $1.br [L]
+
+	RewriteCond %{HTTP:Accept-Encoding} \bgzip\b
+	RewriteCond %{REQUEST_FILENAME}.gz -f
+	RewriteRule ^(.+\.(?:js|mjs|css|svg|json))$ $1.gz [L]
+
+	# ---- 6. SPA routing with real 404s --------------------------------------
+	# Real files and directories are served as-is (assets, sitemap.xml,
+	# robots.txt, llms.txt, favicon, hashed bundles, .well-known ...).
+	RewriteCond %{REQUEST_FILENAME} -f [OR]
+	RewriteCond %{REQUEST_FILENAME} -d [OR]
+	RewriteCond %{REQUEST_FILENAME} -l
+	RewriteRule ^ - [L]
+
+	# Leaf routes: exact path only (a trailing sub-path would be an Angular 404
+	# anyway, so give it a real 404 too).
+	RewriteCond %{REQUEST_URI} ^/(home|services|quotebot_section|about-us|fleet|tutorials|safety|customer-faq|driver-faq|countries|cancellation-policy|group-travel-planner|investors|blog|contact-us|insurance-licensing|privacy-policy|delivery-membership-terms-condition|client-terms-condition|transaction-history|subscription|partner-registration|payment-details|admin-login|sub-admin-login|login|otp|add-driver-details-from-invite|public-invoice-summary|states-test)$
+	RewriteRule ^ index.html [L]
+
+	# Prefix routes: these have child routes / params underneath them.
+	RewriteCond %{REQUEST_URI} ^/(blog|login|email|quotebot|admin|affiliate|sub_affiliate|travel_agent|sub_travel_agent|individual|payment-by-email|live-ride-tracking|passenger|driver)(/|$)
+	RewriteRule ^ index.html [L]
+
+	# Everything else: genuine 404. ErrorDocument above serves index.html with
+	# the 404 status, so the user still sees the Angular "page not found" page.
+	RewriteRule ^ - [R=404,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+	# 404 responses must never be indexed (belt and braces with the meta tag
+	# SeoService sets on the `**` route).
+	Header always set X-Robots-Tag "noindex, nofollow" "expr=%{REQUEST_STATUS} == 404"
+
+	# Staging / QA / preview / bare-IP: block indexing of every response so a
+	# duplicate copy of the site can never rank. Production is (www.)1800limo.com
+	# (the bare host only ever answers with a 301, plus the AASA file); anything
+	# else is treated as non-production.
+	Header always set X-Robots-Tag "noindex, nofollow" "expr=%{HTTP_HOST} !~ m#^(www\.)?1800limo\.com$#i"
+
+	# Plain-text crawler files: no caching surprises after a deploy.
+	<FilesMatch "^(robots(-staging)?\.txt|sitemap.*\.xml|llms\.txt)$">
+		Header set Cache-Control "public, max-age=3600"
+	</FilesMatch>
+
+	# ---- 7. Cache-Control ----------------------------------------------------
+	# Un-hashed static files (src/assets images, fonts, favicon): one day, so
+	# replacing an image in place still shows up by tomorrow.
+	<FilesMatch "\.(png|jpe?g|gif|webp|avif|svg|ico|woff2?|ttf|otf|eot|mp4|webm|pdf)$">
+		Header set Cache-Control "public, max-age=86400"
+	</FilesMatch>
+
+	# Hashed build output (main.501037081883dd7c.js, flags.f0b9...png): the name
+	# changes on every build, so browsers/CDNs may keep it forever.
+	<FilesMatch "\.[0-9a-f]{16,}\.[a-z0-9]+(\.(br|gz))?$">
+		Header set Cache-Control "public, max-age=31536000, immutable"
+	</FilesMatch>
+
+	# The SPA shell points at the current hashes; always revalidate it so a
+	# deploy is visible immediately.
+	<Files "index.html">
+		Header set Cache-Control "no-cache"
+	</Files>
+</IfModule>
+
+<IfModule mod_mime.c>
+	AddType text/plain .txt
+	AddType application/xml .xml
+</IfModule>
+
+# Pre-compressed variants (section 5): real type of the original file, the
+# matching Content-Encoding, and no second compression pass by mod_deflate.
+# Drop any server-wide ".gz -> x-gzip" mapping so the header below wins.
+<IfModule mod_mime.c>
+	RemoveType .gz .br
+	RemoveEncoding .gz .br
+</IfModule>
+<FilesMatch "\.(js|mjs)\.(br|gz)$">
+	ForceType "text/javascript; charset=utf-8"
+</FilesMatch>
+<FilesMatch "\.css\.(br|gz)$">
+	ForceType "text/css; charset=utf-8"
+</FilesMatch>
+<FilesMatch "\.svg\.(br|gz)$">
+	ForceType image/svg+xml
+</FilesMatch>
+<FilesMatch "\.json\.(br|gz)$">
+	ForceType application/json
+</FilesMatch>
+<FilesMatch "\.br$">
+	SetEnv no-gzip 1
+	SetEnv no-brotli 1
+	<IfModule mod_headers.c>
+		Header set Content-Encoding br
+		Header append Vary Accept-Encoding
+	</IfModule>
+</FilesMatch>
+<FilesMatch "\.gz$">
+	SetEnv no-gzip 1
+	SetEnv no-brotli 1
+	<IfModule mod_headers.c>
+		Header set Content-Encoding gzip
+		Header append Vary Accept-Encoding
+	</IfModule>
+</FilesMatch>
+
+# ---------------------------------------------------------------------------
+# OPTIONAL - HTTP Basic auth for staging/QA (recommended by the SEO audit).
+# Uncomment and create the htpasswd file on the server. Kept off by default
+# because the mobile apps' QA builds and the API callbacks may hit these hosts.
+#
+# <If "%{HTTP_HOST} =~ /infodevbox\.com$/">
+#     AuthType Basic
+#     AuthName "1800limo staging"
+#     AuthUserFile /etc/apache2/.htpasswd-1800limo-staging
+#     Require valid-user
+# </If>
+# ---------------------------------------------------------------------------

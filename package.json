@@ -9,7 +9,8 @@
     "e2e": "ng e2e",
     "build": "ng build --configuration=staging",
     "build-testing": "ng build --configuration=testing",
-    "build-aws": "rm -rf dist && ng build --configuration=production",
+    "build-aws": "rm -rf dist && ng build --configuration=production && npm run precompress",
+    "precompress": "node scripts/precompress.js",
     "generate:llms-txt": "node scripts/generate-llms-txt.js"
   },
   "private": true,

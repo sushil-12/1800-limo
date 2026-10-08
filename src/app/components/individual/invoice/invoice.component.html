@@ -21,56 +21,56 @@
         <div class="containeredd mt-1 ">
 
             <div class="row my-2 align-items-center">
-                <!-- Start-Date -->
-                <div class="col-sm-4 col-md-4 my-2">
-                    <mat-form-field appearance="outline" class="m-0 text-xl">
-                        <mat-label>
-                            Start Date <span class="asterisk"> * </span>
-                        </mat-label>
-                        <input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker1"
-                            placeholder="Start Date" id="id_4" (dateChangeWithFormat)="changeDate('startDate', $event)"
-                            (click)="picker1.open()" [value]="startDate" readonly />
-                        <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
-                        <mat-datepicker #picker1 [calendarHeaderComponent]="exampleHeader"></mat-datepicker>
+                <!-- Date Range: All / Custom -->
+                <div class="col-sm-4 col-md-3 my-2">
+                    <mat-form-field appearance="outline" class="m-0">
+                        <mat-label>Date Range</mat-label>
+                        <mat-select [value]="dateMode" (selectionChange)="changeDateMode($event.value)">
+                            <mat-option value="all">All Invoices</mat-option>
+                            <mat-option value="custom">Custom</mat-option>
+                        </mat-select>
                     </mat-form-field>
                 </div>
 
-                <!-- End-Date -->
-                <div class="col-sm-4 col-md-4 my-2">
-                    <mat-form-field appearance="outline" class="m-0 text-xl">
-                        <mat-label>
-                            End Date <span class="asterisk"> * </span>
-                        </mat-label>
-                        <input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker2"
-                            placeholder="End Date" id="id_5" (dateChangeWithFormat)="changeDate('endDate',$event)"
-                            (click)="picker2.open()" [value]="endDate" [min]="startDate" readonly />
-                        <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
-                        <mat-datepicker #picker2 [calendarHeaderComponent]="exampleHeader"></mat-datepicker>
-                    </mat-form-field>
-                </div>
-                <!-- Search Button -->
-                <div class="align-btn d-flex justify-content-around">
-                    <div class="col-sm-2 ml-n5">
-                        <button class="custom-filled-button orange-button"
-                            style="color:#fff;padding: 5px 12px !important;"
-                            (click)="loadInvoice(); saveCookie('startDate_invoice_indv', startDate); saveCookie('endDate_invoice_indv', endDate)">
-                            Search
-                        </button>
+                <ng-container *ngIf="dateMode == 'custom'">
+                    <!-- Start-Date -->
+                    <div class="col-sm-4 col-md-3 my-2">
+                        <mat-form-field appearance="outline" class="m-0 text-xl">
+                            <mat-label>Start Date</mat-label>
+                            <input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker1"
+                                placeholder="Start Date" id="id_4" (dateChangeWithFormat)="changeDate('startDate', $event)"
+                                (click)="picker1.open()" [value]="startDate" readonly />
+                            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+                            <mat-datepicker #picker1 [calendarHeaderComponent]="exampleHeader"></mat-datepicker>
+                        </mat-form-field>
                     </div>
-                    <div class="col-sm-2">
-                        <button class="custom-filled-back-button"
-                            style="white-space: nowrap;color:#fff;padding: 5px 12px !important;  background-color: #000 !important;"
-                            (click)="reset(); loadInvoice()">
-                            Reset
-                        </button>
-                    </div>
-                </div>
 
-            </div>
-            <div>
-                <p><mat-checkbox (change)="handleChangeCheckbox($event.checked)" [checked]="useDateFilter">Uncheck this
-                        box to
-                        view all invoices</mat-checkbox></p>
+                    <!-- End-Date -->
+                    <div class="col-sm-4 col-md-3 my-2">
+                        <mat-form-field appearance="outline" class="m-0 text-xl">
+                            <mat-label>End Date</mat-label>
+                            <input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker2"
+                                placeholder="End Date" id="id_5" (dateChangeWithFormat)="changeDate('endDate',$event)"
+                                (click)="picker2.open()" [value]="endDate" [min]="startDate" readonly />
+                            <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+                            <mat-datepicker #picker2 [calendarHeaderComponent]="exampleHeader"></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                </ng-container>
+
+                <!-- Search / Reset Buttons -->
+                <div class="col-md-3 my-2 d-flex">
+                    <button *ngIf="dateMode == 'custom'" class="custom-filled-button orange-button mr-2"
+                        style="color:#fff;padding: 5px 12px !important;"
+                        (click)="loadInvoice(); saveCookie('startDate_invoice_indv', startDate); saveCookie('endDate_invoice_indv', endDate)">
+                        Search
+                    </button>
+                    <button class="custom-filled-back-button"
+                        style="white-space: nowrap;color:#fff;padding: 5px 12px !important;  background-color: #000 !important;"
+                        (click)="reset(); loadInvoice()">
+                        Reset
+                    </button>
+                </div>
             </div>
             <div class="row my-2 mb-3">
                 <div class="col-md-12">
@@ -78,7 +78,7 @@
                         <mat-form-field appearance="outline" class="m-0">
                             <input matInput type="text" (keypress)="handleKeypressEvents()"
                                 (keyup)="searchInBookings($event.target.value)" [value]="searchText"
-                                placeholder="Search by booking number, invoice number, name, cell phone" id="keyword3"
+                                placeholder="Search by booking #, invoice #, name, phone, total or grand total" id="keyword3"
                                 autofocus>
                         </mat-form-field>
                     </div>
@@ -105,6 +105,8 @@
                                         <th>Status</th>
                                         <th>Invoice #</th>
                                         <th>Date</th>
+                                        <th>Total</th>
+                                        <th>Grand Total</th>
                                         <th>Pax Info</th>
                                         <th>Driver Info</th>
                                         <th>Vehicle Type</th>
@@ -147,6 +149,12 @@
                                         </td>
                                         <td class="sorting_1">
                                             <p>{{ invoice.date }}</p>
+                                        </td>
+                                        <td class="text-right" style="white-space: nowrap">
+                                          {{ invoice?.sub_total != null ? (invoice?.currency_symbol || '$') + (invoice.sub_total | number:'1.2-2') : '-' }}
+                                        </td>
+                                        <td class="text-right font-weight-bolder" style="white-space: nowrap">
+                                          {{ invoice?.booking_total != null ? (invoice?.currency_symbol || '$') + (invoice.booking_total | number:'1.2-2') : '-' }}
                                         </td>
                                         <td>
                                             <p data-target="#sendEmailModal" style="white-space: pre"

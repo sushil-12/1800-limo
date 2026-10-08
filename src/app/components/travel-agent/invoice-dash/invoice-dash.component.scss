@@ -16,11 +16,11 @@
 .adminbox_shadow.user_information,
 .adminbox_shadow.user_information .mat-mdc-form-field,
 .mat-calendar {
-	font-family: "PT Serif", serif !important;
+	font-family: "Poppins", "Roboto", sans-serif !important;
 }
 
 button {
-	font-family: "PT Serif", serif !important;
+	font-family: "Poppins", "Roboto", sans-serif !important;
 }
 
 .booking_status {
@@ -279,4 +279,32 @@ a.dropdown-item {
 	font-size: 16px;
 	font-weight: 500 !important;
 	font-family: "Roboto", sans-serif !important;
+}
+/* Invoice table typography */
+#dataTable {
+	font-family: "Poppins", "Roboto", sans-serif !important;
+	font-size: 14px;
+
+	thead th {
+		font-size: 13px;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+	}
+
+	td {
+		vertical-align: middle;
+	}
+
+	/* Total / Grand Total: line up the digits */
+	td.text-right {
+		font-variant-numeric: tabular-nums;
+		font-size: 15px;
+	}
+
+	.booking_status {
+		font-size: 13px;
+		font-weight: 500;
+		padding: 6px 12px;
+	}
 }

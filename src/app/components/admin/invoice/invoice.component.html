@@ -100,16 +100,15 @@
                 <thead>
                   <tr role="row">
                     <th>Actions</th>
-                    <th>Booking #</th>
-                    <th>Status</th>
-                    <th>Invoice #</th>
                     <th>Date</th>
+                    <th>Booking #</th>
                     <th>Total</th>
                     <th>Grand Total</th>
                     <th>Pax Info</th>
                     <th>Driver Info</th>
                     <th>Vehicle Type</th>
                     <th>Account Info</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody class="invoiceTbody" *ngFor="let invoice of invoices">
@@ -133,20 +132,11 @@
                         </a>
                       </div>
                     </td>
-                    <td class="text-center font-weight-bolder cursor-pointer text-underline">
-                      <span [innerHTML]="highlighText(invoice.booking_id)" style="font-weight: 600;"></span>
-                    </td>
-                    <td>
-                      <div [className]="'badge badge-pill booking_status cursor-pointer ' + invoice?.status">
-                        {{invoice?.status| bookingStatusTextReplace :
-                        '_' : ' ' |titlecase}}
-                      </div>
-                    </td>
-                    <td class="text-center font-weight-bolder cursor-pointer text-underline">
-                      <span [innerHTML]="highlighText(invoice.invoice_number)"></span>
-                    </td>
                     <td class="sorting_1">
                       <p>{{ invoice.date }}</p>
+                    </td>
+                    <td class="text-center font-weight-bolder cursor-pointer text-underline">
+                      <span [innerHTML]="highlighText(invoice.booking_id)" style="font-weight: 600;"></span>
                     </td>
                     <td class="text-right" style="white-space: nowrap">
                       {{ invoice?.sub_total != null ? (invoice?.currency_symbol || '$') + (invoice.sub_total | number:'1.2-2') : '-' }}
@@ -185,6 +175,12 @@
                       <span class="text-underline cursor-pointer">
                         <span [innerHTML]="highlighText(invoice?.account_email)"></span>
                       </span>
+                    </td>
+                    <td>
+                      <div [className]="'badge badge-pill booking_status cursor-pointer ' + invoice?.status">
+                        {{invoice?.status| bookingStatusTextReplace :
+                        '_' : ' ' |titlecase}}
+                      </div>
                     </td>
                   </tr>
                 </tbody>

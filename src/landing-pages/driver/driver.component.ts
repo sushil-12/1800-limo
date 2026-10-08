@@ -279,7 +279,7 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly showcaseScreens: ShowcaseScreen[] = [
     {
       label: 'My Bookings',
-      image: 'assets/images/driver-landing/phone-4.webp',
+      image: 'assets/images/driver-landing/Mybookings.png',
       imageAlt: 'Driver app bookings list with pending, finalized and paid trips',
       hotspots: true,
       callouts: [

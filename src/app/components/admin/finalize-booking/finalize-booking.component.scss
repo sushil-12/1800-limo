@@ -506,11 +506,215 @@ body {
 }
 
 .cardSection {
-    border: 1px solid #000;
-    border-radius: 15px;
-    padding: 8px;
-    max-width: 95%;
-    margin: 5px 20px 0px 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 16px;
+    max-width: calc(100% - 40px);
+    margin: 12px 20px 0px 20px;
+    background-color: #fff;
+}
+
+/* ---- Saved cards list ---- */
+.methodCard {
+    .bi {
+        float: none;
+        margin-top: 0;
+        font-size: inherit;
+    }
+}
+
+.saved-cards-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.saved-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.saved-card {
+    display: flex;
+    align-items: center;
+    border: 2px solid #e6e6e6;
+    border-radius: 10px;
+    background-color: #fff;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        border-color: #c7c7c7;
+        box-shadow: 0 4px 12px -6px rgba(40, 40, 40, 0.35);
+    }
+
+    &.selected {
+        border-color: var(--orange);
+        background-color: rgba(243, 147, 61, 0.06);
+    }
+}
+
+.saved-card-select {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 12px 16px;
+    cursor: pointer;
+
+    input[type=radio] {
+        margin: 0;
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        accent-color: var(--orange);
+        cursor: pointer;
+    }
+}
+
+.saved-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 30px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    background-color: rgba(243, 147, 61, 0.12);
+    color: var(--orange);
+    font-size: 20px;
+}
+
+.saved-card-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
+}
+
+.saved-card-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #000;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.saved-card-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #555;
+    background-color: #eef0f2;
+    border-radius: 20px;
+    padding: 1px 8px;
+}
+
+.saved-card-number {
+    color: #555;
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+}
+
+.saved-card-expiry {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    line-height: 1.3;
+    color: #000;
+    font-weight: 500;
+
+    small {
+        color: #888;
+        font-size: 0.75rem;
+        font-weight: 400;
+    }
+}
+
+.saved-card-delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: transparent;
+    color: #888;
+    font-size: 17px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+
+    &:hover {
+        background-color: #fdecec;
+        color: #dc3545;
+    }
+
+    &:focus {
+        outline: none;
+    }
+}
+
+.saved-cards-empty {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background-color: #f7f9fa;
+    color: #666;
+
+    .bi {
+        font-size: 20px;
+    }
+}
+
+.add-card-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0 0;
+    padding: 12px 16px;
+    border: 2px dashed #c7c7c7;
+    border-radius: 10px;
+    color: var(--orange);
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+
+    input[type=radio] {
+        margin: 0;
+        width: 18px;
+        height: 18px;
+        accent-color: var(--orange);
+        cursor: pointer;
+    }
+
+    .bi {
+        font-size: 18px;
+    }
+
+    &:hover {
+        border-color: var(--orange);
+        background-color: rgba(243, 147, 61, 0.06);
+    }
+
+    &.selected {
+        border-style: solid;
+        border-color: var(--orange);
+        background-color: rgba(243, 147, 61, 0.06);
+    }
 }
 
 input[type=radio] {
@@ -699,6 +903,76 @@ tbody {
     }
 }
 
+.charge-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+}
+
+.payment-method-toggle {
+    display: inline-flex;
+    gap: 8px;
+
+    .pm-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 2px solid #c7c7c7;
+        background-color: #fff;
+        color: #555;
+        font-weight: 600;
+        border-radius: 0.75rem;
+        padding: 6px 16px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+
+        &:hover:not(.active) {
+            color: #000;
+            border-color: var(--green-color);
+        }
+
+        &:focus {
+            outline: none;
+        }
+
+        &:focus-visible {
+            box-shadow: 0 0 0 3px rgba(51, 198, 88, 0.35);
+        }
+
+        &.active {
+            background-color: var(--green-color);
+            border-color: var(--green-color);
+            color: #fff;
+            box-shadow: 0px 5px 10px -1px rgb(0 0 0 / 30%);
+        }
+
+        .bi {
+            float: none;
+            font-size: 16px;
+            margin-top: 0;
+        }
+    }
+}
+
+.cash-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1b7c3d;
+    background-color: #f2fbf5;
+    border-color: var(--green-color);
+    padding: 14px 16px;
+    margin-top: 12px;
+
+    .bi {
+        float: none;
+        font-size: 22px;
+        margin-top: 0;
+    }
+}
+
 .charge-subtext {
     color: #555;
     font-size: 0.95rem;
@@ -716,5 +990,35 @@ tbody {
 
     .fp-connector {
         width: 20px;
+    }
+
+    .cardSection {
+        max-width: calc(100% - 20px);
+        margin: 12px 10px 0px 10px;
+        padding: 12px;
+    }
+
+    .saved-card-select {
+        gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .saved-card-icon {
+        display: none;
+    }
+
+    .saved-card-delete {
+        margin-right: 6px;
+    }
+
+    .payment-method-toggle {
+        width: 100%;
+
+        .pm-btn {
+            flex: 1;
+            justify-content: center;
+            padding: 6px 8px;
+            font-size: 0.9rem;
+        }
     }
 }

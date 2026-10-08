@@ -52,7 +52,8 @@ export class BookingsHeaderComponent {
 		return typeof count === 'number' ? count : null;
 	}
 
+	/** No tab is highlighted while a search is in progress. */
 	isActive(key: string): boolean {
-		return this.listTab == key && !this.showNeedsAction;
+		return this.listTab == key && !this.showNeedsAction && !this.searchText?.trim();
 	}
 }

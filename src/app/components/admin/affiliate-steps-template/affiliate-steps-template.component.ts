@@ -34,6 +34,8 @@ export class AffiliateStepsTemplateComponent implements OnInit {
 	affiliateId: string;
 	stepsObj: string;
 	affiliateName: any;
+	// true when step statuses couldn't be loaded, so every step is shown red
+	stepsLoadFailed = false;
 
 	constructor(
 		private router: Router,
@@ -77,6 +79,7 @@ export class AffiliateStepsTemplateComponent implements OnInit {
 					).subscribe({
 						next: (response: any) => {
 							const responseData = response?.data ?? response;
+							this.stepsLoadFailed = !responseData;
 							if (responseData) {
 								const stepCompleted = Array.isArray(responseData.step_completed) ? responseData.step_completed : [];
 								const stepCompletedObj = this.mergeWithCompletedSteps(responseData.step_completed_obj, stepCompleted);
@@ -91,25 +94,33 @@ export class AffiliateStepsTemplateComponent implements OnInit {
 								this.stepCompletedObj = stepCompletedObj;
 								this.adminService.updateStepsArrayLocal(stepCompleted);
 								this.adminService.updateStepsCompletedObj(stepCompletedObj);
-								this.stepCompletionTick();
 							}
+							this.stepCompletionTick();
 						},
 						error: (error: any) => {
 							console.error('[affiliate-steps] getStepsCompleted subscribe error', error);
+							this.stepsLoadFailed = true;
+							this.stepCompletionTick();
 						}
 					});
 			} else {
 				const stepsObjStr = sessionStorage.getItem('step_completed_obj');
 				if (stepsObjStr) {
-					this.stepsObj = JSON.parse(stepsObjStr);
-					const localStepArray = JSON.parse(sessionStorage.getItem('steps-completed') || '[]');
-					this.stepCompleted = Array.isArray(localStepArray) ? localStepArray : [];
-					this.stepCompletedObj = this.mergeWithCompletedSteps(this.stepsObj, this.stepCompleted);
-					console.group('[affiliate-steps] session fallback');
-					console.log('step_completed from session', this.stepCompleted);
-					console.log('step_completed_obj from session raw', this.stepsObj);
-					console.log('step_completed_obj from session merged', this.stepCompletedObj);
-					console.groupEnd();
+					try {
+						this.stepsObj = JSON.parse(stepsObjStr);
+						const localStepArray = JSON.parse(sessionStorage.getItem('steps-completed') || '[]');
+						this.stepCompleted = Array.isArray(localStepArray) ? localStepArray : [];
+						this.stepCompletedObj = this.mergeWithCompletedSteps(this.stepsObj, this.stepCompleted);
+						this.stepsLoadFailed = false;
+						console.group('[affiliate-steps] session fallback');
+						console.log('step_completed from session', this.stepCompleted);
+						console.log('step_completed_obj from session raw', this.stepsObj);
+						console.log('step_completed_obj from session merged', this.stepCompletedObj);
+						console.groupEnd();
+					} catch (error) {
+						console.error('[affiliate-steps] invalid step data in session', error);
+						this.stepsLoadFailed = true;
+					}
 				}
 				this.stepCompletionTick();
 			}
@@ -118,18 +129,16 @@ export class AffiliateStepsTemplateComponent implements OnInit {
 
 	private mergeWithCompletedSteps(stepCompletedObj: any, stepCompleted: any[] = []) {
 		const mergedSteps = { ...(stepCompletedObj || {}) };
-		stepCompleted.forEach((step: string) => {
-			if (step !== null && step !== undefined && step !== '') {
+		// keep 'error' from the API (unverified emails in step1, stripe issues in step2)
+		const markCompleted = (step: string) => {
+			if (step !== null && step !== undefined && step !== '' && !this.isErrorState(mergedSteps[`step${step}`])) {
 				mergedSteps[`step${step}`] = 'completed';
 			}
-		});
+		};
+		stepCompleted.forEach(markCompleted);
 		const localStepValue = sessionStorage.getItem('stepCompleted');
 		const localSteps = localStepValue ? localStepValue.split(',') : [];
-		localSteps.forEach((step: string) => {
-			if (step !== null && step !== undefined && step !== '') {
-				mergedSteps[`step${step}`] = 'completed';
-			}
-		});
+		localSteps.forEach(markCompleted);
 		console.log('[affiliate-steps] mergeWithCompletedSteps', {
 			stepCompletedObj,
 			stepCompleted,
@@ -137,6 +146,19 @@ export class AffiliateStepsTemplateComponent implements OnInit {
 			mergedSteps
 		});
 		return mergedSteps;
+	}
+
+	private isErrorState(state: any): boolean {
+		return !!state && !['completed', 'done', 'uncompleted'].includes(state);
+	}
+
+	private getStepState(stepKey: string): string {
+		const rawStepState = this.stepCompletedObj?.[stepKey] || 'uncompleted';
+		// anything other than a known good/pending state ('error', 'failed', 'rejected', ...) shows red
+		if (this.isErrorState(rawStepState)) {
+			return 'error';
+		}
+		return this.isStepCompleted(stepKey) ? 'completed' : 'uncompleted';
 	}
 
 	private isStepCompleted(stepKey: string): boolean {
@@ -156,9 +178,7 @@ export class AffiliateStepsTemplateComponent implements OnInit {
 	stepCompletionTick() {
 		const steps = ['step0', 'step1', 'step2', 'step3', 'step4', 'step5', 'step6'];
 		steps.forEach(step => {
-			const rawStepState = this.stepCompletedObj?.[step] || 'uncompleted';
-			const normalizedState = rawStepState === 'done' ? 'completed' : rawStepState;
-			const stepState = this.isStepCompleted(step) ? 'completed' : normalizedState;
+			const stepState = this.stepsLoadFailed ? 'error' : this.getStepState(step);
 			this[step] = `md-step ${stepState}${this.currentStep == step ? ' active' : ''}`;
 		});
 		console.group('[affiliate-steps] stepCompletionTick result');
@@ -180,7 +200,12 @@ export class AffiliateStepsTemplateComponent implements OnInit {
 
 	stepClicked(step) {
 		let steps_completed = sessionStorage.getItem('stepCompleted')
-		let steps_completed_obj = JSON.parse(sessionStorage.getItem('step_completed_obj'))
+		let steps_completed_obj = {}
+		try {
+			steps_completed_obj = JSON.parse(sessionStorage.getItem('step_completed_obj')) || {}
+		} catch (error) {
+			console.error('[affiliate-steps] invalid step_completed_obj in session', error)
+		}
 		let first_incomplete_step = Object.keys(steps_completed_obj)[Object.values(steps_completed_obj).indexOf('uncompleted')]
 		let first_step_error = Object.keys(steps_completed_obj)[Object.values(steps_completed_obj).indexOf('error')] || first_incomplete_step
 		console.log(Object.values(steps_completed_obj).indexOf('error'), Object.values(steps_completed_obj).indexOf('uncompleted'))

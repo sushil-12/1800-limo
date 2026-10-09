@@ -2474,11 +2474,13 @@ export class BookingComponent implements OnInit, OnDestroy {
 		// 3. Match airport in airportsData by name/code
 		if (airports.length) {
 			const normSearch = rawText.toLowerCase();
+			// Codes must match as whole words - a substring check turns "birmingham" into HAM (Hamburg).
+			const searchWords = new Set(normSearch.split(/[^a-z0-9]+/).filter(Boolean));
 			const matchedByName = airports.find(item => {
 				const code = String(item.code || '').toLowerCase();
 				const name = String(item.name || '').toLowerCase();
 				const formattedName = String(item.formatted_name || '').toLowerCase();
-				return (code && normSearch.includes(code)) || (name && normSearch.includes(name)) || (formattedName && normSearch.includes(formattedName));
+				return (code && searchWords.has(code)) || (name && normSearch.includes(name)) || (formattedName && normSearch.includes(formattedName));
 			});
 			if (matchedByName && matchedByName.code && matchedByName.code.trim().length >= 3) {
 				return matchedByName.code.trim().toUpperCase();
@@ -2679,7 +2681,8 @@ export class BookingComponent implements OnInit, OnDestroy {
 			this.searchGooglePredictions(searchText, sessionToken)
 		]);
 
-		const airportPredictions = airportOptions
+		// Airports from the raw-text query are kept too, in case the base query was rewritten to the wrong code.
+		const airportPredictions = [...airportOptions, ...plainOptions]
 			.filter((option) => this.isAirportPrediction(option) && this.getCustomAirportPredictionType(option) === 'airport')
 			.map((option) => ({ ...option, isTerminal: false }));
 

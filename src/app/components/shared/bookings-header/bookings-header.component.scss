@@ -130,11 +130,11 @@
 	.bh-search {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: 8px;
 		margin: 0;
-		padding: 8px 8px 8px 20px;
+		padding:7px 4px 6px 14px;
 		border: 1px solid var(--bh-line);
-		border-radius: 20px;
+		border-radius: 14px;
 		background: var(--bh-surface);
 		box-shadow: 0 6px 18px rgba(31, 56, 104, .06);
 	}
@@ -147,17 +147,18 @@
 	.bh-search-input {
 		flex: 1 1 auto;
 		min-width: 0;
-		height: 48px;
-		padding: 0 6px;
+		height: 40px;
+		padding: 0 4px;
 		border: 0;
 		outline: 0;
 		background: transparent;
 		color: var(--bh-ink);
-		font-size: 17px;
+		font-size: 18px;
 		box-shadow: none;
 
 		&::placeholder {
 			color: #7a8399;
+			font-size: 18px;
 		}
 	}
 
@@ -165,11 +166,11 @@
 	.bh-search-btn {
 		display: inline-flex;
 		align-items: center;
-		gap: 8px;
-		height: 50px;
-		padding: 0 20px;
-		border-radius: 14px;
-		font-size: 16px;
+		gap: 6px;
+		height: 38px;
+		padding: 0 14px;
+		border-radius: 10px;
+		font-size: 15px;
 		font-weight: 600;
 		white-space: nowrap;
 		cursor: pointer;
@@ -185,9 +186,9 @@
 		&::before {
 			content: '';
 			position: absolute;
-			left: -12px;
-			top: 10px;
-			bottom: 10px;
+			left: -8px;
+			top: 8px;
+			bottom: 8px;
 			width: 1px;
 			background: var(--bh-line);
 		}
@@ -428,7 +429,7 @@
 
 		.bh-search {
 			flex-wrap: wrap;
-			padding: 8px 8px 8px 14px;
+			padding: 4px 4px 4px 12px;
 		}
 
 		.bh-search-input {
@@ -439,10 +440,10 @@
 		.bh-search-btn {
 			flex: 1 1 0;
 			justify-content: center;
-			height: 44px;
-			padding: 0 14px;
-			border-radius: 12px;
-			font-size: 15px;
+			height: 38px;
+			padding: 0 12px;
+			border-radius: 10px;
+			font-size: 14px;
 		}
 
 		.bh-filters-btn {
@@ -527,13 +528,13 @@
 
 		.bh-search {
 			gap: 8px;
-			padding: 6px 6px 6px 14px;
-			border-radius: 16px;
+			padding: 4px 4px 4px 12px;
+			border-radius: 12px;
 		}
 
 		.bh-search-input {
-			height: 44px;
-			font-size: 15px !important;
+			height: 40px;
+			font-size: 16px !important;
 		}
 
 		// Filters and dates stack one per row, each spanning the full width.
@@ -600,7 +601,7 @@
 		}
 
 		.bh-search-input::placeholder {
-			font-size: 15px;
+			font-size: 16px;
 		}
 	}
 }

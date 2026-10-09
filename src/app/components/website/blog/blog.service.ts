@@ -4,8 +4,8 @@ import { Observable, of, forkJoin, throwError } from 'rxjs';
 import { map, catchError, switchMap, shareReplay } from 'rxjs/operators';
 import { BlogPost, BlogComment } from './blog.data';
 
-const WP_API = 'https://blog.1800limo.com/wp-json/wp/v2';
-const WP_CUSTOM_API = 'https://blog.1800limo.com/wp-json/custom/v1';
+const WP_API = 'http://10.20.10.132/blog1800limo/wp-json/wp/v2';
+const WP_CUSTOM_API = 'http://10.20.10.132/blog1800limo/wp-json/custom/v1';
 
 export interface WpStyleHandle {
     handle: string;

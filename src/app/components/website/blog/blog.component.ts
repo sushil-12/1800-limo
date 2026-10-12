@@ -131,7 +131,7 @@ export class BlogComponent implements OnInit {
     tmp.innerHTML = html;
     const text = (tmp.textContent || tmp.innerText || '').trim();
     const idx = text.toLowerCase().indexOf(query);
-    if (idx === -1) return text.substring(0, 100) + '...';
+    if (idx === -1) return text.substring(0, 30) + '...';
     const start = Math.max(0, idx - 40);
     const end = Math.min(text.length, idx + query.length + 60);
     return (start > 0 ? '...' : '') + text.substring(start, end) + (end < text.length ? '...' : '');

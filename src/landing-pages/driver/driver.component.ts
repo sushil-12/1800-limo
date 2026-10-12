@@ -202,7 +202,7 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     },
     {
       title: 'Transparent Pay, Keep Your Tips',
-      description: 'You set your rate and keep 100% of your tips. Our 25% booking fee is added on top of your rate and paid by the client, and taxes, tolls, and expenses are paid to you by the client too.',
+      description: 'You set your rate and Keep 100% of your all-inclusive rate and tip, and repeat clients. Our 25% booking fee is added on top of your rate and paid by the client, and taxes, tolls, and expenses are paid to you by the client too.',
       image: 'assets/images/driver-landing/money.png',
       imageAlt: 'Money bag with stacks of cash and gold coins'
     },

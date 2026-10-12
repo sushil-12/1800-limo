@@ -4,8 +4,8 @@ import { Observable, of, forkJoin, throwError } from 'rxjs';
 import { map, catchError, switchMap, shareReplay } from 'rxjs/operators';
 import { BlogPost, BlogComment } from './blog.data';
 
-const WP_API = 'http://10.20.10.132/blog1800limo/wp-json/wp/v2';
-const WP_CUSTOM_API = 'http://10.20.10.132/blog1800limo/wp-json/custom/v1';
+const WP_API = 'https://blog.1800limo.com/wp-json/wp/v2';
+const WP_CUSTOM_API = 'https://blog.1800limo.com/wp-json/custom/v1';
 
 export interface WpStyleHandle {
     handle: string;
@@ -95,7 +95,7 @@ export class BlogService {
    getPosts(): Observable<BlogPost[]> {
       if (!this.allPostsCache$) {
          this.allPostsCache$ = this.http
-            .get<WpPost[]>(`${WP_API}/posts?per_page=100`)
+            .get<WpPost[]>(`${WP_API}/posts?per_page=30`)
             .pipe(
                switchMap(posts => this.hydratePosts(posts)),
                shareReplay(1),
@@ -145,7 +145,7 @@ export class BlogService {
       if (!this.categoriesCache$) {
          this.categoriesCache$ = this.http
             .get<Array<{ id: number; name: string; slug: string; count: number }>>(
-               `${WP_API}/categories?per_page=100&hide_empty=true`
+               `${WP_API}/categories?per_page=30&hide_empty=true`
             )
             .pipe(
                map(cats => cats.map(c => ({
@@ -182,22 +182,22 @@ export class BlogService {
 
       const media$ = mediaIds.length
          ? this.http.get<Array<{ id: number; source_url: string }>>(
-              `${WP_API}/media?include=${mediaIds.join(',')}&per_page=100&_fields=id,source_url`
+              `${WP_API}/media?include=${mediaIds.join(',')}&per_page=30&_fields=id,source_url`
            ).pipe(catchError(() => of([])))
          : of([]);
       const authors$ = authorIds.length
          ? this.http.get<Array<{ id: number; name: string; description?: string; avatar_urls?: { [key: string]: string } }>>(
-              `${WP_API}/users?include=${authorIds.join(',')}&per_page=100&_fields=id,name,description,avatar_urls`
+              `${WP_API}/users?include=${authorIds.join(',')}&per_page=30&_fields=id,name,description,avatar_urls`
            ).pipe(catchError(() => of([])))
          : of([]);
       const categories$ = categoryIds.length
          ? this.http.get<Array<{ id: number; name: string }>>(
-              `${WP_API}/categories?include=${categoryIds.join(',')}&per_page=100&_fields=id,name`
+              `${WP_API}/categories?include=${categoryIds.join(',')}&per_page=30&_fields=id,name`
            ).pipe(catchError(() => of([])))
          : of([]);
       const tags$ = tagIds.length
          ? this.http.get<Array<{ id: number; name: string }>>(
-              `${WP_API}/tags?include=${tagIds.join(',')}&per_page=100&_fields=id,name`
+              `${WP_API}/tags?include=${tagIds.join(',')}&per_page=30&_fields=id,name`
            ).pipe(catchError(() => of([])))
          : of([]);
 
@@ -213,7 +213,7 @@ export class BlogService {
 
    getComments(postId: number): Observable<BlogComment[]> {
       return this.http
-         .get<WpComment[]>(`${WP_API}/comments?post=${postId}&per_page=100&order=desc&orderby=date`)
+         .get<WpComment[]>(`${WP_API}/comments?post=${postId}&per_page=30&order=desc&orderby=date`)
          .pipe(
             map(comments => comments.map(c => this.mapComment(c))),
             catchError(() => of([]))

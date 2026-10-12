@@ -1,6 +1,21 @@
 // Not encapsulated (see the component): every rule is scoped under .bh-card,
 // or under a bh-* class for the buttons/fields pages project into the slots.
 
+// Pins the title, tabs, search and filters while the page's bookings table scrolls under it.
+// `top` clears the portal top nav (#sidenavAccordion: sticky, 80px tall in every portal).
+// The card is transparent, so the host takes its section's background to hide the rows, and
+// flow-root keeps the card's bottom margin inside that background.
+// Phones skip this: the header is too tall there to leave room for the table.
+@media screen and (min-width: 768px) {
+	app-bookings-header {
+		position: sticky;
+		top: 80px;
+		z-index: 5;
+		display: flow-root;
+		background-color: inherit;
+	}
+}
+
 .bh-card {
 	--bh-ink: #141a2e;
 	--bh-text: #1d2a4a;
@@ -153,7 +168,7 @@
 		outline: 0;
 		background: transparent;
 		color: var(--bh-ink);
-		font-size: 18px;
+		font-size: 18px !important;
 		box-shadow: none;
 
 		&::placeholder {

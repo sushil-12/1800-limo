@@ -545,19 +545,22 @@ $brand-orange: #f3933d;
 }
 
 // Inline text link. The underline is a background so it never breaks between words.
+// Inline (not flex) so long labels wrap like text on phones: left-aligned, each line
+// underlined (box-decoration-break), and the arrow follows the last word.
 .tw-scope .lp-link {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.4rem;
+	display: inline;
 	margin: 0;
 	padding: 0 0 3px;
 	border: 0;
 	background: linear-gradient($brand-orange, $brand-orange) 0 100% / 100% 2px no-repeat;
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
 	color: #111;
 	font-family: 'Poppins', sans-serif;
 	font-size: inherit;
 	font-weight: 600;
-	line-height: 1.3;
+	line-height: 1.6;
+	text-align: left;
 	text-decoration: none;
 	cursor: pointer;
 	transition: color 0.2s $ease-out;
@@ -583,6 +586,7 @@ $brand-orange: #f3933d;
 
 .tw-scope .lp-link__arrow {
 	display: inline-block;
+	margin-left: 0.4rem;
 	transition: transform 0.2s $ease-out;
 
 	@media (prefers-reduced-motion: reduce) {

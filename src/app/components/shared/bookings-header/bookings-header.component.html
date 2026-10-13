@@ -42,18 +42,28 @@
 		<input #searchBox id="keyword" class="bh-search-input" type="text" autocomplete="off"
 			[attr.aria-label]="searchPlaceholder" [placeholder]="searchPlaceholder" [value]="searchText"
 			(focus)="searchBox.select()" (input)="searchInput.emit(searchBox.value)">
-		<button type="button" class="bh-filters-btn" *ngIf="hasFilters" [class.open]="filtersOpen"
-			[attr.aria-expanded]="filtersOpen" (click)="filtersOpen = !filtersOpen">
+		<button type="button" class="bh-filters-btn" *ngIf="filterOptions?.length" [class.open]="filtersOpen"
+			[class.active]="filterValue != null" [matMenuTriggerFor]="filterMenu" (menuOpened)="filtersOpen = true"
+			(menuClosed)="filtersOpen = false">
 			<svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
 				stroke-width="2" stroke-linejoin="round">
 				<path d="M4 5h16l-6.2 7.4V19l-3.6-1.8v-4.8L4 5Z" />
 			</svg>
-			<span>Filters</span>
+			<span>{{ selectedFilterLabel || 'Filters' }}</span>
 			<svg class="bh-chevron" aria-hidden="true" viewBox="0 0 24 24" width="15" height="15" fill="none"
 				stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
 				<path d="m6 9 6 6 6-6" />
 			</svg>
 		</button>
+		<mat-menu #filterMenu="matMenu" xPosition="before" class="bh-filter-menu">
+			<button mat-menu-item type="button" [class.selected]="filterValue == null" (click)="filterChange.emit(null)">
+				{{ filterAllLabel }}
+			</button>
+			<button mat-menu-item type="button" *ngFor="let option of filterOptions"
+				[class.selected]="filterValue == option.value" (click)="filterChange.emit(option.value)">
+				{{ option.label }}
+			</button>
+		</mat-menu>
 		<button type="submit" class="bh-search-btn">
 			<svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
 				stroke-width="2.2" stroke-linecap="round">
@@ -63,10 +73,6 @@
 			<span>Search</span>
 		</button>
 	</form>
-
-	<div class="bh-filters-panel" *ngIf="hasFilters" [hidden]="!filtersOpen">
-		<ng-content select="[bhFilters]"></ng-content>
-	</div>
 
 	<ng-content select="[bhCustomRange]"></ng-content>
 

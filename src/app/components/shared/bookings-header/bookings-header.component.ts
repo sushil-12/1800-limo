@@ -1,5 +1,10 @@
 import { Component, EventEmitter, Input, Output, ViewEncapsulation } from '@angular/core';
 
+export interface BookingFilterOption {
+	label: string;
+	value: any;
+}
+
 export interface BookingTabCounts {
 	upcoming?: number | null;
 	past?: number | null;
@@ -10,9 +15,11 @@ export interface BookingTabCounts {
  * travel agent): title, search bar, Upcoming / Past / Custom tabs and, for the
  * driver side, the "needs your response" banner.
  *
- * Slots: [bhActions] role buttons beside the title, [bhFilters] the Filters
- * panel (set `hasFilters`), [bhToolbar] buttons beside the tabs, and
- * [bhCustomRange] the date pickers shown under the Custom tab.
+ * Filters: pass `filterOptions` and the Filters button opens them as a
+ * dropdown; picking one emits `filterChange` (null for "All").
+ *
+ * Slots: [bhActions] role buttons beside the title, [bhToolbar] buttons beside
+ * the tabs, and [bhCustomRange] the date pickers shown under the Custom tab.
  */
 @Component({
 	selector: 'app-bookings-header',
@@ -30,7 +37,9 @@ export class BookingsHeaderComponent {
 	@Input() tabCounts: BookingTabCounts | null = null;
 	@Input() needsActionCount: number = 0;
 	@Input() showNeedsAction: boolean = false;
-	@Input() hasFilters: boolean = false;
+	@Input() filterOptions: BookingFilterOption[] | null = null;
+	@Input() filterValue: any = null;
+	@Input() filterAllLabel: string = 'All Statuses';
 
 	/** Every keystroke; the page debounces it. */
 	@Output() searchInput = new EventEmitter<string>();
@@ -38,6 +47,7 @@ export class BookingsHeaderComponent {
 	@Output() searchSubmit = new EventEmitter<string>();
 	@Output() tabChange = new EventEmitter<string>();
 	@Output() needsActionToggle = new EventEmitter<void>();
+	@Output() filterChange = new EventEmitter<any>();
 
 	filtersOpen: boolean = false;
 
@@ -46,6 +56,12 @@ export class BookingsHeaderComponent {
 		{ key: 'past', label: 'Past' },
 		{ key: 'custom', label: 'Custom' },
 	];
+
+	/** Label of the chosen filter, shown on the button in place of "Filters". */
+	get selectedFilterLabel(): string | null {
+		if (this.filterValue == null) return null;
+		return this.filterOptions?.find(option => option.value == this.filterValue)?.label ?? null;
+	}
 
 	countFor(key: string): number | null {
 		const count = this.tabCounts?.[key];

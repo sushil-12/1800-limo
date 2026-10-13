@@ -35,7 +35,6 @@
 
 	position: relative;
 	overflow: hidden;
-	margin-bottom: 18px;
 	padding: 0px 23px 18px;
 	font-family: inherit;
 	color: var(--bh-text);
@@ -215,6 +214,11 @@
 		&.open .bh-chevron {
 			transform: rotate(180deg);
 		}
+
+		&.active {
+			border-color: var(--bh-blue);
+			color: var(--bh-blue);
+		}
 	}
 
 	.bh-search-btn {
@@ -225,17 +229,6 @@
 
 		&:hover {
 			filter: brightness(1.05);
-		}
-	}
-
-	.bh-filters-panel {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 12px;
-		margin-top: 16px;
-
-		&[hidden] {
-			display: none;
 		}
 	}
 
@@ -553,8 +546,7 @@
 		}
 
 		// Filters and dates stack one per row, each spanning the full width.
-		.bh-range,
-		.bh-filters-panel {
+		.bh-range {
 			gap: 0 12px;
 
 			.mat-mdc-form-field {
@@ -675,5 +667,23 @@
 
 	&:hover {
 		border-color: #c9d4ea;
+	}
+}
+
+// The Filters dropdown renders in the CDK overlay, outside .bh-card.
+.bh-filter-menu {
+	min-width: 200px !important;
+	max-height: 360px !important;
+	border-radius: 12px !important;
+
+	.mat-mdc-menu-item {
+		min-height: 40px;
+		font-size: 15px;
+
+		&.selected {
+			font-weight: 600;
+			color: #2f7cf6;
+			background: rgba(47, 124, 246, .08);
+		}
 	}
 }

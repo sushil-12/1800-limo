@@ -24,6 +24,7 @@ import { BsDatepickerConfig } from 'ngx-bootstrap/datepicker'; // Import for con
 import { MapUtils } from '../../../utils/map-utils';
 import { ToastrService } from "ngx-toastr";
 import Quill from "quill";
+import { BookingFilterOption } from "../../shared/bookings-header/bookings-header.component";
 
 
 @Component({
@@ -83,6 +84,7 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 	reciptentName: any;
 	notification_msg: any;
 	status_list: any = [];
+	statusFilterOptions: BookingFilterOption[] = [];
 	selectedStatus: any = null;
 	bookings_Original: any = [];
 	audit_Trail: any = [];
@@ -212,6 +214,7 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 			)
 			.subscribe(({ data }: any) => {
 				this.status_list = data;
+				this.statusFilterOptions = (data || []).map((item: any) => ({ label: item.status, value: item.value }));
 			});
 
 		this.selectedStatus = localStorage.getItem("DBS_Status") ? localStorage.getItem("DBS_Status") : null;

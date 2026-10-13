@@ -4,21 +4,13 @@
 	<!-- Main page content-->
 	<section class="adminbox_shadow user_information" id="daily_bookings_table">
 		<app-bookings-header class="no-print" title="Bookings" [searchText]="searchText" [listTab]="listTab"
-			[tabCounts]="tabCounts" [hasFilters]="true" (searchInput)="searchInBookings($event)"
+			[tabCounts]="tabCounts" [filterOptions]="statusFilterOptions" [filterValue]="selectedStatus"
+			(filterChange)="applyStatusFilter($event)" (searchInput)="searchInBookings($event)"
 			(searchSubmit)="submitSearch($event)" (tabChange)="selectTab($event)">
 			<button bhActions type="button" class="bh-cta bh-cta--plain" data-toggle="modal" data-target="#cancelModal"
 				*ngIf="(currentUser?.created_by_role == 'subscriber' && currentUser?.roleName == 'admin') && !isCancelled">
 				Cancel Subscription
 			</button>
-			<mat-form-field bhFilters appearance="outline" class="m-0">
-				<mat-label>Filter by Status</mat-label>
-				<mat-select [value]="selectedStatus" (selectionChange)="applyStatusFilter($event.value)">
-					<mat-option [value]="null">All Statuses</mat-option>
-					<mat-option *ngFor="let item of status_list" [value]="item.value">
-						{{item.status}}
-					</mat-option>
-				</mat-select>
-			</mat-form-field>
 			<ng-container bhToolbar>
 				<button type="button" class="bh-ghost-btn" (click)="reset()">Reset</button>
 				<button type="button" class="bh-ghost-btn" (click)="printDailyBookings()">Print</button>

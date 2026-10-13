@@ -29,6 +29,7 @@ import { DatePickerComponent } from './date-picker/date-picker.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatMenuModule } from '@angular/material/menu';
 import { EmbeddedQuoteComponent } from './embedded-quote/embedded-quote.component';
 import { BookingsHeaderComponent } from './bookings-header/bookings-header.component';
 
@@ -63,7 +64,8 @@ export const DATE_FORMATS = {
 		MatCheckboxModule,
 		MatSlideToggleModule,
 		FormsModule,
-		MatFormFieldModule
+		MatFormFieldModule,
+		MatMenuModule
 
 	],
 	exports: [

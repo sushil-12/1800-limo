@@ -87,6 +87,7 @@ import { FarmOutBookingsComponent } from './components/subscription/farm-out-boo
 import { TutorialsComponent } from './components/website/tutorials/tutorials.component';
 import { LiveRideTrackingComponent } from './components/public/live-ride-tracking/live-ride-tracking.component';
 import { RideChatComponent } from './components/public/live-ride-tracking/ride-chat/ride-chat.component';
+import { AiAssistantComponent } from './components/ai-assistant/ai-assistant.component';
 import { StatesTestComponent } from './components/public/states-test/states-test.component';
 import { AppLinkFallbackComponent } from './components/public/app-link-fallback/app-link-fallback.component';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
@@ -155,6 +156,7 @@ import { NotificationBellComponent } from './components/admin/admin-notification
 		TutorialsComponent,
 		LiveRideTrackingComponent,
 		RideChatComponent,
+		AiAssistantComponent,
 		StatesTestComponent,
 		AppLinkFallbackComponent,
 		PrivacyPolicyComponent,

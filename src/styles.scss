@@ -977,7 +977,9 @@ gmp-basic-place-autocomplete {
 		overflow-y: auto;
 	}
 
+	// No shrinking: overflow:hidden zeroes the flex min-height, so many rows would get squashed instead of scrolling.
 	.at-change {
+		flex-shrink: 0;
 		border: 1px solid #e5e7eb;
 		border-radius: 8px;
 		overflow: hidden;

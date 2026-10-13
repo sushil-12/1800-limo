@@ -4627,10 +4627,10 @@
 					</div>
 				</div>
 			</div>
-			<div class="modal-footer justify-content-center border-0 pt-0">
-				<button type="button" class="bk-btn bk-btn--primary px-4" [disabled]="!modalSelectedTerminalOption"
-					(click)="onTerminalModalProceed()">
-					Proceed
+			<div class="modal-footer justify-content-center border-0 pt-0"
+				*ngIf="!isModalTerminalLoading && (!modalTerminalOptions || !modalTerminalOptions.length)">
+				<button type="button" class="bk-btn bk-btn--primary px-4" (click)="onTerminalModalProceed()">
+					OK
 				</button>
 			</div>
 		</div>

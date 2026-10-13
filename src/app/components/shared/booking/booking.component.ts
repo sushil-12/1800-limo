@@ -2108,6 +2108,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 
 	selectModalTerminalOption(option: any): void {
 		this.modalSelectedTerminalOption = option;
+		this.onTerminalModalProceed();
 	}
 
 	/** Short chip label ("Terminal 5") instead of the full place text ("ORD Terminal 5,

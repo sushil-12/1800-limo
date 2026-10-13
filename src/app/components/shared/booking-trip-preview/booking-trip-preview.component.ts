@@ -1160,6 +1160,11 @@ export class BookingTripPreviewComponent implements OnInit {
     }
   }
 
+  /** Driver email/phone stay hidden from non-admins until the booking is accepted. */
+  canShowDriverContact(status: any): boolean {
+    return this.userRole === 'admin' || !['pending', 'rejected', 'rejection'].includes(status);
+  }
+
   textFormatter(text: any): string {
     try {
       if (text === null || text === undefined) {

@@ -245,14 +245,14 @@
 							<span class="rcpt-row-value">{{ textFormatter(bookingPreview?.driver_name) | titlecase
 								}}</span>
 						</div>
-						<div class="rcpt-row" *ngIf="bookingPreview?.driver_email">
+						<div class="rcpt-row" *ngIf="bookingPreview?.driver_email && canShowDriverContact(bookingPreview?.booking_status)">
 							<span class="rcpt-row-label">Email</span>
 							<a class="rcpt-row-value rcpt-link" href="mailto:{{bookingPreview?.driver_email}}">
 								<i class="bi bi-envelope"></i>
 								{{ textFormatter(bookingPreview?.driver_email) }}
 							</a>
 						</div>
-						<div class="rcpt-row" *ngIf="bookingPreview?.driver_cell">
+						<div class="rcpt-row" *ngIf="bookingPreview?.driver_cell && canShowDriverContact(bookingPreview?.booking_status)">
 							<span class="rcpt-row-label">Phone</span>
 							<a class="rcpt-row-value rcpt-link"
 								href="tel:{{bookingPreview?.driver_cell_isd}}{{bookingPreview?.driver_cell}}">

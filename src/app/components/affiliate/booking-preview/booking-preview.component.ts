@@ -772,6 +772,7 @@ export class BookingPreviewComponent implements OnInit {
     const isLoose = affiliateType == 'loose_affiliate';
 
     return {
+      booking_status: src.return_booking_status || src.booking_status,
       transfer_type: String(src.return_transfer_type || ''),
       pickup_date: src.return_pickup_date,
       pickup_time: src.return_pickup_time,
@@ -1206,6 +1207,11 @@ export class BookingPreviewComponent implements OnInit {
     } catch (err) {
       console.error('[BookingPreview] showLocationPointOnMapByAddress: Error opening map', err);
     }
+  }
+
+  /** Driver email/phone stay hidden from non-admins until the booking is accepted. */
+  canShowDriverContact(status: any): boolean {
+    return this.userRole === 'admin' || !['pending', 'rejected', 'rejection'].includes(status);
   }
 
   textFormatter(text: any): string {

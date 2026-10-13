@@ -1807,13 +1807,13 @@
 												<span>Driver Name:</span>
 												<strong class="ml-2">{{ driver_info["name"] | titlecase }}</strong>
 											</p>
-											<p class="card-text">
+											<p class="card-text" *ngIf=" canShowDriverContact(bookingResponse?.booking_status)">
 												<span>Driver Phone:</span>
 												<strong class="ml-2">{{ driver_info["phone"] | titlecase }}</strong>
 											</p>
-											<p class="card-text">
+											<p class="card-text" *ngIf="driver_info['gender']">
 												<span>Driver Gender:</span>
-												<strong class="ml-2">{{ driver_info["gender"] | titlecase }}</strong>
+												<strong class="ml-2">{{ driver_info['gender'] | titlecase }}</strong>
 											</p>
 										</div>
 									</div>
@@ -2476,7 +2476,7 @@
 					</div>
 
 					<!-- Affiliate Driver Email (Readonly for regular affiliate) -->
-					<div id="driver-email" class="col-md-6 col-lg-3" *ngIf="Form.affiliate_type.value == 'affiliate'">
+					<div id="driver-email" class="col-md-6 col-lg-3" *ngIf="Form.affiliate_type.value == 'affiliate' && canShowDriverContact(bookingResponse?.booking_status)">
 						<mat-form-field appearance="outline" class="m-0">
 							<mat-label>
 								Email
@@ -2515,7 +2515,7 @@
 					</div>
 
 					<!-- Affiliate Driver Cell (Readonly for regular affiliate) -->
-					<div id="driver-cell" class="col-md-6 col-lg-3" *ngIf="Form.affiliate_type.value == 'affiliate'">
+					<div id="driver-cell" class="col-md-6 col-lg-3" *ngIf="Form.affiliate_type.value == 'affiliate' && canShowDriverContact(bookingResponse?.booking_status)">
 						<mat-form-field appearance="outline" class="mobileField m-0">
 							<mat-label>
 								Phone
@@ -4361,7 +4361,7 @@
 							</div>
 
 							<!-- Affiliate Driver Email (Readonly for regular affiliate) -->
-							<div id="driver-email" class="col-md-6 col-lg-3" *ngIf="Form.return_affiliate_type.value == 'affiliate'">
+							<div id="driver-email" class="col-md-6 col-lg-3" *ngIf="Form.return_affiliate_type.value == 'affiliate' && canShowDriverContact(bookingResponse?.return_booking_status || bookingResponse?.booking_status)">
 								<mat-form-field appearance="outline" class="m-0">
 									<mat-label>
 										Email
@@ -4400,7 +4400,7 @@
 							</div>
 
 							<!-- Affiliate Driver Cell (Readonly for regular affiliate) -->
-							<div id="driver-cell" class="col-md-6 col-lg-3" *ngIf="Form.return_affiliate_type.value == 'affiliate'">
+							<div id="driver-cell" class="col-md-6 col-lg-3" *ngIf="Form.return_affiliate_type.value == 'affiliate' && canShowDriverContact(bookingResponse?.return_booking_status || bookingResponse?.booking_status)">
 								<mat-form-field appearance="outline" class="mobileField m-0">
 									<mat-label>
 										Phone

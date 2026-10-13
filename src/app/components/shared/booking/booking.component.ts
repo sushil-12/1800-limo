@@ -2916,6 +2916,11 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return moment(value, 'HH:mm a').format('h:mm a');
 	}
 
+	/** Driver email/phone stay hidden from non-admins until the booking is accepted. */
+	canShowDriverContact(status: any): boolean {
+		return this.userRole === 'admin' || !['pending', 'rejected', 'rejection'].includes(status);
+	}
+
 	textFormatter(text: string) {
 		try {
 			return text.replace(/[\\\_$]+/g, ' ')

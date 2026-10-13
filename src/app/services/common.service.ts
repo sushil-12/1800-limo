@@ -3,6 +3,7 @@ import { ErrorDialogService } from './error-dialog/errordialog.service';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { SILENT_ERRORS_HEADER } from '../interceptors/http-config.interceptor';
 
 @Injectable({
 	providedIn: 'root'
@@ -78,8 +79,11 @@ export class CommonService {
 	}
 
 	getInvoiceDataWithToken(id: string,userType: string, token: string): Observable<any> {
+		// Silent: the public page handles its own errors, so the interceptor
+		// must not clear the visitor's localStorage on a 401.
 		const headers = new HttpHeaders({
-			'Authorization': `Bearer ${token}`
+			'Authorization': `Bearer ${token}`,
+			[SILENT_ERRORS_HEADER]: '1'
 		});
 		
 		return this.httpClient.get(`${this.serverUrl}${userType}/invoice-summary/${id}`, {

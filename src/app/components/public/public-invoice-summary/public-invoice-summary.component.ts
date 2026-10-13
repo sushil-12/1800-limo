@@ -10,6 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { CommonService } from '../../../services/common.service';
+import { ErrorDialogService } from '../../../services/error-dialog/errordialog.service';
 
 @Component({
 	selector: 'app-public-invoice-summary',
@@ -35,7 +36,8 @@ export class PublicInvoiceSummaryComponent implements OnInit {
 		private router: Router,
 		private adminService: AdminService,
 		private spinner: NgxSpinnerService,
-		private commonService: CommonService
+		private commonService: CommonService,
+		private errorDialogService: ErrorDialogService
 	) { }
 
 	ngOnInit(): void {
@@ -45,8 +47,14 @@ export class PublicInvoiceSummaryComponent implements OnInit {
 			this.userType = params.get('userType');
 			this.token = params.get('token');
 
-			if (!this.bookingId || !this.token) {
-				this.errorMessage = 'Missing bookingId or token.';
+			// Token must come from the URL only, never from localStorage
+			if (!this.token) {
+				this.showUnauthorized();
+				return;
+			}
+
+			if (!this.bookingId) {
+				this.errorMessage = 'Missing bookingId.';
 				this.spinner.hide();
 				return;
 			}
@@ -54,8 +62,12 @@ export class PublicInvoiceSummaryComponent implements OnInit {
 			this.commonService.getInvoiceDataWithToken(this.bookingId,this.userType, this.token)
 				.pipe(
 					catchError(err => {
-						this.errorMessage = err?.error?.message || 'Unable to load invoice. The link may be invalid or expired.';
-						this.spinner.hide();
+						if ([401, 403, 440, 488].includes(err?.status)) {
+							this.showUnauthorized();
+						} else {
+							this.errorMessage = err?.error?.message || 'Unable to load invoice. The link may be invalid or expired.';
+							this.spinner.hide();
+						}
 						return throwError(err);
 					})
 				)
@@ -65,6 +77,14 @@ export class PublicInvoiceSummaryComponent implements OnInit {
 					this.currencySymbol = this.invoiceData?.currency_symbol || '';
 					this.spinner.hide();
 				});
+		});
+	}
+
+	private showUnauthorized(): void {
+		this.errorMessage = 'Unauthorized. The link is invalid or has expired.';
+		this.spinner.hide();
+		this.errorDialogService.openDialog({
+			errors: { error: 'Unauthorized. The link is invalid or has expired.' }
 		});
 	}
 

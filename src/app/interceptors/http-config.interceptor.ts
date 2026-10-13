@@ -37,7 +37,8 @@ export class HttpConfigInterceptor implements HttpInterceptor {
 			request = request.clone({ headers: request.headers.delete(SILENT_ERRORS_HEADER) });
 		}
 
-		if (token) {
+		// Keep an explicitly provided Authorization header (e.g. public token links)
+		if (token && !request.headers.has('Authorization')) {
 			request = request.clone({ headers: request.headers.set('Authorization', 'Bearer ' + token) });
 		}
 

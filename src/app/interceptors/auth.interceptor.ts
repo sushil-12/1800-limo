@@ -22,7 +22,9 @@ export class AuthInterceptor implements HttpInterceptor {
     const accessToken = this.authService.getAccessToken();
     const isLoggedIn = currentUser && accessToken;
     const isApiUrl = request.url.startsWith(this.serverUrl);
-    if (isLoggedIn && isApiUrl) {
+    // Keep an explicitly provided Authorization header (e.g. public token links)
+    const hasAuthHeader = request.headers.has('Authorization');
+    if (isLoggedIn && isApiUrl && !hasAuthHeader) {
       request = request.clone({
         setHeaders: {
           Authorization: `Bearer ${accessToken}`

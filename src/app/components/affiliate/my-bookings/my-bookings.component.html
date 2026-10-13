@@ -195,7 +195,7 @@
 											<span class="text-capitalize"
 												[innerHTML]="highlighText(booking?.driver_name.split(' ')[0] + ' ' + booking?.driver_name.split(' ')[1].slice(0,1))"></span>
 											<br />
-											<span class="font-weight-bolder"
+											<span class="font-weight-bolder" *ngIf="canShowContactInfo(booking?.booking_status)"
 												[innerHTML]="highlighText(booking?.driver_cell_isd + booking?.driver_tel)"></span>
 										</p>
 									</td>

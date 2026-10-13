@@ -1209,9 +1209,10 @@ export class BookingPreviewComponent implements OnInit {
     }
   }
 
-  /** Driver email/phone stay hidden from non-admins until the booking is accepted. */
-  canShowDriverContact(status: any): boolean {
-    return this.userRole === 'admin' || !['pending', 'rejected', 'rejection'].includes(status);
+  /** Driver/affiliate email & phone stay hidden from non-admins until the booking is accepted.
+   *  An unsaved booking has no status yet (undefined), so they stay hidden then too. */
+  canShowContactInfo(status: any): boolean {
+    return this.userRole === 'admin' || (!!status && !['pending', 'rejected', 'rejection'].includes(status));
   }
 
   textFormatter(text: any): string {

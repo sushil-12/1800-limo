@@ -317,6 +317,11 @@ export class MyBookingsComponent implements OnInit {
 		return '0.00';
 	}
 
+	/** Driver/affiliate phone stays hidden until the booking is accepted. */
+	canShowContactInfo(status: any): boolean {
+		return !['pending', 'rejected', 'rejection'].includes(status);
+	}
+
 	highlighText(args: string) {
 		if (!this.searchText) { return args; }
 		if (args) {

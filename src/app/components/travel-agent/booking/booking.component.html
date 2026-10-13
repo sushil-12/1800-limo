@@ -216,9 +216,9 @@
 											<span class="text-capitalize"
 												*ngIf="!booking?.driver_first_name && booking?.loose_aff_driver_name"
 												[innerHTML]="highlighText(booking?.loose_aff_driver_name)"></span><br />
-											<span class="font-weight-bolder" *ngIf="booking?.driver_cell_isd"
+											<span class="font-weight-bolder" *ngIf="booking?.driver_cell_isd && canShowContactInfo(booking?.booking_status)"
 												[innerHTML]="highlighText(booking?.driver_cell_isd + booking?.driver_cell_number)"></span>
-											<span class="font-weight-bolder" *ngIf="!booking?.driver_cell_isd && booking?.loose_affiliate_phone"
+											<span class="font-weight-bolder" *ngIf="!booking?.driver_cell_isd && booking?.loose_affiliate_phone && canShowContactInfo(booking?.booking_status)"
 												[innerHTML]="highlighText(booking?.loose_affiliate_phone_isd + booking?.loose_affiliate_phone)"></span>
 											<span class="font-weight-bolder"
 												*ngIf="!booking?.loose_affiliate_phone && !booking?.driver_cell_isd"

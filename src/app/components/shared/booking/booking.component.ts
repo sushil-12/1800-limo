@@ -2916,9 +2916,19 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return moment(value, 'HH:mm a').format('h:mm a');
 	}
 
-	/** Driver email/phone stay hidden from non-admins until the booking is accepted. */
-	canShowDriverContact(status: any): boolean {
-		return this.userRole === 'admin' || !['pending', 'rejected', 'rejection'].includes(status);
+	/** Driver/affiliate email & phone stay hidden from non-admins until the booking is accepted.
+	 *  An unsaved booking has no status yet (undefined), so they stay hidden then too. */
+	canShowContactInfo(status: any): boolean {
+		return this.userRole === 'admin' || (!!status && !['pending', 'rejected', 'rejection'].includes(status));
+	}
+
+	/** Affiliate names carry the phone in "(...)"; drop it while contact info is hidden. */
+	affiliateDisplayName(name: any, isReturn = false): string {
+		const status = isReturn
+			? (this.bookingResponse?.return_booking_status || this.bookingResponse?.booking_status)
+			: this.bookingResponse?.booking_status;
+		const text = (name ?? '').toString();
+		return this.canShowContactInfo(status) ? text : text.replace(/\s*\([^)]*\)/g, '').trim();
 	}
 
 	textFormatter(text: string) {
@@ -8402,8 +8412,8 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return {
 			reservation_id: isEdit ? (this.booking_id || v.reservation_id) : '',
 			booking_status: isEdit
-				? (this.bookingResponse?.booking_status || 'pending')
-				: (v.driver_name ? 'pending' : 'driver_unassigned'),
+				? this.bookingResponse?.booking_status
+				: (v.driver_name ? undefined : 'driver_unassigned'),
 			payment_status: this.bookingResponse?.payment_status || 'unpaid',
 			reservation_type: this.isFarmoutBooking ? 'farmout' : (this.bookingResponse?.reservation_type || 'booking'),
 			account_type: v.account_type,
@@ -10802,7 +10812,25 @@ export class BookingComponent implements OnInit, OnDestroy {
 			value[field] = this.BookingForm.get(field)?.value ?? value[field];
 		});
 
-		airportCoordinateFields.forEach((field) => {
+		// For an airport leg the airport coordinates are the source of truth. The individual /
+		// travel-agent edit APIs don't return pickup_latitude etc. for airport legs (the
+		// affiliate one does), so mirror them onto the address coordinates the backend reads.
+		const [pickupType, dropoffType] = (this.Form.transfer_type.value || '').split('_to_');
+		const [returnPickupType, returnDropoffType] = (this.Form.return_transfer_type.value || '').split('_to_');
+		const legs = [
+			{ prefix: 'pickup', type: pickupType },
+			{ prefix: 'dropoff', type: dropoffType },
+			{ prefix: 'return_pickup', type: returnPickupType },
+			{ prefix: 'return_dropoff', type: returnDropoffType },
+		];
+		legs.forEach(({ prefix, type }) => {
+			if (type !== 'airport') return;
+			const lat = value[`${prefix}_airport_latitude`];
+			const lng = value[`${prefix}_airport_longitude`];
+			if (lat !== '' && lat != null && lng !== '' && lng != null) {
+				value[`${prefix}_latitude`] = lat;
+				value[`${prefix}_longitude`] = lng;
+			}
 		});
 
 		return value;

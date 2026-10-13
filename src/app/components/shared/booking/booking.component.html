@@ -1807,7 +1807,7 @@
 												<span>Driver Name:</span>
 												<strong class="ml-2">{{ driver_info["name"] | titlecase }}</strong>
 											</p>
-											<p class="card-text" *ngIf=" canShowDriverContact(bookingResponse?.booking_status)">
+											<p class="card-text" *ngIf="canShowContactInfo(bookingResponse?.booking_status)">
 												<span>Driver Phone:</span>
 												<strong class="ml-2">{{ driver_info["phone"] | titlecase }}</strong>
 											</p>
@@ -1828,7 +1828,7 @@
 									<div class="col-sm-12 col-lg-6 col-md-6 player-holder">
 										<div><img class="player-thumb" src="{{vehicleImgUrl}}"></div>
 									</div>
-									<div class="col-sm-12 col-lg-6 col-md-6">
+									<div class="col-sm-12 col-lg-6 col-md-6" style="min-height:260px !important">
 										<div class="card-body">
 											<h5 class="card-title">Vehicle Details</h5>
 											<h6 class="card-subtitle mb-2 text-muted">Vehicle Specs at a Glance!
@@ -1917,10 +1917,11 @@
 							loadingText="Searching affiliates…" notFoundText="No affiliates found"
 							(scrollToEnd)="loadMoreAffiliates(false)"
 							*ngIf="currentUser?.created_by_role != 'subscriber' ">
+							<ng-template ng-label-tmp let-item="item">{{ affiliateDisplayName(item.bindNameAffiliate || item.name, false) }}</ng-template>
 							<ng-template ng-option-tmp let-item="item">
 								<div class="aff-option">
 									<span class="aff-option__text">
-										{{ item.name }}<span class="aff-option__driver" *ngIf="item.driver_name"> / {{ item.driver_name }}</span>
+										{{ affiliateDisplayName(item.name, false) }}<span class="aff-option__driver" *ngIf="item.driver_name"> / {{ item.driver_name }}</span>
 									</span>
 									<span class="aff-option__meta">
 										<span class="aff-badge" [ngClass]="affiliateRankClass(item)"
@@ -2055,10 +2056,11 @@
 							loadingText="Searching affiliates…" notFoundText="No in-progress affiliates found"
 							(scrollToEnd)="loadMoreAffiliates(false)"
 							(change)="handleAffiliateChange($event); choosePendingAffiliate($event)">
+							<ng-template ng-label-tmp let-item="item">{{ affiliateDisplayName(item.bindNameAffiliate || item.name, false) }}</ng-template>
 							<ng-template ng-option-tmp let-item="item">
 								<div class="aff-option">
 									<span class="aff-option__text">
-										{{ item.name }}<span class="aff-option__driver" *ngIf="item.driver_name"> / {{ item.driver_name }}</span>
+										{{ affiliateDisplayName(item.name, false) }}<span class="aff-option__driver" *ngIf="item.driver_name"> / {{ item.driver_name }}</span>
 									</span>
 									<span class="aff-option__meta">
 										<span class="aff-step" [ngClass]="affiliateStepClass(item)"
@@ -2476,7 +2478,7 @@
 					</div>
 
 					<!-- Affiliate Driver Email (Readonly for regular affiliate) -->
-					<div id="driver-email" class="col-md-6 col-lg-3" *ngIf="Form.affiliate_type.value == 'affiliate' && canShowDriverContact(bookingResponse?.booking_status)">
+					<div id="driver-email" class="col-md-6 col-lg-3" *ngIf="Form.affiliate_type.value == 'affiliate' && canShowContactInfo(bookingResponse?.booking_status)">
 						<mat-form-field appearance="outline" class="m-0">
 							<mat-label>
 								Email
@@ -2515,7 +2517,7 @@
 					</div>
 
 					<!-- Affiliate Driver Cell (Readonly for regular affiliate) -->
-					<div id="driver-cell" class="col-md-6 col-lg-3" *ngIf="Form.affiliate_type.value == 'affiliate' && canShowDriverContact(bookingResponse?.booking_status)">
+					<div id="driver-cell" class="col-md-6 col-lg-3" *ngIf="Form.affiliate_type.value == 'affiliate' && canShowContactInfo(bookingResponse?.booking_status)">
 						<mat-form-field appearance="outline" class="mobileField m-0">
 							<mat-label>
 								Phone
@@ -3790,10 +3792,11 @@
 							loadingText="Searching affiliates…" notFoundText="No affiliates found"
 							(scrollToEnd)="loadMoreAffiliates(true)"
 							*ngIf="currentUser?.created_by_role != 'subscriber' ">
+							<ng-template ng-label-tmp let-item="item">{{ affiliateDisplayName(item.bindNameAffiliate || item.name, true) }}</ng-template>
 							<ng-template ng-option-tmp let-item="item">
 								<div class="aff-option">
 									<span class="aff-option__text">
-										{{ item.name }}<span class="aff-option__driver" *ngIf="item.driver_name"> / {{ item.driver_name }}</span>
+										{{ affiliateDisplayName(item.name, true) }}<span class="aff-option__driver" *ngIf="item.driver_name"> / {{ item.driver_name }}</span>
 									</span>
 									<span class="aff-option__meta">
 										<span class="aff-badge" [ngClass]="affiliateRankClass(item)"
@@ -3934,10 +3937,11 @@
 							loadingText="Searching affiliates…" notFoundText="No in-progress affiliates found"
 							(scrollToEnd)="loadMoreAffiliates(true)"
 							(change)="handleReturnAffiliateChange($event); chooseReturnPendingAffiliate($event)">
+							<ng-template ng-label-tmp let-item="item">{{ affiliateDisplayName(item.bindNameAffiliate || item.name, true) }}</ng-template>
 							<ng-template ng-option-tmp let-item="item">
 								<div class="aff-option">
 									<span class="aff-option__text">
-										{{ item.name }}<span class="aff-option__driver" *ngIf="item.driver_name"> / {{ item.driver_name }}</span>
+										{{ affiliateDisplayName(item.name, true) }}<span class="aff-option__driver" *ngIf="item.driver_name"> / {{ item.driver_name }}</span>
 									</span>
 									<span class="aff-option__meta">
 										<span class="aff-step" [ngClass]="affiliateStepClass(item)"
@@ -4361,7 +4365,7 @@
 							</div>
 
 							<!-- Affiliate Driver Email (Readonly for regular affiliate) -->
-							<div id="driver-email" class="col-md-6 col-lg-3" *ngIf="Form.return_affiliate_type.value == 'affiliate' && canShowDriverContact(bookingResponse?.return_booking_status || bookingResponse?.booking_status)">
+							<div id="driver-email" class="col-md-6 col-lg-3" *ngIf="Form.return_affiliate_type.value == 'affiliate' && canShowContactInfo(bookingResponse?.return_booking_status || bookingResponse?.booking_status)">
 								<mat-form-field appearance="outline" class="m-0">
 									<mat-label>
 										Email
@@ -4400,7 +4404,7 @@
 							</div>
 
 							<!-- Affiliate Driver Cell (Readonly for regular affiliate) -->
-							<div id="driver-cell" class="col-md-6 col-lg-3" *ngIf="Form.return_affiliate_type.value == 'affiliate' && canShowDriverContact(bookingResponse?.return_booking_status || bookingResponse?.booking_status)">
+							<div id="driver-cell" class="col-md-6 col-lg-3" *ngIf="Form.return_affiliate_type.value == 'affiliate' && canShowContactInfo(bookingResponse?.return_booking_status || bookingResponse?.booking_status)">
 								<mat-form-field appearance="outline" class="mobileField m-0">
 									<mat-label>
 										Phone

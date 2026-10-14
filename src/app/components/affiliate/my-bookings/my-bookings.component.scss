@@ -855,3 +855,76 @@ button.view-button.dropdown-toggle::after {
 		background-color: #f3e6db;
 	}
 }
+
+// The second Reset sits under the search field and only shows on phones.
+:host ::ng-deep .mb-reset-row {
+	display: none;
+}
+
+// Dark Reset at every screen size.
+:host ::ng-deep .bh-ghost-btn.mb-reset-desktop,
+:host ::ng-deep .bh-ghost-btn.mb-reset-btn {
+	border-color: #141a2e;
+	background: #141a2e;
+	color: #fff !important;
+
+	&:hover {
+		border-color: #263049;
+		background: #263049;
+	}
+}
+
+// Phones: Buy Chauffeur Select on the left (a bit smaller), a dark Reset under
+// the search field, and each tab's label and count on one row.
+@media (max-width: 767.98px) {
+	:host ::ng-deep .bh-card {
+		.mb-reset-desktop {
+			display: none;
+		}
+
+		.mb-reset-row {
+			display: flex;
+			justify-content: flex-end;
+			margin-top: 12px;
+		}
+
+		// Size the tabs by their content: with equal columns "Upcoming" + its
+		// count overflow the pill on 375–393px phones (iPhone SE / 16).
+		.bh-tabs {
+			grid-template-columns: repeat(3, auto);
+			gap: 4px;
+		}
+
+		.bh-tab {
+			flex-direction: row;
+			gap: 5px;
+			padding: 7px 8px;
+			white-space: nowrap;
+		}
+
+		.bh-cta {
+			gap: 8px;
+			padding: 3px 14px 3px 3px;
+			font-size: 15px;
+
+			.bh-cta-plus {
+				width: 32px;
+				height: 32px;
+				font-size: 20px;
+			}
+		}
+	}
+}
+
+@media (max-width: 479.98px) {
+	:host ::ng-deep .bh-card {
+		.bh-tab {
+			font-size: 13px;
+		}
+
+		.bh-count {
+			padding: 1px 5px;
+			font-size: 12px;
+		}
+	}
+}

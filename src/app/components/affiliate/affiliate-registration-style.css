@@ -87,7 +87,6 @@
 
 
 body, body.mat-typography{
-  font-family:'Inter','Poppins',-apple-system,BlinkMacSystemFont,sans-serif !important;
   background:var(--page-bg) !important;
 }
 .allinner_wrapper, .affilate-wrapper.admin-wrapper{
@@ -159,7 +158,6 @@ body, body.mat-typography{
 /* ---- Page header (step number + title) ---- */
 .HeadingH1{
   display:block !important;
-  font-family:'Poppins','Inter',sans-serif !important;
   font-weight:700 !important;
   font-size:1.55rem !important;
   color:var(--ink-900) !important;
@@ -181,7 +179,6 @@ body, body.mat-typography{
   padding:0 !important;
   margin:0 !important;
   color:var(--ink-900) !important;
-  font-family:'Poppins','Inter',sans-serif !important;
   font-weight:700 !important;
   font-size:1.55rem !important;
   white-space:normal !important;
@@ -225,7 +222,6 @@ body, body.mat-typography{
   text-transform:uppercase;
 }
 .step-section__title{
-  font-family:'Poppins','Inter',sans-serif !important;
   font-weight:700 !important;
   font-size:1.6rem !important;
   color:var(--ink-900) !important;

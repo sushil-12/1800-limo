@@ -730,7 +730,7 @@
 				<button class="custom-filled-button orange-button" data-toggle="modal" data-target="#previewCopyData"
 					(click)="closePreview()">Show Content</button>
 			</div>
-			<div class="modal-body" style="font-family: 'PT Serif', serif;">
+			<div class="modal-body">
 				<div class="container text-lg" *ngIf="bookingPreview">
 
 					<h4 class="font-weight-bolder m-0 mt-1">
@@ -1854,7 +1854,7 @@
 		<div class="modal-content">
 			<div class="modal-body">
 				<pre
-					style="white-space: pre-wrap;font-family: 'PT Serif', serif;font-size: 18px;">{{ previewCopyData }}</pre>
+					style="white-space: pre-wrap;font-size: 18px;">{{ previewCopyData }}</pre>
 			</div>
 			<div class="modal-footer justify-content-end">
 				<button type="button" class="close x-circle-btn" data-dismiss="modal" aria-label="Close">

@@ -14,9 +14,6 @@ module.exports = {
 	},
 	theme: {
 		extend: {
-			fontFamily: {
-				poppins: ['Poppins', 'sans-serif']
-			},
 			colors: {
 				brand: {
 					orange: '#F3933D'

@@ -5,7 +5,6 @@
 .adminbox_shadow.user_information,
 .adminbox_shadow.user_information .mat-mdc-form-field,
 .mat-calendar {
-	font-family: 'PT Serif', serif !important;
 }
 
 :host ::ng-deep .mat-mdc-checkbox-checked.mat-accent .mat-checkbox-ripple .mat-ripple-element {
@@ -243,7 +242,6 @@ a.dropdown-item {
 	padding: 0.5rem 1.4rem !important;
 	font-size: 18px;
 	font-weight: 500 !important;
-	font-family: "Roboto", sans-serif !important;
 }
 
 

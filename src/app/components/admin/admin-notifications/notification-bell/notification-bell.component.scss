@@ -1,6 +1,5 @@
 :host {
 	display: inline-block;
-	font-family: 'Roboto', system-ui, -apple-system, sans-serif;
 	--nb-accent: var(--orange, #f47a20);
 	--nb-text: #1f2328;
 	--nb-muted: #6b7280;
@@ -19,7 +18,6 @@
 	user-select: none;
 	-webkit-tap-highlight-color: transparent;
 	box-shadow: none;
-	font-family: inherit;
 }
 
 // ---- Trigger ----

@@ -253,7 +253,7 @@
               <ng-template #sp_pikair>
                 <div class="vd-detail-cell">
                   <span class="vd-detail-cell__lbl">Pickup Airport</span>
-                  <span class="vd-detail-cell__val">{{ quotebot_form.other_details.pickup_airport_name }}</span>
+                  <span class="vd-detail-cell__val">{{ quotebot_form.pickup_airport_name || quotebot_form.other_details?.pickup_airport_name }}</span>
                 </div>
               </ng-template>
               <ng-template #sp_pikadd>
@@ -278,7 +278,7 @@
                 <ng-template #sp_dropair>
                   <div class="vd-detail-cell">
                     <span class="vd-detail-cell__lbl">Dropoff Airport</span>
-                    <span class="vd-detail-cell__val">{{ quotebot_form.other_details.dropoff_airport_name }}</span>
+                    <span class="vd-detail-cell__val">{{ quotebot_form.dropoff_airport_name || quotebot_form.other_details?.dropoff_airport_name }}</span>
                   </div>
                 </ng-template>
                 <ng-template #sp_dropadd>
@@ -368,7 +368,7 @@
                 <ng-template #rt_pikair>
                   <div class="vd-detail-cell">
                     <span class="vd-detail-cell__lbl">Pickup Airport</span>
-                    <span class="vd-detail-cell__val">{{ quotebot_form.other_details.pickup_airport_name }}</span>
+                    <span class="vd-detail-cell__val">{{ quotebot_form.pickup_airport_name || quotebot_form.other_details?.pickup_airport_name }}</span>
                   </div>
                 </ng-template>
                 <ng-template #rt_pikadd>
@@ -388,7 +388,7 @@
                 <ng-template #rt_dropair>
                   <div class="vd-detail-cell">
                     <span class="vd-detail-cell__lbl">Dropoff Airport</span>
-                    <span class="vd-detail-cell__val">{{ quotebot_form.other_details.dropoff_airport_name }}</span>
+                    <span class="vd-detail-cell__val">{{ quotebot_form.dropoff_airport_name || quotebot_form.other_details?.dropoff_airport_name }}</span>
                   </div>
                 </ng-template>
                 <ng-template #rt_dropadd>
@@ -472,7 +472,7 @@
                 <ng-template #ret_pikair>
                   <div class="vd-detail-cell">
                     <span class="vd-detail-cell__lbl">Pickup Airport</span>
-                    <span class="vd-detail-cell__val">{{ quotebot_form.other_details.return_pickup_airport_name }}</span>
+                    <span class="vd-detail-cell__val">{{ quotebot_form.return_pickup_airport_name || quotebot_form.other_details?.return_pickup_airport_name }}</span>
                   </div>
                 </ng-template>
                 <ng-template #ret_pikadd>
@@ -494,7 +494,7 @@
                 <ng-template #ret_dropair>
                   <div class="vd-detail-cell">
                     <span class="vd-detail-cell__lbl">Dropoff Airport</span>
-                    <span class="vd-detail-cell__val">{{ quotebot_form.other_details.return_dropoff_airport_name }}</span>
+                    <span class="vd-detail-cell__val">{{ quotebot_form.return_dropoff_airport_name || quotebot_form.other_details?.return_dropoff_airport_name }}</span>
                   </div>
                 </ng-template>
                 <ng-template #ret_dropadd>

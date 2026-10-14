@@ -7290,7 +7290,7 @@ export class NewBookingComponent implements OnInit, OnDestroy {
 			console.warn('QB -> admin/new-booking prefill missing cancellation policy on selected vehicle', selected_vehicle);
 		}
 		let transfer_type_value = QB?.pickup_type + '_to_' + QB?.dropoff_type
-		let return_transfer_type_value = QB?.dropoff_type + '_to_' + QB?.pickup_type
+		let return_transfer_type_value = (QB?.return_pickup_type || QB?.dropoff_type) + '_to_' + (QB?.return_dropoff_type || QB?.pickup_type)
 		this.isPrefillingTransferTypes = true;
 		this.transfer_type = transfer_type_value
 		this.return_transfer_type = return_transfer_type_value
@@ -7354,12 +7354,12 @@ export class NewBookingComponent implements OnInit, OnDestroy {
 			formatted_address: QB?.other_details?.dropoff_airport_name
 		}, QB?.dropoff_airport_lat, QB?.dropoff_airport_long);
 		const matchedReturnPickupAirport = this.resolveInternalAirportRecord({
-			name: QB?.other_details?.return_pickup_airport_name,
-			formatted_address: QB?.other_details?.return_pickup_airport_name
+			name: QB?.return_pickup_airport_name || QB?.other_details?.return_pickup_airport_name,
+			formatted_address: QB?.return_pickup_airport_name || QB?.other_details?.return_pickup_airport_name
 		}, QB?.return_pickup_airport_lat, QB?.return_pickup_airport_long);
 		const matchedReturnDropoffAirport = this.resolveInternalAirportRecord({
-			name: QB?.other_details?.return_dropoff_airport_name,
-			formatted_address: QB?.other_details?.return_dropoff_airport_name
+			name: QB?.return_dropoff_airport_name || QB?.other_details?.return_dropoff_airport_name,
+			formatted_address: QB?.return_dropoff_airport_name || QB?.other_details?.return_dropoff_airport_name
 		}, QB?.return_dropoff_airport_lat, QB?.return_dropoff_airport_long);
 
 		this.SetFormValue('pickup_date', moment(QB?.pickup_date).format('YYYY-MM-DD'))
@@ -7384,11 +7384,11 @@ export class NewBookingComponent implements OnInit, OnDestroy {
 
 		//return pickup
 		this.SetFormValue('return_pickup_date', moment(QB?.return_pickup_date).format('YYYY-MM-DD'))
-		this.SetFormValue('return_pickup', QB?.return_dropoff_address)
-		this.SetFormValue('return_pickup_latitude', QB?.return_dropoff_address_lat)
-		this.SetFormValue('return_pickup_longitude', QB?.return_dropoff_address_long)
-		this.SetFormValue('return_pickup_airport_option', QB?.other_details?.return_pickup_airport_name)
-		this.SetFormValue('return_pickup_airport_name', QB?.other_details?.return_pickup_airport_name)
+		this.SetFormValue('return_pickup', QB?.return_pickup_address)
+		this.SetFormValue('return_pickup_latitude', QB?.return_pickup_address_lat)
+		this.SetFormValue('return_pickup_longitude', QB?.return_pickup_address_long)
+		this.SetFormValue('return_pickup_airport_option', QB?.return_pickup_airport_name || QB?.other_details?.return_pickup_airport_name)
+		this.SetFormValue('return_pickup_airport_name', QB?.return_pickup_airport_name || QB?.other_details?.return_pickup_airport_name)
 		this.SetFormValue('return_pickup_airport_latitude', QB?.return_pickup_airport_lat)
 		this.SetFormValue('return_pickup_airport_longitude', QB?.return_pickup_airport_long)
 		this.SetFormValue('return_pickup_airport', matchedReturnPickupAirport?.id ?? QB?.return_pickup_airport)
@@ -7397,8 +7397,8 @@ export class NewBookingComponent implements OnInit, OnDestroy {
 		this.SetFormValue('return_dropoff', QB?.return_dropoff_address)
 		this.SetFormValue('return_dropoff_latitude', QB?.return_dropoff_address_lat)
 		this.SetFormValue('return_dropoff_longitude', QB?.return_dropoff_address_long)
-		this.SetFormValue('return_dropoff_airport_option', QB?.other_details?.return_dropoff_airport_name)
-		this.SetFormValue('return_dropoff_airport_name', QB?.other_details?.return_dropoff_airport_name)
+		this.SetFormValue('return_dropoff_airport_option', QB?.return_dropoff_airport_name || QB?.other_details?.return_dropoff_airport_name)
+		this.SetFormValue('return_dropoff_airport_name', QB?.return_dropoff_airport_name || QB?.other_details?.return_dropoff_airport_name)
 		this.SetFormValue('return_dropoff_airport_latitude', QB?.return_dropoff_airport_lat)
 		this.SetFormValue('return_dropoff_airport_longitude', QB?.return_dropoff_airport_long)
 		this.SetFormValue('return_dropoff_airport', matchedReturnDropoffAirport?.id ?? QB?.return_dropoff_airport)

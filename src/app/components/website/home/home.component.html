@@ -782,7 +782,7 @@
 														<input type="text"
 															class="qb-airport-field__input qb-address-field__input input-f font-weight-bolder"
 															style="font-size: 16px !important; background-color: #fff !important; color: #000 !important; padding-left: 42px !important; text-align: left !important;"
-															[attr.placeholder]="QBForm?.dropoff_type?.value === 'airport' ? 'Return Pickup Address' : (QBForm?.dropoff_type?.value === 'city' ? 'Return Pickup Address' : 'Return Pickup Address')"
+															[attr.placeholder]="QBForm?.return_pickup_type?.value === 'airport' ? 'Return Pickup Address' : (QBForm?.return_pickup_type?.value === 'city' ? 'Return Pickup Address' : 'Return Pickup Address')"
 															id="return_pickup_address" #retaddressinput
 															formControlName="return_pickup_address" autocomplete="off"
 															autocorrect="off" autocapitalize="off" spellcheck="false"
@@ -863,7 +863,7 @@
 													class="text-danger">
 													<div
 														*ngIf="QBForm?.return_pickup_address?.errors?.required || QBForm?.return_pickup_airport?.errors?.required">
-														{{ QBForm?.dropoff_type?.value === 'airport' ? 'Return Pickup
+														{{ QBForm?.return_pickup_type?.value === 'airport' ? 'Return Pickup
 														Address is required' : 'Return Pickup Address is required' }}
 													</div>
 												</div>
@@ -874,7 +874,7 @@
 														class="text-danger">
 														<div
 															*ngIf="QBForm?.return_pickup_address_lat?.errors?.required || QBForm?.return_pickup_airport_lat?.errors?.required">
-															{{ QBForm?.dropoff_type?.value === 'airport' ? 'Please
+															{{ QBForm?.return_pickup_type?.value === 'airport' ? 'Please
 															select a valid Return Pickup Address' : 'Please enter valid
 															Return Pickup Address' }}
 														</div>
@@ -882,7 +882,7 @@
 												</ng-template>
 											</div>
 											<!-- <div class="col-md-12 d-flex justify-content-end w-100 current_loc_button"
-												*ngIf="QBForm?.dropoff_type?.value != 'airport'">
+												*ngIf="QBForm?.return_pickup_type?.value != 'airport'">
 												<a href="javascript:void(0)"
 													(click)="useCurrentPickupLocation('return_pickup_address')"
 												class="text-decoration-none small font-weight-bold text-primary"
@@ -998,7 +998,7 @@
 														<input type="text"
 															class="qb-airport-field__input qb-address-field__input input-f font-weight-bolder"
 															style="font-size: 16px !important; background-color: #fff !important; color: #000 !important; padding-left: 42px !important; text-align: left !important;"
-															[attr.placeholder]="QBForm?.pickup_type?.value === 'airport' ? 'Return Dropoff Address' : (QBForm?.pickup_type?.value === 'city' ? 'Return Dropoff Address' : 'Return Dropoff Address')"
+															[attr.placeholder]="QBForm?.return_dropoff_type?.value === 'airport' ? 'Return Dropoff Address' : (QBForm?.return_dropoff_type?.value === 'city' ? 'Return Dropoff Address' : 'Return Dropoff Address')"
 															id="return_dropoff_address" #retdropaddressinput
 															formControlName="return_dropoff_address" autocomplete="off"
 															autocorrect="off" autocapitalize="off" spellcheck="false"
@@ -1079,7 +1079,7 @@
 													class="text-danger">
 													<div
 														*ngIf="QBForm?.return_dropoff_address?.errors?.required || QBForm?.return_dropoff_airport?.errors?.required">
-														{{ QBForm?.pickup_type?.value === 'airport' ? 'Return Drop Off
+														{{ QBForm?.return_dropoff_type?.value === 'airport' ? 'Return Drop Off
 														Address is required' : 'Return Drop Off Address is required' }}
 													</div>
 												</div>
@@ -1090,7 +1090,7 @@
 														class="text-danger">
 														<div
 															*ngIf="QBForm?.return_dropoff_address_lat?.errors?.required || QBForm?.return_dropoff_airport_lat?.errors?.required">
-															{{ QBForm?.pickup_type?.value === 'airport' ? 'Please select
+															{{ QBForm?.return_dropoff_type?.value === 'airport' ? 'Please select
 															a valid Return Drop Off Airport' : 'Please enter valid
 															Return Drop Off Address' }}
 														</div>
@@ -1098,7 +1098,7 @@
 												</ng-template>
 											</div>
 											<!-- <div class="col-md-12 d-flex justify-content-end w-100 current_loc_button"
-											*ngIf="QBForm?.pickup_type?.value != 'airport'">
+											*ngIf="QBForm?.return_dropoff_type?.value != 'airport'">
 											<a href="javascript:void(0)"
 												(click)="useCurrentPickupLocation('return_dropoff_address')"
 												class="text-decoration-none small font-weight-bold text-primary"

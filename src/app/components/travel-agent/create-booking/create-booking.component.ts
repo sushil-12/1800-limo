@@ -5095,7 +5095,7 @@ export class CreateBookingComponent implements OnInit, OnDestroy {
 			this.SetFormValue('number_of_vehicles', selected_vehicle?.number_of_vehicles)
 			// this.vehicles = selected_vehicle?.number_of_vehicles
 			let transfer_type_value = QB?.pickup_type + '_to_' + QB?.dropoff_type
-			let return_transfer_type_value = QB?.dropoff_type + '_to_' + QB?.pickup_type
+			let return_transfer_type_value = (QB?.return_pickup_type || QB?.dropoff_type) + '_to_' + (QB?.return_dropoff_type || QB?.pickup_type)
 			this.transfer_type = transfer_type_value
 			this.return_transfer_type = return_transfer_type_value
 			this.SetFormValue('transfer_type', transfer_type_value)
@@ -5120,12 +5120,12 @@ export class CreateBookingComponent implements OnInit, OnDestroy {
 				formatted_address: QB?.other_details?.dropoff_airport_name
 			}, QB?.dropoff_airport_lat, QB?.dropoff_airport_long);
 			const matchedReturnPickupAirport = this.resolveInternalAirportRecord({
-				name: QB?.other_details?.return_pickup_airport_name,
-				formatted_address: QB?.other_details?.return_pickup_airport_name
+				name: QB?.return_pickup_airport_name || QB?.other_details?.return_pickup_airport_name,
+				formatted_address: QB?.return_pickup_airport_name || QB?.other_details?.return_pickup_airport_name
 			}, QB?.return_pickup_airport_lat, QB?.return_pickup_airport_long);
 			const matchedReturnDropoffAirport = this.resolveInternalAirportRecord({
-				name: QB?.other_details?.return_dropoff_airport_name,
-				formatted_address: QB?.other_details?.return_dropoff_airport_name
+				name: QB?.return_dropoff_airport_name || QB?.other_details?.return_dropoff_airport_name,
+				formatted_address: QB?.return_dropoff_airport_name || QB?.other_details?.return_dropoff_airport_name
 			}, QB?.return_dropoff_airport_lat, QB?.return_dropoff_airport_long);
 			this.applyQuoteBotAirportPrefill(
 				'pickup',
@@ -5155,7 +5155,7 @@ export class CreateBookingComponent implements OnInit, OnDestroy {
 			this.SetFormValue('return_pickup_longitude', QB?.return_pickup_address_long ?? QB?.return_dropoff_address_long)
 			this.applyQuoteBotAirportPrefill(
 				'return_pickup',
-				QB?.other_details?.return_pickup_airport_name,
+				QB?.return_pickup_airport_name || QB?.other_details?.return_pickup_airport_name,
 				QB?.return_pickup_airport_lat,
 				QB?.return_pickup_airport_long,
 				QB?.return_pickup_airport,
@@ -5168,7 +5168,7 @@ export class CreateBookingComponent implements OnInit, OnDestroy {
 			this.SetFormValue('return_dropoff_longitude', QB?.return_dropoff_address_long)
 			this.applyQuoteBotAirportPrefill(
 				'return_dropoff',
-				QB?.other_details?.return_dropoff_airport_name,
+				QB?.return_dropoff_airport_name || QB?.other_details?.return_dropoff_airport_name,
 				QB?.return_dropoff_airport_lat,
 				QB?.return_dropoff_airport_long,
 				QB?.return_dropoff_airport,

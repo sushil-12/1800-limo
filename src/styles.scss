@@ -10,7 +10,7 @@ $my-theme: mat.define-light-theme((color: (primary: mat.define-palette(mat.$indi
                 accent: mat.define-palette(mat.$green-palette),
                 warn: mat.define-palette(mat.$red-palette),
             ),
-            typography: mat.define-typography-config(),
+            typography: mat.define-typography-config($font-family: "'Poppins', sans-serif"),
             density: 0,
         ));
 
@@ -54,6 +54,14 @@ $my-theme: mat.define-light-theme((color: (primary: mat.define-palette(mat.$indi
 body {
     -ms-scroll-chaining: none;
     overscroll-behavior: contain;
+}
+
+// The only font-family for the whole website. !important beats Bootstrap, Quill and
+// component styles; Font Awesome icon elements are excluded so icons keep their font.
+html,
+body,
+body *:not(.fa):not(.fas):not(.far):not(.fab):not([class*="fa-"]) {
+    font-family: 'Poppins', sans-serif !important;
 }
 
 body.bg-fade:before {
@@ -103,7 +111,6 @@ button.custom-filled-button {
     letter-spacing: 1px;
     font-size: 0.98rem;
     display: inline-block;
-    font-family: "Roboto", sans-serif;
     font-weight: 700;
     appearance: button;
     -moz-appearance: button;
@@ -129,7 +136,6 @@ button.custom-filled-back-button {
     letter-spacing: 1px;
     font-size: 0.98rem;
     display: inline-block;
-    font-family: "Roboto", sans-serif;
     font-weight: 700;
     appearance: button;
     -moz-appearance: button;
@@ -151,7 +157,6 @@ button.custom-filled-reset-button {
     letter-spacing: 1.3px;
     font-size: 0.98rem;
     display: inline-block;
-    font-family: "Roboto", sans-serif;
     font-weight: 700;
     appearance: button;
     -moz-appearance: button;
@@ -896,7 +901,6 @@ gmp-basic-place-autocomplete {
 	border-radius: 10px;
 	box-shadow: 0 14px 34px rgba(15, 23, 42, 0.22);
 	opacity: 1;
-	font-family: 'Roboto', system-ui, -apple-system, sans-serif;
 
 	&:hover {
 		box-shadow: 0 16px 40px rgba(15, 23, 42, 0.28);

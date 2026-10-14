@@ -3136,7 +3136,6 @@ table #navbarDropdownUserImage {
 
 .clock-face .clock-face__container {
     --body-background-color: #fff;
-    --primary-font-family: "Roboto", sans-serif;
     --button-color: var(--orange-color) !important;
     --dial-active-color: #fff;
     --dial-inactive-color: rgba(255, 255, 255, 0.5);

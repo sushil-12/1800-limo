@@ -460,27 +460,49 @@
 			}
 		}
 
-		.bh-head {
-			flex-wrap: wrap;
-			gap: 14px 12px;
-			margin-bottom: 14px;
+		// One column: title, tabs, the role button (left), search, then the
+		// toolbar (Reset/Print, right) under the search. `display: contents`
+		// lifts the title row's pieces into the card so they can be reordered.
+		display: flex;
+		flex-direction: column;
+		gap: 14px;
+
+		> * {
+			order: 6;
 		}
 
-		// No room for title and buttons side by side: stack them, left-aligned.
-		.bh-titles {
-			flex: 1 1 100%;
-		}
-
+		.bh-head,
 		.bh-head-end {
-			flex: 1 1 100%;
+			display: contents;
+		}
+
+		.bh-titles {
+			order: 1;
+		}
+
+		.bh-tabs {
+			order: 2;
+		}
+
+		.bh-actions {
+			order: 3;
 			justify-content: flex-start;
-			margin-left: 0;
-			gap: 8px;
+		}
+
+		.bh-search {
+			order: 4;
 		}
 
 		.bh-toolbar {
+			order: 5;
 			flex-wrap: nowrap;
+			justify-content: flex-end;
 			gap: 8px;
+		}
+
+		.bh-range,
+		.bh-banner {
+			margin-top: 0;
 		}
 
 		.bh-ghost-btn {
@@ -492,10 +514,12 @@
 		// A full-width segmented control: every tab visible, no sideways scroll.
 		.bh-tabs {
 			display: grid;
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-			gap: 6px;
+			// Sized by content: equal columns are too narrow for "Upcoming" + its
+			// count on 375-393px phones (iPhone SE / 16).
+			grid-template-columns: repeat(3, auto);
+			gap: 4px;
 			flex-basis: 100%;
-			padding: 10px;
+			padding: 5px;
 			border: 1px solid var(--bh-line);
 			border-radius: 16px;
 			background: var(--bh-tint);
@@ -584,16 +608,16 @@
 		}
 	}
 
-	// Phones: drop the tab icons and put the count under the label so three
-	// tabs fit side by side.
+	// Phones: drop the tab icons and tighten the type so three tabs fit side
+	// by side with each label and count on one row.
 	@media (max-width: 479.98px) {
 		.bh-tab {
-			flex-direction: column;
-			gap: 8px;
-			min-height: 26px;
-			padding: 7px;
-			font-size: 14px;
+			gap: 5px;
+			min-height: 40px;
+			padding: 0 8px;
+			font-size: 13px;
 			line-height: 1.15;
+			white-space: nowrap;
 
 			> svg {
 				display: none;
@@ -601,8 +625,8 @@
 		}
 
 		.bh-count {
-			padding: 0 6px;
-			font-size: 14px;
+			padding: 1px 5px;
+			font-size: 12px;
 		}
 
 		.bh-search-input::placeholder {
@@ -647,6 +671,22 @@
 	&:hover {
 		filter: brightness(1.05);
 	}
+
+	@media (max-width: 767.98px) {
+		gap: 8px;
+		padding: 3px 14px 3px 3px;
+		font-size: 15px;
+
+		.bh-cta-plus {
+			width: 32px;
+			height: 32px;
+			font-size: 20px;
+		}
+
+		&.bh-cta--plain {
+			padding: 10px 18px;
+		}
+	}
 }
 
 .bh-ghost-btn {
@@ -665,6 +705,18 @@
 
 	&:hover {
 		border-color: #c9d4ea;
+	}
+}
+
+// Reset: a dark ghost button, at every screen size.
+.bh-ghost-btn.bh-reset-btn {
+	border-color: var(--bh-ink, #141a2e);
+	background: var(--bh-ink, #141a2e);
+	color: #fff !important;
+
+	&:hover {
+		border-color: #263049;
+		background: #263049;
 	}
 }
 

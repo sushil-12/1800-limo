@@ -206,7 +206,7 @@
 										</p>
 									</td>
 									<td>
-										<p data-target="#sendEmailModal" data-toggle="modal"
+										<p data-target="#sendEmailModal" [attr.data-toggle]="canShowContactInfo(booking?.booking_status) ? 'modal' : null"
 											(click)="openModal(booking, booking?.driver_cell_isd ? 'Driver' : (booking?.loose_affiliate_phone ? 'Loose_Affiliate' : 'Driver'))">
 											<span *ngIf="!booking?.driver_name">1800Limo
 												Chauffeurs</span>

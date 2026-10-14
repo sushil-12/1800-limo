@@ -190,7 +190,7 @@
 									</td>
 									<!-- Driver Column -->
 									<td>
-										<p data-target="#sendEmailModal" data-toggle="modal"
+										<p data-target="#sendEmailModal" [attr.data-toggle]="canShowContactInfo(booking?.booking_status) ? 'modal' : null"
 											(click)="openModal(booking, 'Driver')">
 											<span class="text-capitalize"
 												[innerHTML]="highlighText(booking?.driver_name.split(' ')[0] + ' ' + booking?.driver_name.split(' ')[1].slice(0,1))"></span>

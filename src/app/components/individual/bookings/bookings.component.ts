@@ -728,6 +728,8 @@ export class BookingsComponent implements OnInit {
 
 	show = false
 	openModal(booking: any, selection_button: string) {
+		// Driver/affiliate contact stays closed until the booking is accepted.
+		if (selection_button != 'Passenger' && selection_button != 'created_by' && !this.canShowContactInfo(booking?.booking_status)) return;
 		try {
 			setTimeout(() => {
 				// $('textarea').attr('autofocus', 'autofocus');

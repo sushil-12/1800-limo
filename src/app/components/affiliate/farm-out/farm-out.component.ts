@@ -462,6 +462,8 @@ export class FarmOutComponent implements OnInit {
 	}
 
 	openModal(booking: any, selection_button: string) {
+		// Driver/affiliate contact stays closed until the booking is accepted.
+		if (selection_button != 'Passenger' && selection_button != 'created_by' && !this.canShowContactInfo(booking?.booking_status)) return;
 		console.log('open modal-->>>>>>>', selection_button)
 		this.passengerDetails = booking;
 		this.passengerDetails['selection_button'] = selection_button

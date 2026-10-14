@@ -164,7 +164,7 @@
 								</td>
 								<td>
 									<!-- class="disabled-btn" -->
-									<p data-target="#sendEmailModal" data-toggle="modal"
+									<p data-target="#sendEmailModal" [attr.data-toggle]="canShowContactInfo(booking?.booking_status) ? 'modal' : null"
 										(click)="openModal(booking, 'Driver')"
 										*ngIf="booking?.affiliate_type != 'gig_operator'; else gigOperator">
 										<span class="text-capitalize"

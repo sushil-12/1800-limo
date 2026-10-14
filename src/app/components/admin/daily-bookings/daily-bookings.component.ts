@@ -732,11 +732,6 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 		}, 50);
 	}
 
-	/** Driver/affiliate phone stays hidden from non-admins until the booking is accepted. */
-	canShowContactInfo(status: any): boolean {
-		return this.currentUser?.roleName === 'admin' || !['pending', 'rejected', 'rejection'].includes(status);
-	}
-
 	highlighText(args: string) {
 		if (!this.searchText) {
 			return args;

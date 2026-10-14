@@ -370,12 +370,10 @@
 											*ngIf="booking.affiliate_type == null; else otherAffiliate">
 											<span
 												[innerHTML]="highlighText(booking.loose_aff_driver_name ? booking.loose_aff_driver_name + ' '+'(L)' : '1800Limo Chauffeurs ')"></span><br />
-											<ng-container *ngIf="canShowContactInfo(booking?.booking_status)">
 											<span class="font-weight-bolder"
 												[innerHTML]="highlighText(booking.loose_affiliate_phone_isd ? booking.loose_affiliate_phone_isd : '+1')"></span>
 											<span class="font-weight-bolder"
 												[innerHTML]="highlighText(booking.loose_affiliate_phone ? booking.loose_affiliate_phone : '8005466266')"></span>
-											</ng-container>
 										</p>
 										<ng-template #otherAffiliate>
 											<p [ngClass]="currentUser?.roleName == 'admin' || subModules.includes('can_send_notifications') ? '' : 'disabled-btn'"
@@ -389,14 +387,12 @@
 													</span>
 												<span
 													(click)="openModal(booking, 'Affiliate')">({{fomatAffiliateType(booking.affiliate_type)}})</span><br />
-												<ng-container *ngIf="canShowContactInfo(booking?.booking_status)">
 												<span (click)="openModal(booking, 'Affiliate')"
 													class="font-weight-bolder"
 													[innerHTML]="highlighText(booking.driver_cell_isd)"></span>
 												<span (click)="openModal(booking, 'Affiliate')"
 													class="font-weight-bolder"
 													[innerHTML]="highlighText(booking.driver_cell_number)"></span>
-												</ng-container>
 												<br
 													*ngIf="booking?.affiliate_id && booking?.affiliate_id != 0 && booking?.company_name" />
 												<br />
@@ -423,12 +419,10 @@
 													<span
 														[innerHTML]="highlighText((booking?.driver_first_name ?? '') + ' ' + (booking?.is_pending_affiliate == 1 ? '' : (booking?.driver_last_name?.slice(0,1) ?? '')))"></span>
 													<span>({{fomatAffiliateType(booking.affiliate_type)}})</span> <br />
-													<ng-container *ngIf="canShowContactInfo(booking?.booking_status)">
 													<span class="font-weight-bolder"
 														[innerHTML]="highlighText(booking.driver_cell_isd)"></span>
 													<span class="font-weight-bolder"
 														[innerHTML]="highlighText(booking.driver_cell_number)"></span>
-													</ng-container>
 												</p>
 											</ng-template>
 										</ng-template>

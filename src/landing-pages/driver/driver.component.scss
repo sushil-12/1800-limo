@@ -189,9 +189,9 @@ $brand-orange: #f3933d;
 	justify-content: center;
 	gap: 0.75rem;
 	box-sizing: border-box;
-	height: 3.5rem;
+	height: 3rem;
 	margin: 0 0 var(--btn-depth);
-	padding: 0 1.75rem;
+	padding: 0 1rem;
 	border: 0;
 	border-radius: 14px;
 	background: linear-gradient(180deg, var(--btn-top) 0%, var(--btn-bottom) 100%);
@@ -200,7 +200,6 @@ $brand-orange: #f3933d;
 		0 var(--btn-depth) 0 var(--btn-edge),
 		0 calc(var(--btn-depth) + 10px) 22px -8px var(--btn-glow);
 	color: var(--btn-fg);
-	font-family: 'Poppins', sans-serif;
 	font-size: 1rem;
 	font-weight: 700;
 	line-height: 1;
@@ -252,8 +251,8 @@ $brand-orange: #f3933d;
 	}
 
 	@media (min-width: 640px) {
-		height: 4rem;
-		font-size: 1.0625rem;
+		height: 3rem;
+        font-size: 1rem;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -596,4 +595,73 @@ $brand-orange: #f3933d;
 
 .tw-scope .lp-link:hover .lp-link__arrow {
 	transform: translateX(3px);
+}
+
+// Text fields in the service interest popup. Font size is !important because
+// style.css forces 0.9rem on mobile, which makes iOS zoom into the field.
+.tw-scope .lp-field {
+	display: block;
+	width: 100%;
+	height: 3rem;
+	margin: 0;
+	padding: 0 0.875rem;
+	border: 1px solid #d1d5db;
+	border-radius: 10px;
+	background: #fff;
+	color: #000;
+	font-size: 1rem !important;
+	box-shadow: none;
+	outline: none;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+	&::placeholder {
+		color: #9ca3af;
+	}
+
+	&:focus {
+		border-color: #f3933d;
+		box-shadow: 0 0 0 3px rgba(243, 147, 61, 0.2);
+	}
+
+	&:disabled {
+		background-color: #f9fafb;
+	}
+}
+
+// Native select arrows sit flush against the edge; draw our own with room on the right.
+.tw-scope .lp-field--select {
+	padding-right: 3rem;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 1rem center;
+	background-size: 1.25rem;
+	cursor: pointer;
+}
+
+// Google's address widget replaces the address input and copies its classes, but it is
+// created outside the template, so scoped styles don't reach it without ::ng-deep.
+:host ::ng-deep .tw-scope gmp-place-autocomplete.lp-field {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-height: 3rem;
+	margin: 0;
+	padding: 0 0.25rem;
+	border: 1px solid #d1d5db;
+	border-radius: 10px;
+	background: #fff;
+	color: #000;
+	font-family: 'Poppins', sans-serif;
+	font-size: 1rem !important;
+	color-scheme: light;
+}
+
+// The shared autocomplete helper makes the widget's border transparent on focus (global
+// !important rule). Here we want the same orange focus ring as the other popup fields.
+:host ::ng-deep .tw-scope gmp-place-autocomplete.lp-field:focus-within {
+	border-color: #f3933d !important;
+	box-shadow: 0 0 0 3px rgba(243, 147, 61, 0.2) !important;
 }

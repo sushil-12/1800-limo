@@ -1,0 +1,97 @@
+<div class="new-card-form" [formGroup]="cardForm">
+	<p class="new-card-form__title mb-2">New card details</p>
+	<div class="row">
+		<!-- Card Holder Name -->
+		<div class="col-12 col-md-6 col-lg-4 my-2">
+			<mat-form-field appearance="outline" class="m-0 w-100">
+				<mat-label class="required-field">
+					Card Holder
+				</mat-label>
+				<input matInput placeholder="First & Last Name" type="text" formControlName="name"
+					tabindex="0" (focus)="$event.target.select()">
+			</mat-form-field>
+			<div class="error-message"
+				*ngIf="cardForm.controls.name.invalid && (cardForm.controls.name.touched || cardForm.controls.name.dirty)">
+				<p class="text-danger text-lg m-0" *ngIf="cardForm.controls.name.errors?.required">
+					This field is required
+				</p>
+			</div>
+		</div>
+		<!-- Card Number -->
+		<div class="col-12 col-md-6 col-lg-4 my-2">
+			<mat-form-field appearance="outline" class="m-0 w-100">
+				<mat-label class="required-field">
+					Card Number
+				</mat-label>
+				<input matInput placeholder="xxxxxxxxxxxxxxxx" type="text" formControlName="card_number"
+					tabindex="0" (focus)="$event.target.select()">
+			</mat-form-field>
+			<div class="error-message"
+				*ngIf="cardForm.controls.card_number.invalid && (cardForm.controls.card_number.touched || cardForm.controls.card_number.dirty)">
+				<p class="text-danger text-lg m-0" *ngIf="cardForm.controls.card_number.errors?.required">
+					This field is required
+				</p>
+				<div class="text-danger text-lg m-0" *ngIf="cardForm.controls.card_number.errors?.minlength">
+					Required min 12 no.
+				</div>
+				<div class="text-danger text-lg m-0" *ngIf="cardForm.controls.card_number.errors?.maxlength">
+					Exceeded max limit
+				</div>
+				<div class="text-danger text-lg m-0" *ngIf="cardForm.controls.card_number.errors?.pattern">
+					Invalid card number
+				</div>
+			</div>
+		</div>
+
+		<!-- Expiry Date (Calendar) -->
+		<div class="col-12 col-md-6 col-lg-4 my-2">
+			<mat-form-field appearance="outline" class="m-0 w-100">
+				<mat-label class="required-field">Expiration date</mat-label>
+				<input matInput [matDatepicker]="cardExpiryDp" [formControl]="expiryDateControl"
+					[min]="minExpiryDate" placeholder="MM/YYYY" (click)="cardExpiryDp.open()" readonly>
+				<mat-datepicker-toggle matSuffix [for]="cardExpiryDp"></mat-datepicker-toggle>
+				<mat-datepicker #cardExpiryDp startView="multi-year" (yearSelected)="chosenYearHandler($event)"
+					(monthSelected)="chosenMonthHandler($event, cardExpiryDp)" panelClass="example-month-picker">
+				</mat-datepicker>
+			</mat-form-field>
+			<div class="error-message"
+				*ngIf="((cardForm.controls.exp_month.invalid || cardForm.controls.exp_year.invalid) && (cardForm.controls.exp_month.touched || cardForm.controls.exp_month.dirty)) || (cardForm.errors?.invalidExpiryDate && (cardForm.controls.exp_month.touched || cardForm.controls.exp_month.dirty || expiryDateControl.touched))">
+				<p class="text-danger text-lg m-0"
+					*ngIf="cardForm.controls.exp_month.errors?.required || cardForm.controls.exp_year.errors?.required">
+					Expiry Date is required
+				</p>
+				<p class="text-danger text-lg m-0" *ngIf="cardForm.errors?.invalidExpiryDate">
+					Please select a valid date
+				</p>
+			</div>
+		</div>
+
+		<!-- CVV -->
+		<div class="col-12 col-md-6 col-lg-4 my-2">
+			<mat-form-field appearance="outline" class="m-0 w-100">
+				<mat-label class="required-field">
+					CVV (3-4 digit code)
+				</mat-label>
+				<input matInput placeholder="0000" type="text" tabindex="0"
+					(focus)="$event.target.select()" formControlName="cvv">
+			</mat-form-field>
+			<div class="error-message"
+				*ngIf="cardForm.controls.cvv.invalid && (cardForm.controls.cvv.touched || cardForm.controls.cvv.dirty)">
+				<p class="text-danger text-lg m-0" *ngIf="cardForm.controls.cvv.errors?.required">
+					This field is required
+				</p>
+				<p class="text-danger text-lg m-0" *ngIf="cardForm.controls.cvv.errors?.pattern">
+					Contains only numbers
+				</p>
+				<p class="text-danger text-lg m-0" *ngIf="cardForm.controls.cvv.errors?.maxlength">
+					Contains atmost 4 digit
+				</p>
+			</div>
+		</div>
+		<div class="col-12 mb-2 d-flex justify-content-center">
+			<button type="button" class="custom-filled-button new-card-form__save m-2" [disabled]="isSaving" (click)="saveCardDetails()">
+				Save
+			</button>
+		</div>
+	</div>
+</div>

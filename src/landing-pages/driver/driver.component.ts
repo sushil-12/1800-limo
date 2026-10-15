@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NgClass, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/services/auth.service';
 import { CommonService } from 'src/app/services/common.service';
 import * as intlTelInput from 'intl-tel-input';
+import { attachPlaceAutocompleteElement, getPlaceAutocompleteDisplayValue } from 'src/app/utils/google-place-autocomplete';
 
 interface Benefit {
   title: string;
@@ -119,6 +120,12 @@ const MAX_SENDS_PER_BROWSER = 5;
 const SEND_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** Minimum gap between two sends, so nobody can walk down a list of numbers. */
 const SEND_COOLDOWN_MS = 30 * 1000;
+
+// Service interest popup: opens on every visit to the page, after a random 4-8s delay.
+const SERVICE_POPUP_MIN_DELAY = 3000;
+const SERVICE_POPUP_MAX_DELAY = 5000;
+/** The Maps script loads async; wait this long between checks for it (up to 20 tries). */
+const MAPS_RETRY_MS = 250;
 
 // Showcase timeline (ms). Motion uses transform/opacity only; see the template.
 const PHONE_LEAD_IN = 700;
@@ -347,16 +354,43 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   /** Country flag + dial code picker on the Apply CTA's mobile field. */
   private phoneInput?: intlTelInput.Plugin;
 
+  readonly serviceOptions = [
+    'Chauffeur / Driver',
+    'Limo Company / Fleet Operator',
+    'Reservation & Dispatch Software',
+    'Farm-in / Farm-out Bookings',
+    'Other'
+  ];
+  servicePopupOpen = false;
+  serviceForm = { email: '', phone: '', address: '', service: '' };
+  serviceError = '';
+  serviceSent = '';
+  serviceSending = false;
+  private servicePopupTimer?: ReturnType<typeof setTimeout>;
+  private addressAutocompleteTimer?: ReturnType<typeof setTimeout>;
+
+  /** The address field only exists while the popup is open, so attach Google Places when it appears. */
+  @ViewChild('serviceAddressInput') set serviceAddressInput(ref: ElementRef<HTMLInputElement> | undefined) {
+    this.serviceAddressEl = ref?.nativeElement;
+    if (this.serviceAddressEl) this.attachAddressAutocomplete(this.serviceAddressEl);
+    else clearTimeout(this.addressAutocompleteTimer);
+  }
+  private serviceAddressEl?: HTMLInputElement;
+
   private plansSub?: Subscription;
   private appLinkSub?: Subscription;
+  private serviceSub?: Subscription;
 
   constructor(
     private authService: AuthService,
     private commonService: CommonService,
-    private router: Router
+    private router: Router,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
+    this.scheduleServicePopup();
+
     this.plansSub = this.authService.getSubsPlans().subscribe({
       next: (response: any) => {
         this.plans = (response?.data ?? []).map((plan: any): PlanCard => ({
@@ -405,6 +439,9 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clearShowcaseTimers();
     this.plansSub?.unsubscribe();
     this.appLinkSub?.unsubscribe();
+    this.serviceSub?.unsubscribe();
+    clearTimeout(this.servicePopupTimer);
+    clearTimeout(this.addressAutocompleteTimer);
     clearInterval(this.heroTimer);
     this.phoneInput?.destroy();
   }
@@ -484,8 +521,120 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closePlanNotice();
+    this.closeServicePopup();
+  }
+
   closePlanNotice(): void {
     this.planNotice = null;
+  }
+
+  private scheduleServicePopup(): void {
+    if (typeof window === 'undefined') return;
+    // Signed-in users have already given us their details.
+    try {
+      if (localStorage.getItem('access_token')) return;
+    } catch {
+      // Storage blocked: treat the visitor as signed out.
+    }
+    const delay = SERVICE_POPUP_MIN_DELAY + Math.random() * (SERVICE_POPUP_MAX_DELAY - SERVICE_POPUP_MIN_DELAY);
+    this.servicePopupTimer = setTimeout(() => {
+      // Don't stack on top of the plan notice.
+      if (!this.planNotice) this.servicePopupOpen = true;
+    }, delay);
+  }
+
+  closeServicePopup(): void {
+    this.servicePopupOpen = false;
+  }
+
+  /**
+   * Digits plus one leading "+" for the country code (+1, +91...). Letters, spaces and other
+   * symbols are stripped as they are typed or pasted.
+   */
+  onServicePhoneInput(event: Event): void {
+    this.serviceForm.phone = this.sanitizePhoneInput(event.target as HTMLInputElement);
+  }
+
+  /** Strips a phone field down to digits plus one leading "+", and returns the cleaned value. */
+  private sanitizePhoneInput(input: HTMLInputElement): string {
+    const plus = input.value.trimStart().startsWith('+') ? '+' : '';
+    const cleaned = plus + input.value.replace(/\D/g, '').slice(0, 15);
+    // Write back to the field directly: if the model value didn't change, ngModel wouldn't repaint it.
+    if (input.value !== cleaned) input.value = cleaned;
+    return cleaned;
+  }
+
+  /** Same Google Places suggestions as the home page pickup/drop-off fields. */
+  private attachAddressAutocomplete(input: HTMLInputElement, attemptsLeft = 20): void {
+    clearTimeout(this.addressAutocompleteTimer);
+    if (typeof google === 'undefined' || !google?.maps) {
+      if (attemptsLeft > 1) {
+        this.addressAutocompleteTimer = setTimeout(() => this.attachAddressAutocomplete(input, attemptsLeft - 1), MAPS_RETRY_MS);
+      }
+      return;
+    }
+
+    void attachPlaceAutocompleteElement(
+      input,
+      {
+        types: ['geocode', 'establishment'],
+        fields: ['formatted_address', 'geometry', 'place_id', 'name', 'address_components', 'types']
+      },
+      (place) => {
+        this.ngZone.run(() => {
+          const formattedAddress = place.formatted_address ?? '';
+          const placeName = place.name ?? '';
+          // Businesses read better with their name; plain addresses already start with it.
+          this.serviceForm.address = placeName && !formattedAddress.startsWith(placeName)
+            ? `${placeName} - ${formattedAddress}`
+            : formattedAddress;
+          input.value = this.serviceForm.address;
+          if (this.serviceError) this.serviceError = '';
+        });
+      }
+    );
+  }
+
+  submitServiceInterest(): void {
+    if (this.serviceSending) return;
+
+    const email = this.serviceForm.email.trim();
+    const phone = this.serviceForm.phone.trim();
+    // Typed text that wasn't picked from the suggestions only lives in the Google widget.
+    const typedAddress = this.serviceAddressEl ? getPlaceAutocompleteDisplayValue(this.serviceAddressEl) : '';
+    const address = (typedAddress || this.serviceForm.address).trim();
+    const service = this.serviceForm.service;
+    const phoneDigits = phone.replace(/\D/g, '');
+
+    this.serviceSent = '';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.serviceError = 'Please enter a valid email address.';
+    } else if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+      this.serviceError = 'Please enter a valid phone number.';
+    } else if (!address) {
+      this.serviceError = 'Please enter your physical address.';
+    } else if (!service) {
+      this.serviceError = 'Please select the service you are interested in.';
+    } else {
+      this.serviceError = '';
+    }
+    if (this.serviceError) return;
+
+    this.serviceSending = true;
+    this.serviceSub = this.authService.submitServiceInterest({ email, phone, address, service }).subscribe({
+      next: () => {
+        this.serviceSending = false;
+        this.serviceSent = 'Thank you! Our team will contact you shortly.';
+        this.serviceForm = { email: '', phone: '', address: '', service: '' };
+        setTimeout(() => this.closeServicePopup(), 2000);
+      },
+      error: (err: any) => {
+        this.serviceSending = false;
+        this.serviceError = err?.error?.message || "We couldn't submit your details right now. Please try again.";
+      }
+    });
   }
 
   private startCheckout(plan: PlanCard, route: string): void {
@@ -568,6 +717,11 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   private clearShowcaseTimers(): void {
     this.showcaseTimers.forEach(clearTimeout);
     this.showcaseTimers = [];
+  }
+
+  onMobileInput(event: Event): void {
+    this.mobile = this.sanitizePhoneInput(event.target as HTMLInputElement);
+    this.onMobileChange();
   }
 
   /** Editing the number clears whatever the last attempt said. */

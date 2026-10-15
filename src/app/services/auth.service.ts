@@ -70,6 +70,11 @@ export class AuthService {
     return this.httpClient.post('https://api.1800limo.com/api/send-driver-app-link', data);
   }
 
+  /** Lead from the driver landing page's "Which service" popup. */
+  submitServiceInterest(data: { email: string; phone: string; address: string; service: string }) {
+    return this.httpClient.post(this.serverUrl + 'service-interest', data);
+  }
+
   createPayment(data){
     return this.httpClient.post(this.serverUrl + 'create-subscription-plan', data);
   }

@@ -201,7 +201,7 @@
 										(change)="handleChangeTravelAccounts('travel_loose_customer')">
 										Create new client
 									</mat-radio-button>
-								</mat-radio-group>
+							</mat-radio-group>
 							</div>
 						</div>
 						<div class="row px-4">
@@ -267,7 +267,18 @@
 					</div>
 					<!-- Saved Credit Cards -->
 					<div *ngIf="shouldRenderSavedCardsSection()" class="mt-3 px-4 pb-3">
-						<h5 class="mb-3">Saved Credit Cards</h5>
+						<div class="saved-cards-header">
+							<h5 class="saved-cards-header__title">Saved Credit Cards</h5>
+							<button type="button" class="bk-btn bk-btn--sm saved-cards-header__btn"
+								[ngClass]="isAddCardFormOpen ? 'bk-btn--tertiary' : 'saved-cards-header__btn--add'"
+								(click)="toggleAddCardForm()">
+								<i class="bi" [ngClass]="isAddCardFormOpen ? 'bi-x-lg' : 'bi-plus-lg'"></i>
+								<span>{{ isAddCardFormOpen ? 'Cancel' : 'Add Credit Card' }}</span>
+							</button>
+						</div>
+						<app-new-card-form *ngIf="isAddCardFormOpen" [accountId]="addCardAccountId"
+							[defaultName]="getUserValue('name')" (saved)="onCardSaved()">
+						</app-new-card-form>
 						<div *ngIf="isLoadingSavedCards" class="text-muted py-2">
 							Loading saved credit cards...
 						</div>

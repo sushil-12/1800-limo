@@ -1200,7 +1200,7 @@ h4.border-secondary,
 .bk-btn {
   border-radius: 8px !important;
   font-weight: 600 !important;
-  padding: 10px 20px !important;
+  padding: 8px 9px !important;
   box-shadow: none !important;
   transition: all .15s ease;
 }
@@ -1893,5 +1893,51 @@ $secnav-green: #21a45d;
 	.bk-route-actions__btn,
 	.bk-add-stop {
 		transition: none;
+	}
+}
+
+/* Saved Credit Cards header: title with the add-card button beside it */
+.saved-cards-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 16px;
+	margin-bottom: 1rem;
+}
+
+.saved-cards-header__title {
+	margin: 0;
+}
+
+.saved-cards-header__btn {
+	gap: 6px;
+	white-space: nowrap;
+	// switch Add/Cancel colors instantly instead of fading through green
+	transition: none;
+
+	.bi {
+		font-size: 0.85rem;
+		line-height: 1;
+	}
+}
+
+.saved-cards-header__btn--add {
+	background-color: var(--green-color, #33c658) !important;
+	border: 1px solid var(--green-color, #33c658) !important;
+	color: #fff !important;
+
+	&:hover {
+		filter: brightness(0.92);
+	}
+}
+
+@media (max-width: 575.98px) {
+	.saved-cards-header {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.saved-cards-header__btn {
+		width: 100%;
 	}
 }

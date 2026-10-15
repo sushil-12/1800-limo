@@ -1,0 +1,25 @@
+.new-card-form {
+    margin-bottom: 14px;
+    padding: 14px 16px 4px;
+    border: 1px solid rgba(243, 147, 61, 0.45);
+    border-radius: 10px;
+    background-color: rgba(243, 147, 61, 0.04);
+}
+
+.new-card-form__title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #777;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 575.98px) {
+    .new-card-form {
+        padding: 12px 10px 4px;
+    }
+
+    .new-card-form__save {
+        width: calc(100% - 1rem);
+    }
+}

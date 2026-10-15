@@ -383,6 +383,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 	bigDataSubscription: Subscription;
 	userCreditCards: any[] = [];
 	isLoadingSavedCards: boolean = false;
+	isAddCardFormOpen: boolean = false;
 	private bookingAutocompleteRetryTimeout?: ReturnType<typeof setTimeout>;
 	isPrefilling: boolean = false;
 	/** Emits whenever form valueChanges subscriptions are (re)wired, tearing down the previous set to avoid duplicates. */
@@ -5006,6 +5007,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 
 	private loadCombinedSavedCards(accountId: number, shouldLoad: boolean, travelAdvisorId?: number) {
 		if(this.isAffiliateMode || this.isGuestMode) {return;};
+		this.isAddCardFormOpen = false;
 		if ((!shouldLoad || !accountId) && !travelAdvisorId) {
 			this.userCreditCards = [];
 			this.isLoadingSavedCards = false;
@@ -5060,6 +5062,30 @@ export class BookingComponent implements OnInit, OnDestroy {
 			&& !!this.Form?.travel_client_id?.value;
 
 		return isDirectIndividual || isTravelAdvisor || isTravelIndividual;
+	}
+
+	toggleAddCardForm() {
+		this.isAddCardFormOpen = !this.isAddCardFormOpen;
+	}
+
+	/** Account the new card is saved to: the selected travel client, otherwise the selected account */
+	get addCardAccountId(): number {
+		const isTravelIndividual = this.Form?.account_type?.value === 'travel_planner'
+			&& this.Form?.travel_client_acc?.value === 'travel_individual'
+			&& !!this.Form?.travel_client_id?.value;
+		return isTravelIndividual ? this.Form?.travel_client_id?.value : this.Form?.acc_id?.value;
+	}
+
+	onCardSaved() {
+		if (this.Form?.account_type?.value === 'travel_planner') {
+			this.loadCombinedSavedCards(
+				this.Form?.travel_client_id?.value,
+				this.Form?.travel_client_acc?.value === 'travel_individual',
+				this.Form?.acc_id?.value
+			);
+		} else {
+			this.loadSavedCards(this.Form?.acc_id?.value, true);
+		}
 	}
 
 	fillLCDetails(choose_user: any) {

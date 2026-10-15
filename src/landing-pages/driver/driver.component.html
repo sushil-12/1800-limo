@@ -404,7 +404,11 @@
 			</button>
 
 			<h3 id="service-popup-title" class="tw-m-0 tw-pr-10 tw-font-poppins tw-text-xl tw-font-bold tw-leading-snug tw-text-black sm:tw-text-2xl">
+<<<<<<< HEAD
 				Select Your Service
+=======
+				Which Service you are provided
+>>>>>>> b05a49b3 (fixes)
 			</h3>
 
 			<form class="tw-m-0 tw-mt-6 tw-flex tw-flex-col tw-gap-4" (ngSubmit)="submitServiceInterest()" novalidate>
@@ -413,9 +417,15 @@
 					<input id="sp-email" name="email" type="email" autocomplete="email" [(ngModel)]="serviceForm.email"
 						[disabled]="serviceSending" placeholder="you@example.com" class="lp-field">
 				</div>
+<<<<<<< HEAD
 				<div class="lp-popup-phone">
 					<label for="sp-phone" class="tw-mb-1.5 tw-block tw-font-poppins tw-text-sm tw-font-medium tw-text-[#2E2E3A]">Phone</label>
 					<input #servicePhoneInput id="sp-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16"
+=======
+				<div>
+					<label for="sp-phone" class="tw-mb-1.5 tw-block tw-font-poppins tw-text-sm tw-font-medium tw-text-[#2E2E3A]">Phone</label>
+					<input id="sp-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16"
+>>>>>>> b05a49b3 (fixes)
 						[ngModel]="serviceForm.phone" (input)="onServicePhoneInput($event)"
 						[disabled]="serviceSending" placeholder="+15551234567" class="lp-field">
 				</div>

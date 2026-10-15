@@ -413,11 +413,11 @@
 					<input id="sp-email" name="email" type="email" autocomplete="email" [(ngModel)]="serviceForm.email"
 						[disabled]="serviceSending" placeholder="you@example.com" class="lp-field">
 				</div>
-				<div>
+				<div class="lp-popup-phone">
 					<label for="sp-phone" class="tw-mb-1.5 tw-block tw-font-poppins tw-text-sm tw-font-medium tw-text-[#2E2E3A]">Phone</label>
-					<input id="sp-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16"
+					<input #servicePhoneInput id="sp-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16"
 						[ngModel]="serviceForm.phone" (input)="onServicePhoneInput($event)"
-						[disabled]="serviceSending" placeholder="+15551234567" class="lp-field">
+						[disabled]="serviceSending" placeholder="Phone number" class="lp-field">
 				</div>
 				<div>
 					<label for="sp-address" class="tw-mb-1.5 tw-block tw-font-poppins tw-text-sm tw-font-medium tw-text-[#2E2E3A]">Physical address</label>

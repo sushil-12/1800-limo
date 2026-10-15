@@ -377,6 +377,16 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   private serviceAddressEl?: HTMLInputElement;
 
+  /** Flag + dial-code picker on the popup's phone field; created and destroyed with the popup. */
+  @ViewChild('servicePhoneInput') set servicePhoneInput(ref: ElementRef<HTMLInputElement> | undefined) {
+    this.servicePhonePicker?.destroy();
+    this.servicePhonePicker = undefined;
+    if (ref) {
+      this.servicePhonePicker = intlTelInput(ref.nativeElement, this.commonService.getTelInputOptions(this.phoneCountry()));
+    }
+  }
+  private servicePhonePicker?: intlTelInput.Plugin;
+
   private plansSub?: Subscription;
   private appLinkSub?: Subscription;
   private serviceSub?: Subscription;
@@ -410,10 +420,7 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     if (this.mobileInputRef) {
-      // Signed-in users start on their own country (as in affiliate step 1); everyone else by IP location.
-      const user = this.authService.currentUserValue;
-      const country = user?.phoneCountry || user?.country || 'auto';
-      this.phoneInput = intlTelInput(this.mobileInputRef.nativeElement, this.commonService.getTelInputOptions(country));
+      this.phoneInput = intlTelInput(this.mobileInputRef.nativeElement, this.commonService.getTelInputOptions(this.phoneCountry()));
       this.mobileInputRef.nativeElement.addEventListener('countrychange', () => this.onMobileChange());
     }
 
@@ -444,6 +451,13 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     clearTimeout(this.addressAutocompleteTimer);
     clearInterval(this.heroTimer);
     this.phoneInput?.destroy();
+    this.servicePhonePicker?.destroy();
+  }
+
+  /** Signed-in users start on their own country (as in affiliate step 1); everyone else by IP location. */
+  private phoneCountry(): string {
+    const user = this.authService.currentUserValue;
+    return user?.phoneCountry || user?.country || 'auto';
   }
 
   showHeroSlide(index: number): void {
@@ -601,17 +615,17 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.serviceSending) return;
 
     const email = this.serviceForm.email.trim();
-    const phone = this.serviceForm.phone.trim();
+    // Sent in E.164 (+15551234567), with the dial code from the flag picker.
+    const phone = this.e164Number(this.serviceForm.phone, this.servicePhonePicker);
     // Typed text that wasn't picked from the suggestions only lives in the Google widget.
     const typedAddress = this.serviceAddressEl ? getPlaceAutocompleteDisplayValue(this.serviceAddressEl) : '';
     const address = (typedAddress || this.serviceForm.address).trim();
     const service = this.serviceForm.service;
-    const phoneDigits = phone.replace(/\D/g, '');
 
     this.serviceSent = '';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       this.serviceError = 'Please enter a valid email address.';
-    } else if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+    } else if (!phone) {
       this.serviceError = 'Please enter a valid phone number.';
     } else if (!address) {
       this.serviceError = 'Please enter your physical address.';
@@ -767,18 +781,18 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /** The typed number in E.164 (`+15551234567`), or '' when it isn't a valid mobile number. */
-  private e164Number(): string {
-    const digits = this.mobile.replace(/\D/g, '');
+  private e164Number(raw = this.mobile, picker = this.phoneInput): string {
+    const digits = raw.replace(/\D/g, '');
 
     // isValidNumber()/getNumber() need the utils script; until it loads, fall back to a length
     // check and build the number from the picker's dial code.
-    if (this.phoneInput && (window as any).intlTelInputUtils) {
-      return this.phoneInput.isValidNumber() ? this.phoneInput.getNumber() : '';
+    if (picker && (window as any).intlTelInputUtils) {
+      return picker.isValidNumber() ? picker.getNumber() : '';
     }
     if (digits.length < 7 || digits.length > 15) return '';
     // separateDialCode is on, so the field holds a national number - unless one was pasted in.
-    if (this.mobile.trim().startsWith('+')) return `+${digits}`;
-    const dialCode = this.phoneInput?.getSelectedCountryData()?.dialCode;
+    if (raw.trim().startsWith('+')) return `+${digits}`;
+    const dialCode = picker?.getSelectedCountryData()?.dialCode;
     return dialCode ? `+${dialCode}${digits}` : '';
   }
 

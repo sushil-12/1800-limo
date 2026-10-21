@@ -1,5 +1,4 @@
 import { AfterViewInit, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { AfterViewInit, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NgClass, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -7,7 +6,6 @@ import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/services/auth.service';
 import { CommonService } from 'src/app/services/common.service';
 import * as intlTelInput from 'intl-tel-input';
-import { attachPlaceAutocompleteElement, getPlaceAutocompleteDisplayValue } from 'src/app/utils/google-place-autocomplete';
 import { attachPlaceAutocompleteElement, getPlaceAutocompleteDisplayValue } from 'src/app/utils/google-place-autocomplete';
 
 interface Benefit {
@@ -122,12 +120,6 @@ const MAX_SENDS_PER_BROWSER = 5;
 const SEND_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** Minimum gap between two sends, so nobody can walk down a list of numbers. */
 const SEND_COOLDOWN_MS = 30 * 1000;
-
-// Service interest popup: opens on every visit to the page, after a random 4-8s delay.
-const SERVICE_POPUP_MIN_DELAY = 3000;
-const SERVICE_POPUP_MAX_DELAY = 5000;
-/** The Maps script loads async; wait this long between checks for it (up to 20 tries). */
-const MAPS_RETRY_MS = 250;
 
 // Service interest popup: opens on every visit to the page, after a random 4-8s delay.
 const SERVICE_POPUP_MIN_DELAY = 3000;
@@ -385,9 +377,18 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   private serviceAddressEl?: HTMLInputElement;
 
+  /** Flag + dial-code picker on the popup's phone field; created and destroyed with the popup. */
+  @ViewChild('servicePhoneInput') set servicePhoneInput(ref: ElementRef<HTMLInputElement> | undefined) {
+    this.servicePhonePicker?.destroy();
+    this.servicePhonePicker = undefined;
+    if (ref) {
+      this.servicePhonePicker = intlTelInput(ref.nativeElement, this.commonService.getTelInputOptions(this.phoneCountry()));
+    }
+  }
+  private servicePhonePicker?: intlTelInput.Plugin;
+
   private plansSub?: Subscription;
   private appLinkSub?: Subscription;
-  private serviceSub?: Subscription;
   private serviceSub?: Subscription;
 
   constructor(
@@ -395,13 +396,9 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     private commonService: CommonService,
     private router: Router,
     private ngZone: NgZone
-    private router: Router,
-    private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
-    this.scheduleServicePopup();
-
     this.scheduleServicePopup();
 
     this.plansSub = this.authService.getSubsPlans().subscribe({
@@ -449,9 +446,6 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clearShowcaseTimers();
     this.plansSub?.unsubscribe();
     this.appLinkSub?.unsubscribe();
-    this.serviceSub?.unsubscribe();
-    clearTimeout(this.servicePopupTimer);
-    clearTimeout(this.addressAutocompleteTimer);
     this.serviceSub?.unsubscribe();
     clearTimeout(this.servicePopupTimer);
     clearTimeout(this.addressAutocompleteTimer);
@@ -541,11 +535,6 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   @HostListener('document:keydown.escape')
-  onEscape(): void {
-    this.closePlanNotice();
-    this.closeServicePopup();
-  }
-
   onEscape(): void {
     this.closePlanNotice();
     this.closeServicePopup();

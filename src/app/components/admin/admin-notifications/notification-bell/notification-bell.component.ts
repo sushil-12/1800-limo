@@ -195,7 +195,9 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
 		}
 		this.open = false;
 		const link = bookingLink(n);
-		this.router.navigate(link.commands, { queryParams: link.queryParams });
+		if (link) {
+			this.router.navigate(link.commands, { queryParams: link.queryParams });
+		}
 	}
 
 	toggleExpanded(n: AdminNotification, event: MouseEvent): void {

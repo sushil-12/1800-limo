@@ -6,6 +6,7 @@ export const EVENT_LABELS: Record<string, string> = {
 	cancelled: 'Cancelled',
 	status_changed: 'Status changed',
 	payment: 'Payment',
+	lead: 'New lead',
 };
 
 const ROLE_LABELS: Record<number, string> = {
@@ -21,6 +22,10 @@ export function eventLabel(event: string): string {
 export function headline(n: AdminNotification): string {
 	const id = `#${n.reservation_id}`;
 	switch (n.event) {
+		case 'lead': {
+			const service = (n.changes || []).find(c => c.field === 'service')?.new;
+			return service ? `New lead for ${service}` : 'New lead';
+		}
 		case 'created': return `New booking ${id}`;
 		case 'cancelled': return `Booking ${id} cancelled`;
 		case 'status_changed': return `Booking ${id} status changed`;
@@ -66,8 +71,9 @@ export function timeAgo(iso: string): string {
 	return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+/** Entries whose changes are a list of values rather than old → new diffs. */
 export function isNewBooking(n: AdminNotification): boolean {
-	return n.event === 'created';
+	return n.event === 'created' || n.event === 'lead';
 }
 
 /** Internal reservation columns that aren't useful to admins reading the activity feed. */
@@ -143,8 +149,11 @@ export function changeSummary(n: AdminNotification, max = 2): string {
 	return `${actorName(n)} · ` + parts.join(' · ') + (more > 0 ? ` · +${more} more` : '');
 }
 
-/** Admin screen that opens a single booking. */
-export function bookingLink(n: AdminNotification): { commands: any[]; queryParams: any } {
+/** Admin screen that opens a single booking; null for leads, which have no booking. */
+export function bookingLink(n: AdminNotification): { commands: any[]; queryParams: any } | null {
+	if (!n.reservation_id) {
+		return null;
+	}
 	return { commands: ['/admin/new-booking-v2'], queryParams: { bookingId: n.reservation_id, updateType: 'edit' } };
 }
 

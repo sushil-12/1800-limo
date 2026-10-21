@@ -83,7 +83,7 @@
 			<ng-container *ngIf="isExpanded(n)">
 				<div class="an-changes" *ngIf="changesOf(n).length; else noChanges">
 					<div class="an-changes-title">
-						{{ isNewBooking(n) ? 'Booking details' : changesOf(n).length + ' instruction' + (changesOf(n).length === 1 ? '' : 's') + ' changed' }}
+						{{ isNewBooking(n) ? (n.event === 'lead' ? 'Lead details' : 'Booking details') : changesOf(n).length + ' instruction' + (changesOf(n).length === 1 ? '' : 's') + ' changed' }}
 					</div>
 					<div class="an-diff">
 						<div class="an-diff-head" *ngIf="!isNewBooking(n)">

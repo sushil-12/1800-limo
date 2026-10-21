@@ -134,7 +134,9 @@ export class AdminNotificationsComponent implements OnInit, OnDestroy {
 			this.markRead(n);
 		}
 		const link = bookingLink(n);
-		this.router.navigate(link.commands, { queryParams: link.queryParams });
+		if (link) {
+			this.router.navigate(link.commands, { queryParams: link.queryParams });
+		}
 	}
 
 	isExpanded(n: AdminNotification): boolean {

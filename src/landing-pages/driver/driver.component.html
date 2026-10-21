@@ -86,6 +86,8 @@
 							<label for="driver-mobile" class="tw-sr-only">Mobile number</label>
 							<input #mobileInput id="driver-mobile" name="mobile" type="tel" inputmode="tel" autocomplete="tel" maxlength="16"
 								[ngModel]="mobile" (input)="onMobileInput($event)" [disabled]="sending"
+							<input #mobileInput id="driver-mobile" name="mobile" type="tel" inputmode="tel" autocomplete="tel" maxlength="16"
+								[ngModel]="mobile" (input)="onMobileInput($event)" [disabled]="sending"
 								placeholder="Enter your mobile number"
 								class="tw-m-0 tw-h-14 tw-w-full tw-rounded-md tw-border-0 tw-bg-transparent tw-pr-3 !tw-text-base tw-font-normal tw-text-black tw-shadow-none tw-outline-none placeholder:!tw-font-normal placeholder:tw-text-[#C4C4C4] sm:tw-h-16 sm:tw-pr-5 sm:!tw-text-lg">
 						</div>
@@ -404,7 +406,7 @@
 			</button>
 
 			<h3 id="service-popup-title" class="tw-m-0 tw-pr-10 tw-font-poppins tw-text-xl tw-font-bold tw-leading-snug tw-text-black sm:tw-text-2xl">
-				Which Service you are provided
+				Select Your Service
 			</h3>
 
 			<form class="tw-m-0 tw-mt-6 tw-flex tw-flex-col tw-gap-4" (ngSubmit)="submitServiceInterest()" novalidate>
@@ -413,11 +415,11 @@
 					<input id="sp-email" name="email" type="email" autocomplete="email" [(ngModel)]="serviceForm.email"
 						[disabled]="serviceSending" placeholder="you@example.com" class="lp-field">
 				</div>
-				<div class="lp-popup-phone">
+				<div>
 					<label for="sp-phone" class="tw-mb-1.5 tw-block tw-font-poppins tw-text-sm tw-font-medium tw-text-[#2E2E3A]">Phone</label>
-					<input #servicePhoneInput id="sp-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16"
+					<input id="sp-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16"
 						[ngModel]="serviceForm.phone" (input)="onServicePhoneInput($event)"
-						[disabled]="serviceSending" placeholder="Phone number" class="lp-field">
+						[disabled]="serviceSending" placeholder="+15551234567" class="lp-field">
 				</div>
 				<div>
 					<label for="sp-address" class="tw-mb-1.5 tw-block tw-font-poppins tw-text-sm tw-font-medium tw-text-[#2E2E3A]">Physical address</label>

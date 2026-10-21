@@ -59,6 +59,7 @@
 								<th style="width: 48px;"></th>
 								<th>Image</th>
 								<th>Vehicle Type</th>
+								<th>Status</th>
 								<th *ngIf="currentUser?.created_by_role == 'admin' ">Actions</th>
 							</tr>
 						</thead>
@@ -68,24 +69,32 @@
 									style="cursor: default;">
 									<td cdkDragHandle style="vertical-align: middle; text-align: center; cursor: move;">
 										<span class="drag-grip-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="black" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="5" cy="5" r="1.5"/>
-  <circle cx="12" cy="5" r="1.5"/>
-  <circle cx="19" cy="5" r="1.5"/>
+											<circle cx="5" cy="5" r="1.5"/>
+											<circle cx="12" cy="5" r="1.5"/>
+											<circle cx="19" cy="5" r="1.5"/>
 
-  <circle cx="5" cy="12" r="1.5"/>
-  <circle cx="12" cy="12" r="1.5"/>
-  <circle cx="19" cy="12" r="1.5"/>
+											<circle cx="5" cy="12" r="1.5"/>
+											<circle cx="12" cy="12" r="1.5"/>
+											<circle cx="19" cy="12" r="1.5"/>
 
-  <circle cx="5" cy="19" r="1.5"/>
-  <circle cx="12" cy="19" r="1.5"/>
-  <circle cx="19" cy="19" r="1.5"/>
-</svg></span>
+											<circle cx="5" cy="19" r="1.5"/>
+											<circle cx="12" cy="19" r="1.5"/>
+											<circle cx="19" cy="19" r="1.5"/>
+											</svg></span>
 									</td>
 								<td>
 									<img src="{{vehicle.vehicle_homepage_img}}" />
 								</td>
 								<td>
 									<p>{{vehicle.vehicle_name}}</p>
+								</td>
+								<td style="vertical-align: middle;">
+									<mat-slide-toggle [color]="color"
+										[checked]="(vehicle.status || 'enable') == 'enable'"
+										[disabled]="currentUser?.created_by_role != 'admin' || vehicle.statusUpdating"
+										(change)="vehicleStatusToggled(vehicle, $event)">
+										{{(vehicle.status || 'enable') == 'enable' ? 'Enabled' : 'Disabled'}}
+									</mat-slide-toggle>
 								</td>
 								<td *ngIf="currentUser?.created_by_role == 'admin' ">
 									<a class="user-profileded btn btn-icon btn-transparent-dark dropdown-toggle"
@@ -139,7 +148,7 @@
 								</ng-template>
 								<ng-template cdkDragPlaceholder>
 									<tr class="vehicle-drag-placeholder">
-										<td [attr.colspan]="currentUser?.created_by_role == 'admin' ? 4 : 3"></td>
+										<td [attr.colspan]="currentUser?.created_by_role == 'admin' ? 5 : 4"></td>
 									</tr>
 								</ng-template>
 							</tr>

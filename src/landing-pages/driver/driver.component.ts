@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NgClass, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -6,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/services/auth.service';
 import { CommonService } from 'src/app/services/common.service';
 import * as intlTelInput from 'intl-tel-input';
+import { attachPlaceAutocompleteElement, getPlaceAutocompleteDisplayValue } from 'src/app/utils/google-place-autocomplete';
 import { attachPlaceAutocompleteElement, getPlaceAutocompleteDisplayValue } from 'src/app/utils/google-place-autocomplete';
 
 interface Benefit {
@@ -120,6 +122,12 @@ const MAX_SENDS_PER_BROWSER = 5;
 const SEND_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** Minimum gap between two sends, so nobody can walk down a list of numbers. */
 const SEND_COOLDOWN_MS = 30 * 1000;
+
+// Service interest popup: opens on every visit to the page, after a random 4-8s delay.
+const SERVICE_POPUP_MIN_DELAY = 3000;
+const SERVICE_POPUP_MAX_DELAY = 5000;
+/** The Maps script loads async; wait this long between checks for it (up to 20 tries). */
+const MAPS_RETRY_MS = 250;
 
 // Service interest popup: opens on every visit to the page, after a random 4-8s delay.
 const SERVICE_POPUP_MIN_DELAY = 3000;
@@ -377,18 +385,9 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   private serviceAddressEl?: HTMLInputElement;
 
-  /** Flag + dial-code picker on the popup's phone field; created and destroyed with the popup. */
-  @ViewChild('servicePhoneInput') set servicePhoneInput(ref: ElementRef<HTMLInputElement> | undefined) {
-    this.servicePhonePicker?.destroy();
-    this.servicePhonePicker = undefined;
-    if (ref) {
-      this.servicePhonePicker = intlTelInput(ref.nativeElement, this.commonService.getTelInputOptions(this.phoneCountry()));
-    }
-  }
-  private servicePhonePicker?: intlTelInput.Plugin;
-
   private plansSub?: Subscription;
   private appLinkSub?: Subscription;
+  private serviceSub?: Subscription;
   private serviceSub?: Subscription;
 
   constructor(
@@ -396,9 +395,13 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     private commonService: CommonService,
     private router: Router,
     private ngZone: NgZone
+    private router: Router,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
+    this.scheduleServicePopup();
+
     this.scheduleServicePopup();
 
     this.plansSub = this.authService.getSubsPlans().subscribe({
@@ -446,6 +449,9 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clearShowcaseTimers();
     this.plansSub?.unsubscribe();
     this.appLinkSub?.unsubscribe();
+    this.serviceSub?.unsubscribe();
+    clearTimeout(this.servicePopupTimer);
+    clearTimeout(this.addressAutocompleteTimer);
     this.serviceSub?.unsubscribe();
     clearTimeout(this.servicePopupTimer);
     clearTimeout(this.addressAutocompleteTimer);
@@ -540,6 +546,11 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeServicePopup();
   }
 
+  onEscape(): void {
+    this.closePlanNotice();
+    this.closeServicePopup();
+  }
+
   closePlanNotice(): void {
     this.planNotice = null;
   }
@@ -615,17 +626,17 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.serviceSending) return;
 
     const email = this.serviceForm.email.trim();
-    // Sent in E.164 (+15551234567), with the dial code from the flag picker.
-    const phone = this.e164Number(this.serviceForm.phone, this.servicePhonePicker);
+    const phone = this.serviceForm.phone.trim();
     // Typed text that wasn't picked from the suggestions only lives in the Google widget.
     const typedAddress = this.serviceAddressEl ? getPlaceAutocompleteDisplayValue(this.serviceAddressEl) : '';
     const address = (typedAddress || this.serviceForm.address).trim();
     const service = this.serviceForm.service;
+    const phoneDigits = phone.replace(/\D/g, '');
 
     this.serviceSent = '';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       this.serviceError = 'Please enter a valid email address.';
-    } else if (!phone) {
+    } else if (phoneDigits.length < 7 || phoneDigits.length > 15) {
       this.serviceError = 'Please enter a valid phone number.';
     } else if (!address) {
       this.serviceError = 'Please enter your physical address.';

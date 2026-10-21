@@ -145,6 +145,53 @@ export class MasterVehicleTypesComponent implements OnInit {
 
 	}
 
+	vehicleStatusToggled(vehicle: any, event) {
+		const previousStatus = vehicle.status || 'enable';
+		const newStatus = event.checked ? 'enable' : 'disable';
+		vehicle.status = newStatus;
+		vehicle.statusUpdating = true;
+		this.spinner.show();
+
+		const revert = (err) => {
+			vehicle.status = previousStatus;
+			event.source.checked = previousStatus == 'enable';
+			vehicle.statusUpdating = false;
+			this.spinner.hide();
+			return throwError(err);
+		};
+
+		// edit-vehicle-types expects the full record, so load it and resend with only the status changed
+		this.adminService.getVehicleType(vehicle.id || vehicle.ID)
+			.pipe(catchError(revert))
+			.subscribe((result: any) => {
+				const data = result.data;
+				const payload = {
+					vehicleId: data.id,
+					vehicleType: data.vehicle_cat_name,
+					vehicleImage: '',
+					vehicle_homepage_img: data.vehicle_homepage_img || '',
+					gallery_images: data.gallery_images || [],
+					tagline: data.tagline || '',
+					badge_text: data.badge_text || '',
+					features: data.features || [],
+					descriptions: data.descriptions || '',
+					linked_cat: data.linked_cat || '',
+					status: newStatus,
+					sort_order: data.sort_order !== undefined && data.sort_order !== null ? data.sort_order : 1,
+					seats: data.seats,
+					luggage: data.luggage
+				};
+
+				this.adminService.updateVehicleType(payload)
+					.pipe(catchError(revert))
+					.subscribe(() => {
+						vehicle.statusUpdating = false;
+						sessionStorage.setItem('vehiclesTypes', JSON.stringify(this.allVehicles));
+						this.spinner.hide();
+					});
+			});
+	}
+
 	drop(event: CdkDragDrop<any[]>) {
 		if (event.previousIndex === event.currentIndex) {
 			return;

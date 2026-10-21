@@ -842,6 +842,41 @@ gmp-place-autocomplete {
 	svg {
 		fill: currentColor;
 	}
+
+	// Suffix icons (clock, passengers, luggage, vehicles) aligned with the datepicker toggle
+	&.field-icon-btn {
+		padding: 0 12px;
+		margin-right: 0;
+	}
+
+	&.field-icon-btn:is(span) {
+		cursor: default;
+	}
+}
+
+// Vehicle Type ng-select: car icon replaces the dropdown arrow; clicks pass through to open the select
+.ng-select-with-icon {
+	position: relative;
+
+	.ng-select-suffix-icon {
+		position: absolute;
+		top: 50%;
+		right: 12px;
+		transform: translateY(-50%);
+		display: flex;
+		align-items: center;
+		color: rgba(0, 0, 0, 0.54);
+		pointer-events: none;
+
+		svg {
+			fill: currentColor;
+		}
+	}
+
+	::ng-deep .ng-select .ng-arrow-wrapper {
+		visibility: hidden;
+		width: 36px;
+	}
 }
 
 quill-editor {

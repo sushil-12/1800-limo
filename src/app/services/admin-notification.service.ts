@@ -5,7 +5,7 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { SILENT_ERRORS_HEADER } from '../interceptors/http-config.interceptor';
 
-export type AdminNotificationEvent = 'created' | 'updated' | 'cancelled' | 'status_changed' | 'payment';
+export type AdminNotificationEvent = 'created' | 'updated' | 'cancelled' | 'status_changed' | 'payment' | 'lead';
 
 export interface AdminNotificationChange {
 	field: string;
@@ -16,7 +16,8 @@ export interface AdminNotificationChange {
 
 export interface AdminNotification {
 	id: number;
-	reservation_id: number;
+	reservation_id: number | null;
+	lead_id: number | null;
 	event: AdminNotificationEvent;
 	actor_id: number | null;
 	actor_role: number | null;

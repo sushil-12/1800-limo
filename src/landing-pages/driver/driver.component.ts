@@ -377,7 +377,6 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   private serviceAddressEl?: HTMLInputElement;
 
-<<<<<<< HEAD
   /** Flag + dial-code picker on the popup's phone field; created and destroyed with the popup. */
   @ViewChild('servicePhoneInput') set servicePhoneInput(ref: ElementRef<HTMLInputElement> | undefined) {
     this.servicePhonePicker?.destroy();
@@ -388,8 +387,6 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   private servicePhonePicker?: intlTelInput.Plugin;
 
-=======
->>>>>>> b05a49b3 (fixes)
   private plansSub?: Subscription;
   private appLinkSub?: Subscription;
   private serviceSub?: Subscription;

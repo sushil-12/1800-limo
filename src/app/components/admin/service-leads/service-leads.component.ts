@@ -11,6 +11,7 @@ export class ServiceLeadsComponent implements OnInit {
 
 	public leadsRes: any;
 	public leads: any = [];
+	public isLoading: boolean = false;
 
 	public lastPage: number;
 	public totalPage: number;
@@ -31,6 +32,7 @@ export class ServiceLeadsComponent implements OnInit {
 	}
 
 	loadLeads(pageUrl = null) {
+		this.isLoading = true;
 		this.spinner.show();
 		if (pageUrl) {
 			document.getElementById('leads_table')?.scrollIntoView({ behavior: 'smooth' });
@@ -47,9 +49,11 @@ export class ServiceLeadsComponent implements OnInit {
 			this.lastPageUrl = this.leadsRes?.data?.last_page_url;
 			this.prevPageUrl = this.leadsRes?.data?.prev_page_url;
 			this.nextPageUrl = this.leadsRes?.data?.next_page_url;
+			this.isLoading = false;
 			this.spinner.hide();
 		})
 			.catch(err => {
+				this.isLoading = false;
 				this.spinner.hide();
 			});
 	}

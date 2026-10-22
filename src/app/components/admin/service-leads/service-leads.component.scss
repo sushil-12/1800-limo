@@ -1,3 +1,10 @@
+.address-cell {
+	min-width: 200px;
+	max-width: 260px;
+	white-space: normal !important;
+	word-break: break-word;
+}
+
 .lead-status-badge {
 	display: inline-block;
 	padding: 4px 12px;

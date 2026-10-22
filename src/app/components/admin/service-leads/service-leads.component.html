@@ -30,10 +30,10 @@
 									</td>
 									<td style="white-space: nowrap;">{{lead?.phone || 'N/A'}}</td>
 									<td>{{lead?.service || 'N/A'}}</td>
-									<td>{{lead?.address || 'N/A'}}</td>
+									<td class="address-cell" [title]="lead?.address || ''">{{lead?.address || 'N/A'}}</td>
 									<td style="white-space: nowrap;">{{lead?.created_at | date : 'dd-MMM-yyyy, hh:mm a'}}</td>
 								</tr>
-								<tr *ngIf="leads?.length == 0">
+								<tr *ngIf="!isLoading && leads?.length == 0">
 									<td colspan="6" class="text-center">No Leads Found.</td>
 								</tr>
 							</tbody>

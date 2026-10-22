@@ -3464,6 +3464,14 @@ export class BookingComponent implements OnInit, OnDestroy {
 		}
 		console.log('DEBUGRATES - PREFILL START | booking_id:', booking_id, '| updateType:', this.Form.updateType.value);
 		this.fetchBookingDataForEdit(booking_id, this.Form.updateType.value).subscribe((response: any) => {
+			// The list pages hide "Edit" for paid bookings, but the URL can still be
+			// hand-edited to updateType=edit — refuse it here for every role.
+			if (this.isEditingPaidBooking(response?.data)) {
+				this.isPrefillingForm = false;
+				this.$spinner.hide('normalspinner');
+				this.blockPaidBookingEdit();
+				return;
+			}
 			try {
 			console.log('DEBUGRATES - PREFILL RESPONSE ARRIVED | suspect field types:', {
 				booking_instructions: typeof response?.data?.booking_instructions,
@@ -8064,6 +8072,12 @@ export class BookingComponent implements OnInit, OnDestroy {
 	submitForm(preview: boolean) {
 		this.submitBookingForm = true
 
+		// Backstop for the prefill guard: a paid booking must never be saved as an edit.
+		if (this.isEditingPaidBooking(this.bookingResponse)) {
+			this.blockPaidBookingEdit();
+			return;
+		}
+
 		// Drop the previous run's same-location flags so the check below re-evaluates
 		// the current addresses instead of the form staying invalid from the last attempt.
 		this.clearSameLocationErrors();
@@ -8742,6 +8756,29 @@ export class BookingComponent implements OnInit, OnDestroy {
 			return
 		}
 		this.$router.navigate(['/admin/daily-bookings-admin'])
+	}
+
+	/** Paid / paid-in-cash bookings are locked — only repeat/return/round may reuse them. */
+	private isEditingPaidBooking(booking: any): boolean {
+		const isEdit = this.updateType == 'edit' || this.Form?.updateType?.value == 'edit';
+		return isEdit && ['paid', 'paid_cash'].includes(booking?.booking_status);
+	}
+
+	private blockPaidBookingEdit() {
+		this.$errors.openDialog({
+			errors: {
+				error: 'This booking has already been paid and can no longer be edited.'
+			}
+		});
+		// Same destinations as navigatePostSave(), minus the affiliate reload that would drop the dialog.
+		this.$spinner.hide();
+		if (this.isAffiliateMode) {
+			this.$router.navigate([this.currentUser?.roleName == 'sub_affiliate' ? '/sub_affiliate/my-bookings' : '/affiliate/my-bookings']);
+		} else if (this.isIndividualMode || this.isTravelAgentMode) {
+			this.$router.navigate([`/${this.currentUser?.roleName}/bookings`]);
+		} else {
+			this.$router.navigate(['/admin/daily-bookings-admin']);
+		}
 	}
 
 	resetFields() {

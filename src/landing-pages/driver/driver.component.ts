@@ -615,17 +615,17 @@ export class DriverComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.serviceSending) return;
 
     const email = this.serviceForm.email.trim();
-    const phone = this.serviceForm.phone.trim();
+    // The field holds a national number; the dial code comes from the flag picker.
+    const phone = this.e164Number(this.serviceForm.phone, this.servicePhonePicker);
     // Typed text that wasn't picked from the suggestions only lives in the Google widget.
     const typedAddress = this.serviceAddressEl ? getPlaceAutocompleteDisplayValue(this.serviceAddressEl) : '';
     const address = (typedAddress || this.serviceForm.address).trim();
     const service = this.serviceForm.service;
-    const phoneDigits = phone.replace(/\D/g, '');
 
     this.serviceSent = '';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       this.serviceError = 'Please enter a valid email address.';
-    } else if (phoneDigits.length < 7 || phoneDigits.length > 15) {
+    } else if (!phone) {
       this.serviceError = 'Please enter a valid phone number.';
     } else if (!address) {
       this.serviceError = 'Please enter your physical address.';

@@ -1377,7 +1377,7 @@ button.link {
 
 		.price-amount {
 			// font-size: 1.8rem;
-			font-weight: 800; // Extra Bold
+			font-weight: 600; // Extra Bold
 			color: #000;
 			letter-spacing: -0.5px;
 		}
@@ -1387,14 +1387,14 @@ button.link {
 	.promo-text {
 		font-size: 16px;
 		color: red;
-		font-weight: 700;
+		font-weight: 600;
 		margin-bottom: 12px;
 	}
 
 	// Vehicle Name: "Full-Size Sedan - X"
 	.vehicle-name {
 		font-size: 1.2rem; // Reverted to original design size
-		font-weight: 800;
+		font-weight: 700;
 		color: #000;
 		margin: 0 0 10px 0;
 		line-height: 1.2;
@@ -1416,7 +1416,7 @@ button.link {
 	// Details: "2020 Lincoln Continental"
 	.details-text {
 		// font-size: 1.15rem;
-		font-weight: 700;
+		font-weight: 600;
 		color: #000;
 		margin-bottom: 15px;
 	}
@@ -1444,7 +1444,7 @@ button.link {
 			gap: 5px;
 
 			strong {
-				font-weight: 800;
+				font-weight: 600;
 			}
 		}
 
@@ -1465,7 +1465,7 @@ button.link {
 			border: none;
 			padding: 12px 0;
 			border-radius: 8px;
-			font-weight: 700;
+			font-weight: 600;
 			// font-size: 1.05rem;
 			cursor: pointer;
 			transition: all 0.2s ease;

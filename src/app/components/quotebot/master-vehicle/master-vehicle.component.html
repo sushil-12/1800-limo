@@ -401,9 +401,9 @@
 							<p id="vehicle-name" class="vehicle-name-text">
 								{{ vehicle_obj?.name }}
 							</p>
-							<p id="vehicle-price" class="font-weight-bolder mb-4" style="font-size: 1.1rem"
+							<p id="vehicle-price" class="mb-4" style="font-size: 1.1rem"
 								*ngIf="('rate_breakdown_' + getKeyName()) != undefined || ('rate_breakdown_' + getKeyName()).length <= 0">
-								<span style="color: #c94505;font-weight: 600;">
+								<span style="color: #c94505;font-weight: 600; font-weight:600">
 									From&nbsp;
 								</span>
 								{{currencySymbol ? currencySymbol : '$'}} {{ vehicle_obj['rate_breakdown_' +
@@ -417,14 +417,14 @@
 									<img alt="" src="assets/images/select_vehicle/pass.png" style="padding: 3px;"
 										width="16" />
 									<span style="font-size: 0.8rem;margin-left: 0.1rem;font-weight: 500;">Pax</span>
-									<span class="font-weight-bolder" style="font-size: 0.9rem;padding: 3px;">{{
+									<span style="font-size: 0.9rem;padding: 3px; font-weight: 600">{{
 										vehicle_obj?.passenger }}</span>
 								</div>
 								<div class="icon-container-mobile">
 									<img alt="" src="assets/images/select_vehicle/lug.png" style="padding: 3px;"
 										width="16" />
 									<span style="font-size: 0.8rem;margin-left: 0.1rem;font-weight: 500;">Luggage</span>
-									<span class="font-weight-bolder" style="font-size: 0.9rem;padding: 3px;">{{
+									<span style="font-size: 0.9rem;padding: 3px;font-weight: 600">{{
 										vehicle_obj?.luggage }}</span>
 								</div>
 							</div>

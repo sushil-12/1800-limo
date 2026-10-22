@@ -22,13 +22,19 @@
 							</thead>
 							<tbody>
 								<tr role="row" class="odd" *ngFor="let lead of leads">
-									<td>{{lead?.email || 'N/A'}}</td>
+									<td>
+										<a *ngIf="lead?.email; else noEmail" class="contact-link" [href]="'mailto:' + lead.email">{{lead.email}}</a>
+										<ng-template #noEmail>N/A</ng-template>
+									</td>
                                     <td>
 										<span class="lead-status-badge" [ngClass]="'status-' + (lead?.status || 'unknown')">
 											{{(lead?.status || 'N/A') | titlecase}}
 										</span>
 									</td>
-									<td style="white-space: nowrap;">{{lead?.phone || 'N/A'}}</td>
+									<td style="white-space: nowrap;">
+										<a *ngIf="lead?.phone; else noPhone" class="contact-link" [href]="'tel:' + lead.phone">{{lead.phone}}</a>
+										<ng-template #noPhone>N/A</ng-template>
+									</td>
 									<td>{{lead?.service || 'N/A'}}</td>
 									<td class="address-cell" [title]="lead?.address || ''">{{lead?.address || 'N/A'}}</td>
 									<td style="white-space: nowrap;">{{lead?.created_at | date : 'dd-MMM-yyyy, hh:mm a'}}</td>

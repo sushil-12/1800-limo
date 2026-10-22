@@ -83,6 +83,7 @@ import { VehicleDetailsComponent } from '../subscription/vehicle-details/vehicle
 import { VehicleRatesSubscriberComponent } from '../subscription/vehicle-rates-subscriber/vehicle-rates-subscriber.component';
 import { EditVehicleSubscriberComponent } from '../subscription/edit-vehicle-subscriber/edit-vehicle-subscriber.component';
 import { SubscribersListComponent } from './subscribers-list/subscribers-list.component';
+import { ServiceLeadsComponent } from './service-leads/service-leads.component';
 import { DriverDetailsComponent } from '../subscription/driver-details/driver-details.component';
 import { AddDriverSubscriberComponent } from '../subscription/add-driver-subscriber/add-driver-subscriber.component';
 import { FarmOutBookingsComponent } from '../subscription/farm-out-bookings/farm-out-bookings.component';
@@ -602,6 +603,11 @@ const routes: Routes = [
 		path: 'subscribers-list',
 		canActivate: [AdminGuardGuard],
 		component: SubscribersListComponent
+	},
+	{
+		path: 'service-leads',
+		canActivate: [AdminGuardGuard],
+		component: ServiceLeadsComponent
 	},
 	{
 		path: 'farm-out-bookings',

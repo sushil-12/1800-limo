@@ -1,0 +1,71 @@
+<ngx-spinner type="ball-scale-multiple"></ngx-spinner>
+<main>
+	<!-- Main page content-->
+	<section class="adminbox_shadow user_information" id="leads_table">
+		<h2 class="headinginfo"> Service Leads </h2>
+
+		<div class="containeredd driverside_table">
+			<div class="row">
+				<div class="col-md-12 custom_table" style="margin:10px 0px">
+					<div class="table-responsive" style="min-height: 350px">
+						<table class="table table-dark table-striped table-bordered dataTable dt-responsive"
+							id="dataTable" role="grid" aria-describedby="dataTable_info" cellspacing="0">
+							<thead>
+								<tr role="row">
+									<th>Email</th>
+                                    <th>Status</th>
+									<th>Phone</th>
+									<th>Service</th>
+									<th>Address</th>
+									<th>Created Date</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr role="row" class="odd" *ngFor="let lead of leads">
+									<td>{{lead?.email || 'N/A'}}</td>
+                                    <td>
+										<span class="lead-status-badge" [ngClass]="'status-' + (lead?.status || 'unknown')">
+											{{(lead?.status || 'N/A') | titlecase}}
+										</span>
+									</td>
+									<td style="white-space: nowrap;">{{lead?.phone || 'N/A'}}</td>
+									<td>{{lead?.service || 'N/A'}}</td>
+									<td>{{lead?.address || 'N/A'}}</td>
+									<td style="white-space: nowrap;">{{lead?.created_at | date : 'dd-MMM-yyyy, hh:mm a'}}</td>
+								</tr>
+								<tr *ngIf="leads?.length == 0">
+									<td colspan="6" class="text-center">No Leads Found.</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<!----PAGINATION---->
+				<nav aria-label="Page navigation example" *ngIf="totalPage > 1">
+					<ul class="pagination pagination-circle pg-blue">
+						<li *ngIf="currentPage!=1" class="page-item" (click)="loadLeads(firstPageUrl)"><a
+								class="page-link">First</a></li>
+						<li *ngIf="currentPage!=1" class="page-item" (click)="loadLeads(prevPageUrl)">
+							<a class="page-link" aria-label="Previous">
+								<span aria-hidden="true">&laquo;</span>
+								<span class="sr-only">Previous</span>
+							</a>
+						</li>
+						<li *ngFor="let in of counter()" [ngClass]="(in==currentPage)?'page-item active':'page-item'"
+							(click)="in!=currentPage && loadLeads(path+'?page='+in)">
+							<a class="page-link">{{in}}</a>
+						</li>
+						<li *ngIf="currentPage!=lastPage" class="page-item" (click)="loadLeads(nextPageUrl)">
+							<a class="page-link" aria-label="Next">
+								<span aria-hidden="true">&raquo;</span>
+								<span class="sr-only">Next</span>
+							</a>
+						</li>
+						<li *ngIf="currentPage!=lastPage" class="page-item" (click)="loadLeads(lastPageUrl)"><a
+								class="page-link">Last</a></li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+	</section>
+</main>

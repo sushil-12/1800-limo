@@ -1436,6 +1436,11 @@ export class AdminService {
 		return this.httpClient.get(path).toPromise();;
 	}
 
+	serviceLeads(url = null) {
+		const path = url ? url : this.serverUrl + 'admin/leads';
+		return this.httpClient.get(path).toPromise();
+	}
+
 	cancelSubscription(data) {
 		return this.httpClient.post(this.serverUrl + 'cancel-subscription', data);
 	}

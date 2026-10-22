@@ -401,9 +401,9 @@
 							<p id="vehicle-name" class="vehicle-name-text">
 								{{ vehicle_obj?.name }}
 							</p>
-							<p id="vehicle-price" class="mb-4" style="font-size: 1.1rem"
+							<p id="vehicle-price" class="mb-4" style="font-size: 1.1rem;font-weight: 600 !important;"
 								*ngIf="('rate_breakdown_' + getKeyName()) != undefined || ('rate_breakdown_' + getKeyName()).length <= 0">
-								<span style="color: #c94505;font-weight: 600; font-weight:600">
+								<span style="color: #c94505;">
 									From&nbsp;
 								</span>
 								{{currencySymbol ? currencySymbol : '$'}} {{ vehicle_obj['rate_breakdown_' +

@@ -57,8 +57,8 @@
 							titlecase }}
 						</mat-label>
 						<input type="number" matInput placeholder="0" formControlName="baserate"
-							[tabIndex]="getTabIndex(item.key)" class="font-weight-bolder rate-input-field text-right"
-							(focus)="$event.target.select()"
+							[tabIndex]="getTabIndex(item.key)" class="rate-input-field text-right"
+							(focus)="$event.target.select()" style="font-weight:600"
 							[readonly]="(userRole === 'affiliate' || isAffiliateMode) && sub_item.key === 'Base_Rate'"
 							(change)="sub_item.key != 'Misc_Charges' && handleNegtiveValue(item.key,sub_item.key,'baserate',$event.target.value)" />
 					</mat-form-field>
@@ -80,7 +80,7 @@
 							Distance
 						</mat-label>
 						<input type="number" matInput placeholder="0" [value]="distance" style="cursor: not-allowed"
-							class="font-weight-bolder rate-input-field text-right" readonly />
+							class="rate-input-field text-right" style="font-weight:600" readonly />
 					</mat-form-field>
 				</div>
 			</div>
@@ -91,7 +91,7 @@
 					<mat-form-field appearance="outline" class="m-0" style="width: 100%;">
 						<mat-label>{{ isDaysMode ? 'Number of Days' : 'Number of Hours' }}</mat-label>
 						<input type="number" matInput placeholder="2" [value]="isDaysMode ? charterDays : hours" [readonly]="is_readonly_min_rate"
-							min="2" step="1" class="font-weight-bolder rate-input-field text-right"
+							min="2" step="1" class="rate-input-field text-right" style="font-weight:600"
 							(input)="handleHourChange($event)" (blur)="enforceMinimumHours($event)"
 							(keydown)="blockNegative($event)" (focus)="$event.target.select()" />
 					</mat-form-field>
@@ -170,7 +170,7 @@
 
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row">
 		<div class="col-md-6">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Sub Total
 			</p>
 		</div>
@@ -181,7 +181,7 @@
 	<!-- Number of Vehicles/Hours -->
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row" *ngIf="vehicles !== 0">
 		<div class="col-md-6 col-xl-7">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Number of Vehicles
 			</p>
 		</div>
@@ -194,7 +194,7 @@
 	<!-- Total -->
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row bk-total-row--grand">
 		<div class="col-md-6 col-xl-7">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				{{ isAffiliateMode ? "Client Total" : "Grand Total" }}
 			</p>
 		</div>
@@ -205,7 +205,7 @@
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row"
 		*ngIf="!hideBuckets && !isAffiliateMode && userRole !== 'affiliate' && this.booking_created_from == 'admin'">
 		<div class="col-md-6">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Admin Share
 			</p>
 		</div>
@@ -217,7 +217,7 @@
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row"
 		*ngIf="showTravelAdvisorShare">
 		<div class="col-md-6">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Travel Advisor Share
 			</p>
 		</div>
@@ -229,7 +229,7 @@
 	<hr *ngIf="isAffiliateMode && isFarmoutBooking">
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row" *ngIf="!hideBuckets && isFarmoutBooking" [style.color]="isAffiliateMode ? 'green' : null">
 		<div class="col-md-6">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Farm out Income
 			</p>
 		</div>
@@ -297,8 +297,8 @@
 							titlecase }}
 						</mat-label>
 						<input type="number" matInput placeholder="0" [tabIndex]="getTabIndex('r_'+item.key)"
-							class="font-weight-bolder rate-input-field text-right" (focus)="$event.target.select()"
-							formControlName="baserate"
+							class="rate-input-field text-right" (focus)="$event.target.select()"
+							formControlName="baserate" style="font-weight:600"
 							[readonly]="(userRole === 'affiliate' || isAffiliateMode) && sub_item.key === 'Base_Rate'"
 							(change)="sub_item.key != 'Misc_Charges' && handleNegtiveValuReturn(item.key,sub_item.key,'baserate',$event.target.value)" />
 					</mat-form-field>
@@ -346,7 +346,7 @@
 							Distance
 						</mat-label>
 						<input type="number" matInput placeholder="0" [value]="distance" style="cursor: not-allowed"
-							class="font-weight-bolder rate-input-field text-right" readonly />
+							class="rate-input-field text-right" style="font-weight:600" readonly />
 					</mat-form-field>
 				</div>
 			</div>
@@ -387,7 +387,7 @@
 
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row">
 		<div class="col-md-6">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Sub Total
 			</p>
 		</div>
@@ -398,7 +398,7 @@
 	<!-- Number of Vehicles/Hours -->
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row" *ngIf="vehicles !== 0">
 		<div class="col-md-6 col-xl-7">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Number of Vehicles
 			</p>
 		</div>
@@ -411,7 +411,7 @@
 	<!-- Total -->
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row bk-total-row--grand">
 		<div class="col-md-6 col-xl-7">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem;font-weight:600">
 				{{ isAffiliateMode ? "Client Total" : "Grand Total" }} 
 			</p>
 		</div>
@@ -422,7 +422,7 @@
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row"
 		*ngIf="!hideBuckets && !isAffiliateMode && userRole !== 'affiliate' && this.booking_created_from == 'admin' && currentUser?.created_by_role != 'subscriber'">
 		<div class="col-md-6">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Admin Share
 			</p>
 		</div>
@@ -434,7 +434,7 @@
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row"
 		*ngIf="showTravelAdvisorShare">
 		<div class="col-md-6">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Travel Advisor Share
 			</p>
 		</div>
@@ -446,7 +446,7 @@
 	<hr *ngIf="isAffiliateMode && isFarmoutBooking">
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap bk-total-row" *ngIf="!hideBuckets && isFarmoutBooking" [style.color]="isAffiliateMode ? 'green' : null">
 		<div class="col-md-6">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem;font-weight:600">
 				Farm out Income
 			</p>
 		</div>

@@ -3,7 +3,7 @@
 
 <section class="section-container" *ngIf="BookingDetail">
 	<div class="container" id="print-section">
-		<h3 class="font-weight-bolder mb-1 text-center">Finalize Booking</h3>
+		<h3 class="mb-1 text-center" style="font-weight:600 !important">Finalize Booking</h3>
 		<hr>
 		<div class="invoicesum_header">
 			<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
@@ -14,15 +14,15 @@
 			</div>
 			<div class="row my-3">
 				<div class="col-md-4">
-					<p>Service Type <strong>{{ textFormatter(BookingDetail?.service_type) | titlecase }}</strong>
+					<p>Service Type <strong style="font-weight:600 !important">{{ textFormatter(BookingDetail?.service_type) | titlecase }}</strong>
 					</p>
 				</div>
 				<div class="col-md-4">
-					<p>Booking Type <strong>{{ textFormatter(BookingDetail?.transfer_type) | titlecase }}</strong>
+					<p>Booking Type <strong style="font-weight:600 !important">{{ textFormatter(BookingDetail?.transfer_type) | titlecase }}</strong>
 					</p>
 				</div>
 				<div class="col-md-4">
-					<p>Booking Status <strong>{{ BookingDetail?.booking_status | titlecase }}</strong></p>
+					<p>Booking Status <strong style="font-weight:600 !important">{{ BookingDetail?.booking_status | titlecase }}</strong></p>
 				</div>
 			</div>
 		</div>

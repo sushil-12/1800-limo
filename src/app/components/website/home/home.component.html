@@ -205,8 +205,8 @@
 														style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#666; z-index:2;"></i>
 													<div class="input-box">
 														<input type="text"
-															class="qb-airport-field__input qb-address-field__input input-f font-weight-bolder"
-															style="font-size: 16px !important; background-color: #fff !important; color: #000 !important; padding-left: 42px !important; text-align: left !important;"
+															class="qb-airport-field__input qb-address-field__input input-f"
+															style="font-size: 16px !important; background-color: #fff !important; color: #000 !important; padding-left: 42px !important; text-align: left !important; font-weight:600 !important"
 															placeholder="Enter Pickup address" id="pickup_address"
 															#addressinput formControlName="pickup_address"
 															autocomplete="off" autocorrect="off" autocapitalize="off"
@@ -218,16 +218,6 @@
 															(touchend)="onAddressFieldTouchEnd($event, addressinput)"
 															tabindex="1" />
 													</div>
-
-
-													<button type="button" class="address-current-location-btn"
-														*ngIf="shouldShowCurrentLocationIcon(addressinput, 'pickup_address')"
-														(mousedown)="$event.preventDefault()"
-														(click)="useCurrentPickupLocation('pickup_address')"
-														aria-label="Use current location for pickup address"
-														title="Use Current Location">
-														<i class="fa-solid fa-crosshairs"></i>
-													</button>
 
 
 													<div class="airport-clear-wrap address-clear-wrap"
@@ -332,8 +322,8 @@
 																style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#666; z-index:2;"></i>
 															<div class="input-box w-100">
 																<input #extraStopInputRef type="text"
-																	class="extra-stop-input qb-airport-field__input qb-address-field__input input-f font-weight-bolder"
-																	style="font-size:16px !important; background-color:#fff !important; color:#000 !important; padding-left:42px !important; text-align:left !important;"
+																	class="extra-stop-input qb-airport-field__input qb-address-field__input input-f"
+																	style="font-size:16px !important; background-color:#fff !important; color:#000 !important; padding-left:42px !important; text-align:left !important; font-weight: 600 !important"
 																	[placeholder]="i === 0 ? 'Enter First Stop' : 'Stop ' + (i + 1) + ' address'"
 																	[value]="stop.address" autocomplete="off"
 																	(focus)="onExtraStopAddressFocus(getExtraStopFieldName(i, false), extraStopInputRef)"
@@ -426,8 +416,8 @@
 														style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#666; z-index:2;"></i>
 													<div class="input-box">
 														<input type="text"
-															class="qb-airport-field__input qb-address-field__input input-f font-weight-bolder"
-															style="font-size: 16px !important; background-color: #fff !important; color: #000 !important; padding-left: 42px !important; text-align: left !important;"
+															class="qb-airport-field__input qb-address-field__input input-f"
+															style="font-size: 16px !important; background-color: #fff !important; color: #000 !important; padding-left: 42px !important; text-align: left !important; font-weight:600 !important"
 															placeholder="Enter Dropoff address" id="dropoff_address"
 															#dropaddressinput formControlName="dropoff_address"
 															autocomplete="off" autocorrect="off" autocapitalize="off"
@@ -671,7 +661,7 @@
 																	style="min-width: 2.5rem; font-size:28px !important;"
 																	class="btn btn-decrement btn-outline-secondary highlightButton"
 																	type="button" (click)="change('d','p')">
-																	<strong>-</strong>
+																	<strong style="font-weight:600 !important">-</strong>
 																</button>
 															</div>
 															<input type="number" formControlName="no_of_passenger"
@@ -687,7 +677,7 @@
 																<button style="min-width: 2.5rem"
 																	class="btn btn-increment btn-outline-secondary highlightButton"
 																	type="button" (click)="change('i','p')">
-																	<strong>+</strong>
+																	<strong style="font-weight:600 !important">+</strong>
 																</button>
 															</div>
 														</div>
@@ -720,7 +710,7 @@
 																<button style="min-width: 2.5rem"
 																	class="btn btn-decrement btn-outline-secondary"
 																	type="button" (click)="change('d','l')">
-																	<strong>-</strong>
+																	<strong style="font-weight:600 !important">-</strong>
 																</button>
 															</div>
 															<input type="number" formControlName="no_of_luggage" min="0"
@@ -736,7 +726,7 @@
 																<button style="min-width: 2.5rem"
 																	class="btn btn-increment btn-outline-secondary"
 																	type="button" (click)="change('i','l')">
-																	<strong>+</strong>
+																	<strong style="font-weight:600 !important">+</strong>
 																</button>
 															</div>
 														</div>
@@ -780,8 +770,8 @@
 														style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#666; z-index:2;"></i>
 													<div class="input-box">
 														<input type="text"
-															class="qb-airport-field__input qb-address-field__input input-f font-weight-bolder"
-															style="font-size: 16px !important; background-color: #fff !important; color: #000 !important; padding-left: 42px !important; text-align: left !important;"
+															class="qb-airport-field__input qb-address-field__input input-f"
+															style="font-size: 16px !important; background-color: #fff !important; color: #000 !important; padding-left: 42px !important; text-align: left !important; font-weight:600 !important"
 															[attr.placeholder]="QBForm?.return_pickup_type?.value === 'airport' ? 'Return Pickup Address' : (QBForm?.return_pickup_type?.value === 'city' ? 'Return Pickup Address' : 'Return Pickup Address')"
 															id="return_pickup_address" #retaddressinput
 															formControlName="return_pickup_address" autocomplete="off"
@@ -794,14 +784,6 @@
 															tabindex="1" />
 													</div>
 
-													<button type="button" class="address-current-location-btn"
-														*ngIf="shouldShowCurrentLocationIcon(retaddressinput, 'return_pickup_address')"
-														(mousedown)="$event.preventDefault()"
-														(click)="useCurrentPickupLocation('return_pickup_address')"
-														aria-label="Use current location for return pickup address"
-														title="Use Current Location">
-														<i class="fa-solid fa-crosshairs"></i>
-													</button>
 
 													<div class="airport-clear-wrap address-clear-wrap"
 														*ngIf="shouldShowAddressClear(retaddressinput, 'return_pickup_address')">
@@ -903,8 +885,8 @@
 																style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#666; z-index:2;"></i>
 															<div class="input-box w-100">
 																<input #returnExtraStopInputRef type="text"
-																	class="return-extra-stop-input qb-airport-field__input qb-address-field__input input-f font-weight-bolder"
-																	style="font-size:16px !important; background-color:#fff !important; color:#000 !important; padding-left:42px !important; text-align:left !important;"
+																	class="return-extra-stop-input qb-airport-field__input qb-address-field__input input-f"
+																	style="font-size:16px !important; background-color:#fff !important; color:#000 !important; padding-left:42px !important; text-align:left !important; font-weight:600 !important"
 																	[placeholder]="'Return Stop ' + (i + 1) + ' address'"
 																	[placeholder]="i === 0 ? 'Enter First Return Stop' : 'Return Stop ' + (i + 1) + ' address'"
 																	[value]="stop.address" autocomplete="off"
@@ -996,8 +978,8 @@
 														style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#666; z-index:2;"></i>
 													<div class="input-box">
 														<input type="text"
-															class="qb-airport-field__input qb-address-field__input input-f font-weight-bolder"
-															style="font-size: 16px !important; background-color: #fff !important; color: #000 !important; padding-left: 42px !important; text-align: left !important;"
+															class="qb-airport-field__input qb-address-field__input input-f"
+															style="font-size: 16px !important; background-color: #fff !important; color: #000 !important; padding-left: 42px !important; text-align: left !important; font-weight: 600 !important"
 															[attr.placeholder]="QBForm?.return_dropoff_type?.value === 'airport' ? 'Return Dropoff Address' : (QBForm?.return_dropoff_type?.value === 'city' ? 'Return Dropoff Address' : 'Return Dropoff Address')"
 															id="return_dropoff_address" #retdropaddressinput
 															formControlName="return_dropoff_address" autocomplete="off"

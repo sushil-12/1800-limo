@@ -112,6 +112,7 @@ import { LooseAffiliateAccountDetailsComponent } from './loose-affiliate-account
 import { FleetComponent } from './cms/fleet/fleet.component';
 import { FleetPageEditComponent } from './cms/fleet-page-edit/fleet-page-edit.component';
 import { SubscribersListComponent } from './subscribers-list/subscribers-list.component';
+import { ServiceLeadsComponent } from './service-leads/service-leads.component';
 import { AffiliateMapPinsComponent } from './affiliate-map-pins/affiliate-map-pins.component';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { ReportsAdminComponent } from './reports-admin/reports-admin.component';
@@ -211,6 +212,7 @@ import { QuillModule } from 'ngx-quill';
 		FleetComponent,
 		FleetPageEditComponent,
 		SubscribersListComponent,
+		ServiceLeadsComponent,
 		AffiliateMapPinsComponent,
 		ReportsAdminComponent,
 		ReportsAdminVehiclesComponent,

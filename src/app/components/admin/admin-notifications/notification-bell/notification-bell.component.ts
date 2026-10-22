@@ -137,7 +137,7 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
 			? `<span class="at-more"><span class="at-more-show">+${more} more change${more === 1 ? '' : 's'}</span>`
 				+ `<span class="at-more-hide">Show less</span></span> · `
 			: '';
-		const footer = `<div class="at-hint">${moreToggle}Click to open booking</div>`;
+		const footer = `<div class="at-hint">${moreToggle}Click to open ${n.event === 'lead' ? 'lead' : 'booking'}</div>`;
 
 		return who + (rows ? `<div class="at-changes">${rows}</div>` : '') + footer;
 	}

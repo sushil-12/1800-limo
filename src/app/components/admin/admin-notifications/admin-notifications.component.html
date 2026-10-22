@@ -69,7 +69,7 @@
 
 				<div class="an-actions">
 					<button type="button" class="an-btn an-btn-sm" *ngIf="!n.read_at" (click)="markRead(n, $event)">Mark read</button>
-					<button type="button" class="an-btn an-btn-sm an-btn-primary" (click)="openBooking(n, $event)">Open booking</button>
+					<button type="button" class="an-btn an-btn-sm an-btn-primary" (click)="openBooking(n, $event)">{{ n.event === 'lead' ? 'Open lead' : 'Open booking' }}</button>
 					<button type="button" class="an-toggle" [attr.aria-expanded]="isExpanded(n)"
 						[attr.aria-label]="isExpanded(n) ? 'Collapse details' : 'Expand details'">
 						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"

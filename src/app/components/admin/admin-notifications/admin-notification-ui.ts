@@ -23,8 +23,8 @@ export function headline(n: AdminNotification): string {
 	const id = `#${n.reservation_id}`;
 	switch (n.event) {
 		case 'lead': {
-			const service = (n.changes || []).find(c => c.field === 'service')?.new;
-			return service ? `New lead for ${service}` : 'New lead';
+			// const service = (n.changes || []).find(c => c.field === 'service')?.new;
+			return `New lead`;
 		}
 		case 'created': return `New booking ${id}`;
 		case 'cancelled': return `Booking ${id} cancelled`;
@@ -149,8 +149,11 @@ export function changeSummary(n: AdminNotification, max = 2): string {
 	return `${actorName(n)} · ` + parts.join(' · ') + (more > 0 ? ` · +${more} more` : '');
 }
 
-/** Admin screen that opens a single booking; null for leads, which have no booking. */
+/** Admin screen for the item: the service-leads list for leads, otherwise the single booking. */
 export function bookingLink(n: AdminNotification): { commands: any[]; queryParams: any } | null {
+	if (n.event === 'lead') {
+		return { commands: ['/admin/service-leads'], queryParams: {} };
+	}
 	if (!n.reservation_id) {
 		return null;
 	}

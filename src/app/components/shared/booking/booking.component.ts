@@ -3694,11 +3694,17 @@ export class BookingComponent implements OnInit, OnDestroy {
 			this.SetFormValue('dropoff_airport_option', this.getEditAirportDisplayValue(this.Form.dropoff_airport.value, editing_data.dropoff_address));
 			this.SetFormValue('dropoff_airport_name', this.getEditAirportDisplayValue(this.Form.dropoff_airport.value, editing_data.dropoff_address));
 			this.SetFormValue('dropoff_airline_option', this.BigData.airlinesData.find((item: any) => item.id == this.Form.dropoff_airline.value));
-			this.SetFormValue('return_pickup_airport_option', this.getEditAirportDisplayValue(this.Form.return_pickup_airport.value, editing_data.return_pickup_address));
-			this.SetFormValue('return_pickup_airport_name', this.getEditAirportDisplayValue(this.Form.return_pickup_airport.value, editing_data.return_pickup_address));
+			// When the saved return leg is empty (e.g. repeating a one-way as round trip), the
+			// return airports are mirrored from the outbound ones — keep the outbound terminal line.
+			const returnPickupAirportLine = editing_data.return_pickup_address
+				|| (this.Form.return_pickup_airport.value == this.Form.dropoff_airport.value ? editing_data.dropoff_address : '');
+			const returnDropoffAirportLine = editing_data.return_dropoff_address
+				|| (this.Form.return_dropoff_airport.value == this.Form.pickup_airport.value ? editing_data.pickup_address : '');
+			this.SetFormValue('return_pickup_airport_option', this.getEditAirportDisplayValue(this.Form.return_pickup_airport.value, returnPickupAirportLine));
+			this.SetFormValue('return_pickup_airport_name', this.getEditAirportDisplayValue(this.Form.return_pickup_airport.value, returnPickupAirportLine));
 			this.SetFormValue('return_pickup_airline_option', this.BigData.airlinesData.find((item: any) => item.id == this.Form.return_pickup_airline.value));
-			this.SetFormValue('return_dropoff_airport_option', this.getEditAirportDisplayValue(this.Form.return_dropoff_airport.value, editing_data.return_dropoff_address));
-			this.SetFormValue('return_dropoff_airport_name', this.getEditAirportDisplayValue(this.Form.return_dropoff_airport.value, editing_data.return_dropoff_address));
+			this.SetFormValue('return_dropoff_airport_option', this.getEditAirportDisplayValue(this.Form.return_dropoff_airport.value, returnDropoffAirportLine));
+			this.SetFormValue('return_dropoff_airport_name', this.getEditAirportDisplayValue(this.Form.return_dropoff_airport.value, returnDropoffAirportLine));
 			this.SetFormValue('return_dropoff_airline_option', this.BigData.airlinesData.find((item: any) => item.id == this.Form.return_dropoff_airline.value));
 			this.SetFormValue('origin_airport_city', editing_data?.origin_airport_city ? editing_data?.origin_airport_city : editing_data?.departing_airport_city)
 

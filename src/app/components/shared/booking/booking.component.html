@@ -4652,7 +4652,7 @@
 					<!-- <button type="button" class="custom-filled-reset-button m-3" (click)="resetFields()">
 						Reset
 					</button> -->
-					<button type="submit" class="bk-btn bk-btn--primary bk-btn--lg mr-1 m-3" (click)="submitForm(false)">
+					<button type="submit" class="bk-btn bk-btn--primary bk-btn--lg m-3" (click)="submitForm(false)">
 						Preview
 					</button>
 				</div>
@@ -4746,7 +4746,7 @@
 					Please select the terminal for <strong>{{ modalFieldLabel }}</strong>:
 				</p>
 				<p class="mb-3 text-muted small" *ngIf="modalSelectedAirportName">
-					Selected Airport: <em>{{ modalSelectedAirportName }}</em>
+                   Not sure which terminal? Simply select the airport.
 				</p>
 
 				<div class="text-left my-2" style="padding-bottom: 0px;">
@@ -4760,6 +4760,7 @@
 							[ngClass]="isModalTerminalOptionSelected(option) ? 'bk-btn--primary' : 'bk-btn--secondary'"
 							style="border-radius: 20px; font-weight: 600;"
 							(click)="selectModalTerminalOption(option)">
+							<i class="bi bi-airplane-fill mr-1" *ngIf="option?.isAirportNameOnly"></i>
 							{{ getModalTerminalOptionLabel(option) }}
 						</button>
 					</div>

@@ -473,12 +473,16 @@ ul {
 }
 
 .preview_button_edit {
-	justify-content: end !important;
+	justify-content: center !important;
+	padding-right: 90px;
+	margin-bottom: 24px;
 }
 
 @media (max-width:767px) {
 	.preview_button_edit {
 		justify-content: center !important;
+		padding-right: 0;
+		margin-bottom: 30px;
 	}
 }
 

@@ -448,7 +448,7 @@
 													</div>
 												</div>
 												<div class="route-point stops-toggle-row d-flex align-items-stretch"
-													*ngIf="booking.extra_stops?.length">
+													*ngIf="booking.extra_stops?.length > 1">
 													<div class="route-icon-wrapper">
 														<span class="loc-logo stop-logo">
 															<i class="bi bi-circle" style="font-size: 10px;"></i>
@@ -469,7 +469,7 @@
 												</div>
 												<div class="route-point d-flex align-items-stretch"
 													*ngFor="let stop of booking.extra_stops; let last = last"
-													[class.route-point--collapsed]="!isStopsExpanded(booking.booking_id)">
+													[class.route-point--collapsed]="booking.extra_stops.length > 1 && !isStopsExpanded(booking.booking_id)">
 													<div class="route-icon-wrapper">
 														<span class="loc-logo stop-logo"
 															(click)="showLocationPointOnMapByAddress(stop.address)">

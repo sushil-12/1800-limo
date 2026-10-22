@@ -1868,6 +1868,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 	modalTerminalOptions: Array<any> = [];
 	modalSelectedTerminalOption: any | null = null;
 	isModalTerminalLoading: boolean = false;
+	terminalResolvedFields: Set<string> = new Set<string>();
 
 	/** Last popup open, so a second dialog within a few seconds can be flagged as the pair. */
 	private lastPopupDebug: { popup: string; source: string; at: number } | null = null;
@@ -1953,6 +1954,30 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return false;
 	}
 
+	extractCleanAirportName(displayValue: string, baseField?: string): string {
+		const formName = baseField ? String(this.BookingForm?.get(`${baseField}_name`)?.value || '').trim() : '';
+		const targetControl = baseField ? baseField.replace('_option', '') : '';
+		const airportId = targetControl ? this.BookingForm?.get(targetControl)?.value : null;
+		const airports: any[] = this.BigData?.airportsData || [];
+		if (airportId && airports.length) {
+			const record = airports.find((item: any) => String(item.id) === String(airportId));
+			if (record?.formatted_name) {
+				return record.formatted_name.trim();
+			}
+			if (record?.name) {
+				return record.code ? `${record.name.trim()} (${record.code.trim().toUpperCase()})` : record.name.trim();
+			}
+		}
+
+		if (formName && !formName.includes(',')) {
+			return formName;
+		}
+
+		const raw = String(displayValue || '').trim();
+		const beforeHyphen = raw.split(/\s*[-–]\s*/)[0].trim();
+		return beforeHyphen || formName || raw;
+	}
+
 	async checkAndShowTerminalPopup(controlName: string, displayValue: string, airportId?: string): Promise<boolean> {
 		if (!displayValue) return false;
 		if (!this.isAirportEndpointField(controlName)) return false;
@@ -1961,6 +1986,8 @@ export class BookingComponent implements OnInit, OnDestroy {
 		if (displayValue.toLowerCase().includes('terminal')) return false;
 
 		const baseField = controlName.endsWith('_option') ? controlName.replace('_option', '') : controlName;
+		if (this.terminalResolvedFields.has(baseField)) return false;
+
 		// Needed up front so fetchTerminalOptionsRaw's base-query lookup and the session
 		// token are scoped to this field while we check for terminals.
 		this.modalMissingField = baseField;
@@ -1975,7 +2002,21 @@ export class BookingComponent implements OnInit, OnDestroy {
 
 		this.modalFieldLabel = this.getFieldDisplayName(controlName);
 		this.modalSelectedAirportName = displayValue;
-		this.modalTerminalOptions = terminalOptions;
+
+		// Add Airport Name as the first option so if terminal is unknown, user can select the airport name
+		const cleanAirportName = this.extractCleanAirportName(displayValue, baseField);
+		const airportOption = {
+			isAirportNameOnly: true,
+			isTerminal: true,
+			placeId: String(this.BookingForm.get(baseField)?.value || ''),
+			name: cleanAirportName,
+			description: displayValue,
+			label: cleanAirportName,
+			latitude: this.BookingForm.get(`${baseField}_latitude`)?.value,
+			longitude: this.BookingForm.get(`${baseField}_longitude`)?.value
+		};
+
+		this.modalTerminalOptions = [airportOption, ...terminalOptions];
 		this.modalSelectedTerminalOption = null;
 		this.isModalTerminalLoading = false;
 
@@ -2119,6 +2160,9 @@ export class BookingComponent implements OnInit, OnDestroy {
 	 * that happens within the current option list, a distinguishing snippet from the rest of
 	 * the address is appended so the two buttons don't look like duplicates of the same choice. */
 	getModalTerminalOptionLabel(option: any): string {
+		if (option?.isAirportNameOnly) {
+			return option?.label || option?.name || this.modalSelectedAirportName;
+		}
 		const raw = this.getCustomOptionLabel(option);
 		const match = raw.match(/\b(Terminal|Concourse)\s*[A-Za-z0-9]+\b/i);
 		const shortLabel = match ? match[0] : raw;
@@ -2148,6 +2192,9 @@ export class BookingComponent implements OnInit, OnDestroy {
 
 	isModalTerminalOptionSelected(option: any): boolean {
 		if (!this.modalSelectedTerminalOption) return false;
+		if (option?.isAirportNameOnly && this.modalSelectedTerminalOption?.isAirportNameOnly) {
+			return true;
+		}
 		if (this.modalSelectedTerminalOption.placeId || option?.placeId) {
 			return this.modalSelectedTerminalOption.placeId === option?.placeId;
 		}
@@ -2354,6 +2401,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 	onCustomAirportInput(fieldName: string, value: string): void {
 		this.clearCustomAirportDropdownBlurTimer();
 		this.clearSameLocationErrors();
+		this.terminalResolvedFields.delete(fieldName.replace('_option', ''));
 		this.BookingForm.get(fieldName)?.setValue('', { emitEvent: false });
 		this.BookingForm.get(`${fieldName}_name`)?.setValue('', { emitEvent: false });
 		this.BookingForm.get(`${fieldName}_latitude`)?.setValue('', { emitEvent: false });
@@ -2863,6 +2911,22 @@ export class BookingComponent implements OnInit, OnDestroy {
 	async selectCustomAirportOption(fieldName: string, option: any, skipTerminalCheck: boolean = false): Promise<void> {
 		this.clearCustomAirportDropdownBlurTimer();
 		this.clearSameLocationErrors();
+
+		const baseField = fieldName.replace('_option', '');
+		if (option?.isAirportNameOnly) {
+			const optionControlName = fieldName.endsWith('_option') ? fieldName : `${fieldName}_option`;
+			const airportNameValue = option.name || option.description || this.modalSelectedAirportName;
+			if (airportNameValue) {
+				this.BookingForm.get(optionControlName)?.setValue(airportNameValue);
+			}
+			this.terminalResolvedFields.add(baseField);
+			this.BookingForm.updateValueAndValidity();
+			this.resetCustomAirportSessionToken(fieldName);
+			this.closeCustomAirportDropdown(fieldName);
+			return;
+		}
+
+		this.terminalResolvedFields.delete(baseField);
 		const place = await this.fetchPlaceDetails(option?.placeId);
 		if (place?.geometry?.location) {
 			if (this.isAirportAddressSelection(option, place)) {
@@ -4717,6 +4781,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 		this.clearSameLocationErrors();
 		this.closeCustomAddressDropdown(formControl);
 		this.closeCustomAirportDropdown();
+		this.terminalResolvedFields.delete(formControl.replace('_option', ''));
 		this.BookingForm.get(formControl)?.setValue('');
 		this.BookingForm.get(`${formControl}_latitude`)?.setValue('');
 		this.BookingForm.get(`${formControl}_longitude`)?.setValue('');

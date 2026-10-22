@@ -102,7 +102,7 @@
 
 .rcpt-head-title {
 	font-size: clamp(1.35rem, 4vw, 1.7rem);
-	font-weight: 800;
+	font-weight: 600;
 	letter-spacing: 0.06em;
 	color: #111827;
 	margin: 0;
@@ -132,7 +132,7 @@
 	gap: 6px;
 	padding: 7px 10px;
 	font-size: 0.86rem;
-	font-weight: 700;
+	font-weight: 600;
 	color: #374151;
 	background: #fff;
 	border: 1px solid #d1d5db;
@@ -202,7 +202,7 @@
 
 .rcpt-idrow-value {
 	font-size: 1rem;
-	font-weight: 700;
+	font-weight: 600;
 	color: #111827;
 	text-align: right;
 }
@@ -383,7 +383,7 @@
 	background: #f3f4f6;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 	font-size: 0.78rem;
-	font-weight: 800;
+	font-weight: 600;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	color: #374151;
@@ -476,7 +476,7 @@
 	align-items: flex-start;
 	gap: 5px;
 	font-size: 1rem;
-	font-weight: 700;
+	font-weight: 600;
 	color: #111827;
 	line-height: 1.35;
 	cursor: pointer;
@@ -768,7 +768,7 @@
 
 	.preview-output-field {
 		font-size: 1.02rem !important;
-		font-weight: 800;
+		font-weight: 700;
 		color: #111827;
 		white-space: nowrap;
 		font-variant-numeric: tabular-nums;

@@ -160,3 +160,16 @@
 .asterisk {
 	font-size: 1.45rem;
 }
+
+// Keep ng-select label (floating placeholder) and selected value black in every state
+:host ::ng-deep .ng-select,
+:host ::ng-deep .ng-select.ng-select-focused,
+:host ::ng-deep .ng-select.ng-invalid.ng-touched,
+:host ::ng-deep .ng-select.ng-select-disabled {
+	.ng-select-container .ng-value-container .ng-placeholder,
+	.ng-select-container .ng-value-container .ng-value,
+	.ng-select-container .ng-value-container .ng-value .ng-value-label,
+	.ng-select-container .ng-value-container .ng-input > input {
+		color: #000 !important;
+	}
+}

@@ -58,7 +58,8 @@
 							titlecase }}
 						</mat-label>
 						<input type="number" matInput placeholder="0" formControlName="baserate"
-							[tabIndex]="getTabIndex(item.key)" class="font-weight-bolder rate-input-field text-right"
+							[tabIndex]="getTabIndex(item.key)" class="rate-input-field text-right"
+							style="font-weight:700"
 							(focus)="$event.target.select()"
 							(change)="sub_item.key != 'Misc_Charges' && handleNegtiveValue(item.key,sub_item.key,'baserate',$event.target.value)" />
 					</mat-form-field>
@@ -80,7 +81,7 @@
 							Distance
 						</mat-label>
 						<input type="number" matInput placeholder="0" [value]="distance" style="cursor: not-allowed"
-							class="font-weight-bolder rate-input-field text-right" readonly />
+							class="rate-input-field text-right" style="font-weight:700" readonly />
 					</mat-form-field>
 				</div>
 			</div>
@@ -91,7 +92,7 @@
 					<mat-form-field appearance="outline" class="m-0">
 						<mat-label>{{ isDaysMode ? 'Number of Days' : 'Number of Hours' }}</mat-label>
 						<input type="number" matInput [placeholder]="isDaysMode ? '1' : '2'" [value]="isDaysMode ? charterDays : hours" [readonly]="is_readonly_min_rate"
-							class="font-weight-bolder rate-input-field text-right" (change)="handleHourChange($event)"
+							class="rate-input-field text-right" style="font-weight:700" (change)="handleHourChange($event)"
 							(focus)="$event.target.select()" />
 					</mat-form-field>
 					 <!-- Hrs/Days dropdown -->
@@ -172,7 +173,7 @@
 
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap">
 		<div class="col-md-6">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Sub Total
 			</p>
 		</div>
@@ -183,7 +184,7 @@
 	<!-- Number of Vehicles/Hours -->
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap" *ngIf="vehicles !== 0">
 		<div class="col-md-6 col-xl-7">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Number of Vehicles
 			</p>
 		</div>
@@ -196,7 +197,7 @@
 	<!-- Total -->
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap">
 		<div class="col-md-6 col-xl-7">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Client Total
 			</p>
 		</div>
@@ -206,7 +207,7 @@
 	</div>
 	<div class="row px-2 justify-content-between align-items-center flex-nowrap">
 		<div class="col-md-6">
-			<p class="font-weight-bolder text-uppercase m-0" style="font-size: 1.3rem;">
+			<p class="text-uppercase m-0" style="font-size: 1.3rem; font-weight:600">
 				Affiliate Payout
 			</p>
 		</div>

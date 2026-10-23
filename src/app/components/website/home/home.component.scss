@@ -1912,6 +1912,19 @@ div#google_translate_element_home_mobile {
 	-webkit-backdrop-filter: blur(5px);
 }
 
+/* Tablet portrait (iPad mini / Air): hero columns stack, keep the form centered at a readable width */
+@media (min-width: 768px) and (max-width: 991.98px) {
+	.bannertext {
+		margin-bottom: 2rem;
+	}
+
+	.quoteform_homewrapper {
+		max-width: 620px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+}
+
 .chk_vehicles:not(.owl-loaded) {
 	display: flex;
 	overflow-x: auto;

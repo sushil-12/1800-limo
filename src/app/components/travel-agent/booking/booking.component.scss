@@ -142,6 +142,10 @@ button {
 	background-color: #A020F0;
 }
 
+.status-pill[class*="passenger_"], .start_ride {
+	background-color: #1abc9c;
+}
+
 .btnclass {
 	margin-top: 20px;
 	height: 60px;
@@ -805,20 +809,31 @@ a.dropdown-item {
 // Trip Route icon styling with connecting line
 .trip-route-container {
 	display: block;
-	width: auto; // Allow container to shrink to fit content width (20ch)
+	min-width: 420px;
+
+	// Each pickup/stop/dropoff is its own row so the connecting line
+	// stretches (via flex) to the actual rendered height of its address
+	// text instead of being guessed from the address string length.
+	.route-point {
+		align-items: stretch;
+
+		&:not(:last-child) .address-content {
+			padding-bottom: 18px;
+		}
+	}
 
 	.route-icon-wrapper {
-		position: relative;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		flex: 0 0 auto;
 		margin-right: 8px;
 
 		.connecting-line {
+			flex: 1 1 auto;
 			width: 2px;
-			// height: 30px; // Dynamic height handled in HTML
 			background-color: #FF8C00;
-			margin: -2px 0;
+			margin: 0;
 
 			&--stop {
 				width: 0;
@@ -832,6 +847,7 @@ a.dropdown-item {
 			display: flex;
 			align-items: center;
 			line-height: 1;
+			flex: 0 0 auto;
 
 			i {
 				display: block;
@@ -844,32 +860,50 @@ a.dropdown-item {
 		}
 	}
 
-	.address-content-wrapper {
-		display: flex;
-		flex-direction: column;
-		gap: 18px;
-	}
-
-	.address-main-row {
-		gap: 0;
-		margin-bottom: 0px;
-	}
-
 	.address-content {
-		white-space: normal !important;
-		word-wrap: break-word !important;
-		word-break: break-word !important;
-		overflow-wrap: break-word !important;
+		// Wrap at ~30 characters like admin so the column stays compact
+		width: 30ch;
+		max-width: 30ch;
+		white-space: normal;
+		overflow-wrap: break-word;
 		line-height: 1.4;
-		display: block;
-		width: 30ch !important;
-		max-width: 30ch !important;
 
 		&--stop span {
 			color: #000;
 			font-size: 14px;
 			font-style: italic;
 			text-decoration-color: #c9c9c9 !important;
+		}
+	}
+
+	// Extra stops stay hidden until the "N Stops" chip is clicked
+	.route-point--collapsed {
+		display: none !important;
+	}
+
+	.stops-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 2px 12px;
+		border: 1px dashed #E0A868;
+		border-radius: 12px;
+		background-color: #fdf3e7;
+		color: #b96b12;
+		font-size: 13px;
+		font-weight: 600;
+		font-style: normal;
+		line-height: 1.6;
+		white-space: nowrap;
+		cursor: pointer;
+		user-select: none;
+
+		i {
+			font-size: 10px;
+		}
+
+		&:hover {
+			background-color: #f8e6cf;
 		}
 	}
 }

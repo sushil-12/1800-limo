@@ -25,6 +25,8 @@ declare var $: any;
 	styleUrls: ['./bookings.component.scss']
 })
 export class BookingsComponent implements OnInit {
+	expandedStopsBookingIds: any[] = [];
+
 	@ViewChild(GoogleMap, { static: false }) map!: GoogleMap;
 	@ViewChild('bookingPreviewModal') bookingPreviewModal: any;
 
@@ -89,6 +91,20 @@ export class BookingsComponent implements OnInit {
 	// Upcoming / Past / Custom tabs (Custom = the date-range pickers).
 	listTab: string = 'upcoming';
 	tabCounts: BookingTabCounts | null = null;
+
+	isStopsExpanded(bookingId: any): boolean {
+		return this.expandedStopsBookingIds.includes(bookingId);
+	}
+
+	toggleStops(bookingId: any, event?: Event): void {
+		event?.stopPropagation();
+		const index = this.expandedStopsBookingIds.indexOf(bookingId);
+		if (index > -1) {
+			this.expandedStopsBookingIds.splice(index, 1);
+		} else {
+			this.expandedStopsBookingIds.push(bookingId);
+		}
+	}
 
 	constructor(
 		private affiliateService: AffiliateService,

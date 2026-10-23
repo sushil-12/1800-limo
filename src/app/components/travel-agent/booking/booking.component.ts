@@ -24,6 +24,8 @@ declare var $: any;
 	styleUrls: ['./booking.component.scss']
 })
 export class BookingComponent implements OnInit {
+	expandedStopsBookingIds: any[] = [];
+
 	@ViewChild(GoogleMap, { static: false }) map!: GoogleMap;
 	@ViewChild('inputmsg', { static: false }) message: ElementRef;
 	@ViewChild('sendEmailModalFocus') sendEmailModalFocus: any;
@@ -91,6 +93,20 @@ export class BookingComponent implements OnInit {
 	listTab: string = 'upcoming';
 	tabCounts: BookingTabCounts | null = null;
 
+
+	isStopsExpanded(bookingId: any): boolean {
+		return this.expandedStopsBookingIds.includes(bookingId);
+	}
+
+	toggleStops(bookingId: any, event?: Event): void {
+		event?.stopPropagation();
+		const index = this.expandedStopsBookingIds.indexOf(bookingId);
+		if (index > -1) {
+			this.expandedStopsBookingIds.splice(index, 1);
+		} else {
+			this.expandedStopsBookingIds.push(bookingId);
+		}
+	}
 
 	constructor(
 		private affiliateService: AffiliateService,

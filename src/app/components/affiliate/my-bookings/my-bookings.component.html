@@ -203,7 +203,7 @@
 									<td>
 										<div class="trip-route-container">
 											<div class="address-layout">
-												<div class="address-main-row d-flex align-items-start">
+												<div class="route-point d-flex align-items-stretch">
 													<div class="route-icon-wrapper">
 														<span class="loc-logo"
 															(click)="showLocationPointOnMap(booking.booking_id, 'pickup')">
@@ -211,41 +211,63 @@
 																style="color: #FF8C00; font-size: 14px;"></i>
 														</span>
 														<div class="connecting-line"
-															[class.connecting-line--stop]="booking.extra_stops?.length > 0"
-															[style.height]="calculateConnectorHeight(booking.pickup_address)">
+															[class.connecting-line--stop]="booking.extra_stops?.length > 0">
 														</div>
-														<ng-container *ngFor="let stop of booking.extra_stops; let last = last">
-															<span class="loc-logo stop-logo"
-																(click)="showLocationPointOnMapByAddress(stop.address)">
-																<i class="bi bi-circle" style="font-size: 10px;"></i>
-															</span>
-															<div class="connecting-line"
-																[class.connecting-line--stop]="!last"
-																[style.height]="calculateConnectorHeight(stop.address)">
-															</div>
-														</ng-container>
+													</div>
+													<div class="address-content">
+														<span style="cursor: pointer; text-decoration: underline;"
+															(click)="showLocationPointOnMap(booking.booking_id, 'pickup')"
+															[innerHTML]="highlighText(booking.pickup_address)"></span>
+													</div>
+												</div>
+												<div class="route-point stops-toggle-row d-flex align-items-stretch"
+													*ngIf="booking.extra_stops?.length > 1">
+													<div class="route-icon-wrapper">
+														<span class="loc-logo stop-logo">
+															<i class="bi bi-circle" style="font-size: 10px;"></i>
+														</span>
+														<div class="connecting-line"
+															[class.connecting-line--stop]="isStopsExpanded(booking.booking_id)">
+														</div>
+													</div>
+													<div class="address-content">
+														<span class="stops-toggle"
+															(click)="toggleStops(booking.booking_id, $event)">
+															{{ booking.extra_stops.length }} {{ booking.extra_stops.length
+															=== 1 ? 'Stop' : 'Stops' }}
+															<i class="fa"
+																[ngClass]="isStopsExpanded(booking.booking_id) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+														</span>
+													</div>
+												</div>
+												<div class="route-point d-flex align-items-stretch"
+													*ngFor="let stop of booking.extra_stops; let last = last"
+													[class.route-point--collapsed]="booking.extra_stops.length > 1 && !isStopsExpanded(booking.booking_id)">
+													<div class="route-icon-wrapper">
+														<span class="loc-logo stop-logo"
+															(click)="showLocationPointOnMapByAddress(stop.address)">
+															<i class="bi bi-circle" style="font-size: 10px;"></i>
+														</span>
+														<div class="connecting-line" [class.connecting-line--stop]="!last"></div>
+													</div>
+													<div class="address-content address-content--stop">
+														<span style="cursor: pointer; text-decoration: underline;"
+															(click)="showLocationPointOnMapByAddress(stop.address)"
+															[innerHTML]="highlighText(stop.address)"></span>
+													</div>
+												</div>
+												<div class="route-point d-flex align-items-stretch">
+													<div class="route-icon-wrapper">
 														<span class="loc-logo"
 															(click)="showLocationPointOnMap(booking.booking_id, 'dropoff')">
 															<i class="bi bi-square-fill"
 																style="color: #FF8C00; font-size: 12px;"></i>
 														</span>
 													</div>
-													<div class="address-content-wrapper">
-														<div class="address-content">
-															<span style="cursor: pointer; text-decoration: underline;"
-																(click)="showLocationPointOnMap(booking.booking_id, 'pickup')"
-																[innerHTML]="highlighText(booking.pickup_address)"></span>
-														</div>
-														<div class="address-content address-content--stop" *ngFor="let stop of booking.extra_stops">
-															<span style="cursor: pointer; text-decoration: underline;"
-																(click)="showLocationPointOnMapByAddress(stop.address)"
-																[innerHTML]="highlighText(stop.address)"></span>
-														</div>
-														<div class="address-content">
-															<span style="cursor: pointer; text-decoration: underline;"
-																(click)="showLocationPointOnMap(booking.booking_id, 'dropoff')"
-																[innerHTML]="highlighText(booking.dropoff_address)"></span>
-														</div>
+													<div class="address-content">
+														<span style="cursor: pointer; text-decoration: underline;"
+															(click)="showLocationPointOnMap(booking.booking_id, 'dropoff')"
+															[innerHTML]="highlighText(booking.dropoff_address)"></span>
 													</div>
 												</div>
 											</div>

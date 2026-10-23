@@ -21,6 +21,8 @@ declare var $: any
 	styleUrls: ['./farm-out.component.scss']
 })
 export class FarmOutComponent implements OnInit {
+	expandedStopsBookingIds: any[] = [];
+
 	@ViewChild('inputmsg', { static: false }) message: ElementRef;
 
 	color: ThemePalette = 'accent';
@@ -70,6 +72,20 @@ export class FarmOutComponent implements OnInit {
 	listTab: string = 'upcoming';
 	currencySymbol: any;
 	currentUser: any;
+
+	isStopsExpanded(bookingId: any): boolean {
+		return this.expandedStopsBookingIds.includes(bookingId);
+	}
+
+	toggleStops(bookingId: any, event?: Event): void {
+		event?.stopPropagation();
+		const index = this.expandedStopsBookingIds.indexOf(bookingId);
+		if (index > -1) {
+			this.expandedStopsBookingIds.splice(index, 1);
+		} else {
+			this.expandedStopsBookingIds.push(bookingId);
+		}
+	}
 
 	constructor(
 		private $affiliateService: AffiliateService,

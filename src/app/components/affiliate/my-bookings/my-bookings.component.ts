@@ -20,6 +20,8 @@ declare var $: any;
 	styleUrls: ['./my-bookings.component.scss']
 })
 export class MyBookingsComponent implements OnInit {
+	expandedStopsBookingIds: any[] = [];
+
 	@ViewChild('bookingPreviewModal') bookingPreviewModal: any;
 	@ViewChild('inputmsg', { static: false }) message: ElementRef;
 	@ViewChild('fileInput') fileInput!: ElementRef;
@@ -78,6 +80,20 @@ export class MyBookingsComponent implements OnInit {
 	fileUrl: String;
 	fileName: String;
 	fileType: String;
+
+	isStopsExpanded(bookingId: any): boolean {
+		return this.expandedStopsBookingIds.includes(bookingId);
+	}
+
+	toggleStops(bookingId: any, event?: Event): void {
+		event?.stopPropagation();
+		const index = this.expandedStopsBookingIds.indexOf(bookingId);
+		if (index > -1) {
+			this.expandedStopsBookingIds.splice(index, 1);
+		} else {
+			this.expandedStopsBookingIds.push(bookingId);
+		}
+	}
 
 	constructor(
 		private affiliateService: AffiliateService,

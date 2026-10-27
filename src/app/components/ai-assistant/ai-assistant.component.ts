@@ -4,7 +4,7 @@ import {
 import { NavigationEnd, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { AiAssistantService, AiChatMessage } from 'src/app/services/ai-assistant.service';
+import { AiAssistantService, AiBookingCard, AiChatMessage } from 'src/app/services/ai-assistant.service';
 
 /** Routes that already have their own chat panel in the same corner. */
 const HIDDEN_ROUTE_PREFIXES = ['/live-ride-tracking'];
@@ -41,6 +41,9 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 
 	private shouldScroll = false;
 	private subs = new Subscription();
+	/** Which photo each booking card shows, keyed by message id + card number. */
+	private photoIndexes = new Map<string, number>();
+	private brokenPhotos = new Set<string>();
 	private teaserTimer?: ReturnType<typeof setTimeout>;
 
 	constructor(public assistant: AiAssistantService, private router: Router) { }
@@ -132,7 +135,51 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 		el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
 	}
 
+	/** Booking cards and replies only answer the latest message of a booking in progress. */
+	isLive(m: AiChatMessage): boolean {
+		return !!m.booking?.active && this.messages[this.messages.length - 1] === m;
+	}
+
+	/** Sends the card's number (what the booking expects) and shows its title in the bubble. */
+	pickCard(card: AiBookingCard): void {
+		if (this.isStreaming) return;
+		this.assistant.send(String(card.number), card.title);
+	}
+
+	trackByNumber(_: number, card: AiBookingCard): number {
+		return card.number;
+	}
+
+	photoCount(card: AiBookingCard): number {
+		return this.photos(card).length;
+	}
+
+	photoIndex(m: AiChatMessage, card: AiBookingCard): number {
+		const count = this.photoCount(card);
+		return count ? (this.photoIndexes.get(`${m.id}:${card.number}`) ?? 0) % count : 0;
+	}
+
+	photo(m: AiChatMessage, card: AiBookingCard): string | null {
+		return this.photos(card)[this.photoIndex(m, card)] ?? null;
+	}
+
+	stepPhoto(m: AiChatMessage, card: AiBookingCard, step: number): void {
+		const count = this.photoCount(card);
+		if (count < 2) return;
+		this.photoIndexes.set(`${m.id}:${card.number}`, (this.photoIndex(m, card) + step + count) % count);
+	}
+
+	/** A photo that fails to load is skipped; with none left the card shows a car icon. */
+	photoFailed(src: string): void {
+		this.brokenPhotos.add(src);
+	}
+
+	private photos(card: AiBookingCard): string[] {
+		return (card.images || []).filter(src => /^https?:\/\//.test(src) && !this.brokenPhotos.has(src));
+	}
+
 	newChat(): void {
+		this.photoIndexes.clear();
 		this.assistant.clear();
 		this.newMessageText = '';
 		this.resizeInput();
@@ -162,19 +209,25 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 			.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
 			.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
 
+		// Numbered items keep their numbers: booking menus are answered by typing the number.
 		const out: string[] = [];
-		let inList = false;
+		let list: 'ul' | 'ol' | null = null;
 		for (const line of escaped.split('\n')) {
-			const bullet = /^\s*(?:[-*•]|\d+\.)\s+(.*)$/.exec(line);
-			if (bullet) {
-				if (!inList) { out.push('<ul>'); inList = true; }
-				out.push(`<li>${inline(bullet[1])}</li>`);
+			const item = /^\s*(?:([-*•])|(\d+)\.)\s+(.*)$/.exec(line);
+			if (item) {
+				const kind = item[2] ? 'ol' : 'ul';
+				if (list !== kind) {
+					if (list) out.push(`</${list}>`);
+					out.push(`<${kind}>`);
+					list = kind;
+				}
+				out.push(item[2] ? `<li value="${item[2]}">${inline(item[3])}</li>` : `<li>${inline(item[3])}</li>`);
 				continue;
 			}
-			if (inList) { out.push('</ul>'); inList = false; }
+			if (list) { out.push(`</${list}>`); list = null; }
 			out.push(line.trim() ? `${inline(line)}<br>` : '<br>');
 		}
-		if (inList) out.push('</ul>');
+		if (list) out.push(`</${list}>`);
 		return out.join('').replace(/(<br>)+$/, '');
 	}
 

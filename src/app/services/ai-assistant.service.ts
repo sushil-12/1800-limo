@@ -3,18 +3,46 @@ import { BehaviorSubject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AuthService } from './auth.service';
 
+/** One category / vehicle option of a booking step. Picking it sends `number`. */
+export interface AiBookingCard {
+	number: number;
+	title: string;
+	subtitle: string | null;
+	details: string[];
+	price: string;
+	/** Absolute photo URLs, main photo first; may be empty. */
+	images: string[];
+}
+
+/** The booking step behind a `reply_type: "booking"` answer (the `booking` SSE event). */
+export interface AiBooking {
+	/** The next message in this conversation goes to the booking. */
+	active: boolean;
+	cards_kind: 'category' | 'vehicle' | null;
+	cards: AiBookingCard[];
+	/** Suggested answers, shown as buttons. */
+	replies: string[];
+}
+
 export interface AiChatMessage {
 	id: string;
 	role: 'user' | 'assistant';
 	content: string;
 	timestamp: Date;
+	/** Shown instead of `content` (a picked card's title while "2" is what is sent). */
+	display?: string;
 	/** Assistant reply still receiving tokens. */
 	streaming?: boolean;
 	failed?: boolean;
+	booking?: AiBooking;
 }
 
 const AI_CHAT_URL = `${environment['openAIUrl']}/v1/chat`;
 const STORAGE_KEY = 'ai_assistant_chat';
+const CONVERSATION_KEY = 'ai_assistant_conversation';
+/** POST /v1/chat limits (limoagent docs/API.md): messages per request, characters per message. */
+const MAX_HISTORY = 30;
+const MAX_CHARS = 4000;
 const FAILED_TEXT = 'Sorry, I couldn\'t reach the assistant right now.';
 
 /**
@@ -29,6 +57,8 @@ export class AiAssistantService {
 
 	private abortController: AbortController | null = null;
 	private emitScheduled = false;
+	/** Keys a booking in progress on the server; a new chat starts a new one. */
+	private conversationId = this.restoreConversationId();
 
 	constructor(private authService: AuthService, private zone: NgZone) { }
 
@@ -44,6 +74,7 @@ export class AiAssistantService {
 	clear(): void {
 		this.stop();
 		this.messages$.next([]);
+		this.conversationId = this.newConversationId();
 		this.persist();
 	}
 
@@ -53,11 +84,12 @@ export class AiAssistantService {
 		this.abortController = null;
 	}
 
-	send(text: string): void {
+	/** `display` is shown in the bubble instead of `text` (e.g. the picked vehicle's name). */
+	send(text: string, display?: string): void {
 		const content = text.trim();
 		if (!content || this.isStreaming$.value) return;
 
-		const user: AiChatMessage = { id: this.newId(), role: 'user', content, timestamp: new Date() };
+		const user: AiChatMessage = { id: this.newId(), role: 'user', content, display, timestamp: new Date() };
 		this.messages$.next([...this.messages, user]);
 		this.requestReply();
 	}
@@ -77,9 +109,12 @@ export class AiAssistantService {
 	 * and pops the global error dialog on a 401, and a chatbot hiccup must never log a user out.
 	 */
 	private async requestReply(): Promise<void> {
+		// The server rejects (422) more than MAX_HISTORY messages or any over MAX_CHARS characters.
+		// A booking keeps its own state on the server, so trimming old turns loses nothing.
 		const history = this.messages
 			.filter(m => !m.failed && m.content.trim())
-			.map(m => ({ role: m.role, content: m.content }));
+			.slice(-MAX_HISTORY)
+			.map(m => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
 
 		const reply: AiChatMessage = { id: this.newId(), role: 'assistant', content: '', timestamp: new Date(), streaming: true };
 		this.messages$.next([...this.messages, reply]);
@@ -99,7 +134,7 @@ export class AiAssistantService {
 			const res = await fetch(AI_CHAT_URL, {
 				method: 'POST',
 				headers,
-				body: JSON.stringify({ stream: true, messages: history }),
+				body: JSON.stringify({ stream: true, messages: history, conversation_id: this.conversationId }),
 				signal: controller.signal
 			});
 			if (!res.ok) throw new Error(`AI chat request failed (${res.status})`);
@@ -110,6 +145,7 @@ export class AiAssistantService {
 				// Server ignored stream:true and answered with a single JSON body.
 				const body = await res.json();
 				reply.content = body?.content ?? body?.choices?.[0]?.message?.content ?? body?.choices?.[0]?.delta?.content ?? '';
+				if (body?.booking) reply.booking = body.booking;
 			}
 			if (!reply.content.trim()) throw new Error('Empty reply from assistant');
 		} catch (error: any) {
@@ -135,6 +171,7 @@ export class AiAssistantService {
 
 	/**
 	 * Parse the SSE stream. The server sends named events:
+	 *   event: booking → data: {"active":true,"cards":[...],"replies":[...]}  (booking steps only)
 	 *   event: delta  →  data: {"content":"Hello"}
 	 *   event: done   →  data: {"usage":{...}}
 	 *   event: error  →  data: {"message":"..."}
@@ -185,6 +222,12 @@ export class AiAssistantService {
 		if (eventName === 'error' || json?.error) {
 			throw new Error(json?.error?.message || json?.message || 'Assistant stream error');
 		}
+		if (eventName === 'booking') {
+			reply.booking = json as AiBooking;
+			this.scheduleEmit();
+			return false;
+		}
+		if (eventName === 'start' || eventName === 'data') return false;
 
 		const delta = json?.content
 			?? json?.choices?.[0]?.delta?.content
@@ -222,6 +265,20 @@ export class AiAssistantService {
 		} catch {
 			return [];
 		}
+	}
+
+	private restoreConversationId(): string {
+		try {
+			const saved = sessionStorage.getItem(CONVERSATION_KEY);
+			if (saved && /^[A-Za-z0-9_-]{1,64}$/.test(saved)) return saved;
+		} catch { }
+		return this.newConversationId();
+	}
+
+	private newConversationId(): string {
+		const id = `c_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+		try { sessionStorage.setItem(CONVERSATION_KEY, id); } catch { }
+		return id;
 	}
 
 	private newId(): string {

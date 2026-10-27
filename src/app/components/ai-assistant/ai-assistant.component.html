@@ -66,14 +66,15 @@
         <div class="welcome-text">I'm your 1-800-Limo assistant. Ask me about quotes, bookings, rides or anything else.</div>
       </div>
 
-      <div *ngFor="let m of messages; trackBy: trackById" class="message-row" [class.from-user]="m.role === 'user'">
+      <div *ngFor="let m of messages; trackBy: trackById" class="message-row" [class.from-user]="m.role === 'user'"
+           [class.wide]="!!m.booking?.cards?.length">
         <div *ngIf="m.role === 'assistant'" class="avatar small" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z" />
           </svg>
         </div>
         <div class="message-body">
-          <div *ngIf="m.role === 'user'" class="bubble user-bubble">{{ m.content }}</div>
+          <div *ngIf="m.role === 'user'" class="bubble user-bubble">{{ m.display || m.content }}</div>
 
           <div *ngIf="m.role === 'assistant'" class="bubble bot-bubble" [class.failed]="m.failed">
             <span *ngIf="m.streaming && !m.content" class="typing" aria-label="Assistant is typing">
@@ -81,6 +82,47 @@
             </span>
             <span *ngIf="m.content" class="md" [innerHTML]="renderMarkdown(m.content)"></span><span
                   *ngIf="m.streaming && m.content" class="caret"></span>
+          </div>
+
+          <!-- Booking: vehicle categories / vehicles as photo cards -->
+          <div *ngIf="m.booking?.cards?.length" class="booking-cards" role="list"
+               [attr.aria-label]="m.booking?.cards_kind === 'vehicle' ? 'Vehicles' : 'Vehicle categories'">
+            <div *ngFor="let card of m.booking?.cards; trackBy: trackByNumber" class="booking-card" role="listitem">
+              <div class="card-photo">
+                <img *ngIf="photo(m, card) as src; else noPhoto" [src]="src" [alt]="card.title" loading="lazy"
+                     (error)="photoFailed(src)">
+                <ng-template #noPhoto>
+                  <svg class="photo-placeholder" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M18.9 6c-.2-.6-.8-1-1.4-1h-11c-.7 0-1.2.4-1.4 1L3 12v8c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1h12v1c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-8l-2.1-6zM6.5 16c-.8 0-1.5-.7-1.5-1.5S5.7 13 6.5 13s1.5.7 1.5 1.5S7.3 16 6.5 16zm11 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
+                  </svg>
+                </ng-template>
+                <ng-container *ngIf="photoCount(card) > 1">
+                  <button type="button" class="photo-nav prev" (click)="stepPhoto(m, card, -1)" aria-label="Previous photo">‹</button>
+                  <button type="button" class="photo-nav next" (click)="stepPhoto(m, card, 1)" aria-label="Next photo">›</button>
+                  <span class="photo-count">{{ photoIndex(m, card) + 1 }}/{{ photoCount(card) }}</span>
+                </ng-container>
+              </div>
+              <div class="card-info">
+                <div class="card-title">{{ card.title }}</div>
+                <div *ngIf="card.subtitle" class="card-subtitle">{{ card.subtitle }}</div>
+                <div class="card-details">
+                  <span *ngFor="let detail of card.details">{{ detail }}</span>
+                </div>
+                <div class="card-footer">
+                  <span class="card-price">{{ card.price }}</span>
+                  <button type="button" class="card-select" [disabled]="!isLive(m) || isStreaming"
+                          (click)="pickCard(card)">Select</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Booking: suggested answers for the current step -->
+          <div *ngIf="isLive(m) && !isStreaming && m.booking?.replies?.length" class="booking-replies">
+            <button *ngFor="let reply of m.booking?.replies" type="button" class="quick-reply"
+                    [class.subtle]="reply === 'Cancel' || reply === 'Back'" (click)="sendMessage(reply)">
+              {{ reply }}
+            </button>
           </div>
 
           <div class="message-meta">

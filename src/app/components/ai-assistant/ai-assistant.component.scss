@@ -407,7 +407,8 @@ $soft: #f3f4f6;
 
   .md {
     ::ng-deep {
-      ul {
+      ul,
+      ol {
         margin: 4px 0;
         padding-left: 18px;
       }
@@ -476,6 +477,168 @@ $soft: #f3f4f6;
   font-size: 11px;
   color: #dc2626;
   cursor: pointer;
+}
+
+/* Booking: photo cards and suggested answers */
+.message-row.wide {
+  max-width: 100%;
+  width: 100%;
+
+  .message-body {
+    flex: 1;
+  }
+}
+
+.booking-cards {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 2px 2px 6px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.booking-card {
+  flex: 0 0 210px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: white;
+  overflow: hidden;
+  scroll-snap-align: start;
+  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.06);
+}
+
+.card-photo {
+  position: relative;
+  height: 120px;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .photo-placeholder {
+    width: 48px;
+    height: 48px;
+    color: #d1d5db;
+  }
+}
+
+.photo-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(17, 24, 39, 0.55);
+  color: white;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+
+  &.prev { left: 6px; }
+  &.next { right: 6px; }
+
+  &:focus-visible {
+    outline: 2px solid $accent;
+  }
+}
+
+.photo-count {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgba(17, 24, 39, 0.55);
+  color: white;
+  font-size: 10.5px;
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 3px;
+  padding: 10px 12px 12px;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text;
+}
+
+.card-subtitle {
+  font-size: 12px;
+  color: $muted;
+}
+
+.card-details {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: $muted;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.card-price {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: $text;
+}
+
+.card-select {
+  flex-shrink: 0;
+  border: none;
+  border-radius: 14px;
+  padding: 6px 14px;
+  background: $accent;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: $accent-dark;
+  }
+
+  &:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+}
+
+.booking-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+
+  .quick-reply.subtle {
+    border-color: #e5e7eb;
+    color: $muted;
+  }
 }
 
 /* Quick replies */

@@ -164,7 +164,7 @@
 											<span class="text-underline" [innerHTML]="highlighText(booking?.booking_id )"
 												style="font-weight: 600;"></span>
 										</p>
-										<p class="booking-id-font font-weight-bolder">
+										<p class="booking-id-font font-weight-bolder booking-price">
 											<span class="currency">{{currencySymbol}}</span><span
 												[innerHTML]="highlighText(booking?.share_array?.length > 0 ? booking?.share_array?.affiliateShare.toFixed(2) : (booking?.grand_total).toFixed(2))"></span>
 										</p>
@@ -181,10 +181,11 @@
 
 									<!-- Pax Column -->
 									<td>
-										<p data-target="#sendEmailModal" style="white-space: pre" data-toggle="modal"
+										<p data-target="#sendEmailModal" style="white-space: pre" [attr.data-toggle]="canShowContactInfo(booking?.booking_status) ? 'modal' : null"
 											(click)="openModal(booking, 'Passenger')" id="box">
 											<span class="font-weight-bolder" [innerHTML]="highlighText(booking?.passenger_name)"></span> <br />
-											<span [innerHTML]="highlighText(formatPhoneNumber(booking?.pax_tel))"></span>
+											<span *ngIf="canShowContactInfo(booking?.booking_status)"
+												[innerHTML]="highlighText(formatPhoneNumber(booking?.pax_tel))"></span>
 										</p>
 									</td>
 									<!-- Driver Column -->

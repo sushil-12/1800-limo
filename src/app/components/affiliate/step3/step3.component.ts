@@ -189,7 +189,7 @@ export class Step3Component implements OnInit, AfterViewInit {
 			AgentTelephone: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), this.customValidator.dashValidator(), this.customValidator.plusValidator()]],
 			AgentTelephoneIsd: ['+1', Validators.required],
 			AgentTelephoneCountry: ['us', Validators.required],
-			policyNumber: ['', [Validators.required, this.customValidator.dashValidator(), this.customValidator.plusValidator()]],
+			policyNumber: ['', [Validators.required, this.customValidator.plusValidator()]],
 			policyExpiredDay: ['', Validators.required],
 			policyExpiredMonth: ['', Validators.required],
 			policyExpiredYear: ['', Validators.required],

@@ -158,7 +158,7 @@ export class AffiliateStep3Component implements OnInit {
 			AgentTelephone: ['', [Validators.required, Validators.pattern("^[0-9+]*$"), Validators.minLength(4), Validators.maxLength(15), this.customValidator.dashValidator(), this.customValidator.plusValidator()]],
 			AgentTelephoneIsd: ['+1', Validators.required],
 			AgentTelephoneCountry: ['us', Validators.required],
-			policyNumber: ['', [Validators.required, this.customValidator.dashValidator(), this.customValidator.plusValidator()]],
+			policyNumber: ['', [Validators.required, this.customValidator.plusValidator()]],
 			policyExpiredDate: ['', [Validators.required, pastDateValidator()]],
 			policyExpiredDay: [''],
 			policyExpiredMonth: [''],

@@ -112,15 +112,11 @@
 						<div *ngIf="f.policyNumber.errors.required">This field is required</div>
 					</div>
 					<div *ngIf="f.policyNumber.errors" class="text-danger margin-bottom-thin my-mat-hint">
-						<div *ngIf="f.policyNumber.errors?.invalid_Pattern;else plusError">Do not add Dashes
-							with numbers</div>
-						<ng-template #plusError>
-							<div *ngIf="f.policyNumber.errors?.invalidPattern;else allErrors">Do not enter +
-								sign</div>
-							<ng-template #allErrors>
-								<div *ngIf="f.policyNumber.errors?.pattern">Enter Numbers Only
-								</div>
-							</ng-template>
+						<div *ngIf="f.policyNumber.errors?.invalidPattern;else allErrors">Do not enter +
+							sign</div>
+						<ng-template #allErrors>
+							<div *ngIf="f.policyNumber.errors?.pattern">Enter Numbers Only
+							</div>
 						</ng-template>
 					</div>
 				</div>

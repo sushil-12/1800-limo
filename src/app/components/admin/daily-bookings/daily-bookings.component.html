@@ -322,7 +322,7 @@
 											<span
 												style="text-decoration: none;">&nbsp;{{showAccountType(booking?.account_type)}}</span>
 										</p>
-										<p class="text-left font-weight-bolder"
+										<p class="text-left font-weight-bolder booking-price"
 											[ngClass]="(booking?.charged_amount != null && booking?.booking_status !== 'paid' && booking?.booking_status !== 'paid_cash') ? 'booking-id-font font-weight-bolder cursor-pointer text-purple' : (booking?.payment_status== 'transfer_failed') ? 'booking-id-font font-weight-bolder cursor-pointer text-red' : 'booking-id-font font-weight-bolder cursor-pointer' ">
 											<span class="currency">{{booking?.currency_symbol}}</span><span
 												[innerHTML]="highlighText(booking.grand_total ? (booking.grand_total).toFixed(2) : 0 )"></span>

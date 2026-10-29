@@ -2,6 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AuthService } from './auth.service';
+import { CardDetails } from '../components/shared/new-card-form/new-card-form.component';
 
 /** One category / vehicle option of a booking step. Picking it sends `number`. */
 export interface AiBookingCard {
@@ -14,6 +15,19 @@ export interface AiBookingCard {
 	images: string[];
 }
 
+/**
+ * A changed booking for a new customer, waiting for their card (limoagent EDIT_BOOKING_FLOW.md).
+ * The card form adds the card to `payload.loose_customer.card_details` and this service sends it
+ * to the 1800limo API itself, so the card never goes to the assistant.
+ */
+export interface AiCardRequest {
+	method: 'PUT' | 'POST';
+	/** Relative to `environment.serverUrl`. */
+	path: string;
+	payload: any;
+	card_holder: string;
+}
+
 /** The booking step behind a `reply_type: "booking"` answer (the `booking` SSE event). */
 export interface AiBooking {
 	/** The next message in this conversation goes to the booking. */
@@ -22,6 +36,8 @@ export interface AiBooking {
 	cards: AiBookingCard[];
 	/** Suggested answers, shown as buttons. */
 	replies: string[];
+	/** Show the card form; see AiCardRequest. */
+	card_request?: AiCardRequest | null;
 }
 
 export interface AiChatMessage {
@@ -92,6 +108,54 @@ export class AiAssistantService {
 		const user: AiChatMessage = { id: this.newId(), role: 'user', content, display, timestamp: new Date() };
 		this.messages$.next([...this.messages, user]);
 		this.requestReply();
+	}
+
+	/**
+	 * Send a changed booking with the new customer's card straight to the 1800limo API, then tell
+	 * the assistant how it went ("card:ok" / "card:error <reason>"); it checks the booking itself.
+	 * Plain fetch for the same reason as requestReply: a 401 here must not log the user out.
+	 */
+	async submitCard(request: AiCardRequest, card: CardDetails): Promise<void> {
+		if (this.isStreaming$.value) return;
+		const payload = JSON.parse(JSON.stringify(request.payload ?? {}));
+		payload.loose_customer = { ...(payload.loose_customer || {}), card_details: { ...card } };
+		const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+		const token = this.authService.getAccessToken();
+		if (token) headers['Authorization'] = `Bearer ${token}`;
+		const url = `${environment.serverUrl}${request.path.replace(/^\/+/, '')}`;
+		// TEMP: trace duplicate edit-reservation calls; Laravel logs this id next to its call_id
+		const submitId = `card_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+		headers['X-Submit-Id'] = submitId;
+		console.trace('[ai-assistant] submitCard', submitId, request.method, request.path);
+
+		let outcome: string;
+		try {
+			let body = await this.sendJson(url, request.method, headers, payload);
+			if (body.ok && body.json?.data?.is_confirm === false) {
+				// "Changing the affiliate sends a new accept email": the user already confirmed the changes.
+				body = await this.sendJson(url, request.method, headers, { ...payload, proceed: false });
+			}
+			outcome = body.ok ? 'card:ok' : `card:error ${this.apiErrorText(body.json, body.status)}`;
+		} catch {
+			outcome = 'card:error The card could not be sent. Check your connection and try again.';
+		}
+		this.send(outcome, outcome === 'card:ok' ? 'Card details sent' : 'Card details not accepted');
+	}
+
+	private async sendJson(url: string, method: string, headers: Record<string, string>, payload: any)
+		: Promise<{ ok: boolean; status: number; json: any }> {
+		const res = await fetch(url, { method, headers, body: JSON.stringify(payload) });
+		const json = await res.json().catch(() => null);
+		return { ok: res.ok && json?.success !== false, status: res.status, json };
+	}
+
+	/** Laravel's 422 `{message, data: {field: "msg"}}` as one line. */
+	private apiErrorText(json: any, status: number): string {
+		const fields = json?.data && typeof json.data === 'object'
+			? Object.values(json.data).flat().filter((v: any) => typeof v === 'string')
+			: [];
+		const text = (fields.length ? fields.join(' ') : json?.message) || `The server answered ${status}.`;
+		return String(text).replace(/\s+/g, ' ').slice(0, 300);
 	}
 
 	/** Re-ask the last user message after a failed reply. */

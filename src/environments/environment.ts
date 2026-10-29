@@ -9,9 +9,9 @@ export const environment = {
 	mistralSecretKey: "WvrrM5g1bmpJZjb3Go4d8tnUfZkNogmP",
 	recaptchaEnterpriseKey: "6Lev_gstAAAAACll6pekSq467NHhw3Di-CGuV5_I",
 	recaptchaKey: "6Lcf2MYqAAAAAMPwdv97BZ_LBwX-1e9y2NcFsoIn",
-	openAIUrl : "http://10.20.10.133:9000",
-	serverUrl: "https://1800limoapi.infodevbox.com/api/",
-	// serverUrl: "http://localhost:8000/api/",
+	openAIUrl : "http://localhost:9000",
+	// serverUrl: "https://1800limoapi.infodevbox.com/api/",
+	serverUrl: "http://localhost:8000/api/",
     encryptionKey:"BTEo5hJauptWuoKUqeTfVgEn1a6BOSXzNlSoN6SPQBI=",
 	// serverUrl: "https://api.1800limo.com/api/"
 };

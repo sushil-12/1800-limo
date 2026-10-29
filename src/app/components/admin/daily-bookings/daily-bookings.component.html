@@ -340,11 +340,9 @@
 									<td>
 										<p style="white-space: pre" (click)="openModal(booking, 'Passenger')" id="box"
 											[ngClass]="currentUser?.roleName == 'admin' || subModules.includes('can_send_notifications') ? '' : 'disabled-btn'">
-											<span  [innerHTML]="highlighText(booking.passenger_name)"></span> <br />
-											<span class="font-weight-bolder"
-												[innerHTML]="highlighText( booking.passenger_cell_isd)"></span>
-											<span class="font-weight-bolder"
-												[innerHTML]="highlighText( booking.passenger_cell)"></span>
+											<span class="font-weight-bolder" [innerHTML]="highlighText(booking.passenger_name)"></span> <br />
+											<span [innerHTML]="highlighText( booking.passenger_cell_isd)"></span>
+											<span [innerHTML]="highlighText( booking.passenger_cell)"></span>
 										</p>
 										<div *ngIf="booking.created_by_role != 'admin'" style="margin-top: 23px">
 											<span
@@ -368,17 +366,15 @@
 										<p style="white-space: pre" (click)="openModal(booking, 'Loose_Affiliate')"
 											[ngClass]="currentUser?.roleName == 'admin' || subModules.includes('can_send_notifications') ? '' : 'disabled-btn'"
 											*ngIf="booking.affiliate_type == null; else otherAffiliate">
-											<span
+											<span class="font-weight-bolder"
 												[innerHTML]="highlighText(booking.loose_aff_driver_name ? booking.loose_aff_driver_name + ' '+'(L)' : '1800Limo Chauffeurs ')"></span><br />
-											<span class="font-weight-bolder"
-												[innerHTML]="highlighText(booking.loose_affiliate_phone_isd ? booking.loose_affiliate_phone_isd : '+1')"></span>
-											<span class="font-weight-bolder"
-												[innerHTML]="highlighText(booking.loose_affiliate_phone ? booking.loose_affiliate_phone : '8005466266')"></span>
+											<span [innerHTML]="highlighText(booking.loose_affiliate_phone_isd ? booking.loose_affiliate_phone_isd : '+1')"></span>
+											<span [innerHTML]="highlighText(booking.loose_affiliate_phone ? booking.loose_affiliate_phone : '8005466266')"></span>
 										</p>
 										<ng-template #otherAffiliate>
 											<p [ngClass]="currentUser?.roleName == 'admin' || subModules.includes('can_send_notifications') ? '' : 'disabled-btn'"
 												*ngIf="booking.affiliate_type != 'gig_operator'; else gigOperator">
-												<span
+												<span class="font-weight-bolder"
 													(click)="openModal(booking, 'Affiliate')"
 													[innerHTML]="highlighText(
 														(booking?.driver_first_name ?? '') + ' ' +
@@ -388,10 +384,8 @@
 												<span
 													(click)="openModal(booking, 'Affiliate')">({{fomatAffiliateType(booking.affiliate_type)}})</span><br />
 												<span (click)="openModal(booking, 'Affiliate')"
-													class="font-weight-bolder"
 													[innerHTML]="highlighText(booking.driver_cell_isd)"></span>
 												<span (click)="openModal(booking, 'Affiliate')"
-													class="font-weight-bolder"
 													[innerHTML]="highlighText(booking.driver_cell_number)"></span>
 												<br
 													*ngIf="booking?.affiliate_id && booking?.affiliate_id != 0 && booking?.company_name" />
@@ -416,13 +410,11 @@
 											<ng-template #gigOperator>
 												<p [ngClass]="currentUser?.roleName == 'admin' || subModules.includes('can_send_notifications') ? '' : 'disabled-btn'"
 													(click)="openModal(booking, 'Affiliate')">
-													<span
+													<span class="font-weight-bolder"
 														[innerHTML]="highlighText((booking?.driver_first_name ?? '') + ' ' + (booking?.is_pending_affiliate == 1 ? '' : (booking?.driver_last_name?.slice(0,1) ?? '')))"></span>
 													<span>({{fomatAffiliateType(booking.affiliate_type)}})</span> <br />
-													<span class="font-weight-bolder"
-														[innerHTML]="highlighText(booking.driver_cell_isd)"></span>
-													<span class="font-weight-bolder"
-														[innerHTML]="highlighText(booking.driver_cell_number)"></span>
+													<span [innerHTML]="highlighText(booking.driver_cell_isd)"></span>
+													<span [innerHTML]="highlighText(booking.driver_cell_number)"></span>
 												</p>
 											</ng-template>
 										</ng-template>

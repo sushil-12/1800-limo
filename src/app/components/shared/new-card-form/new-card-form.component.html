@@ -89,8 +89,8 @@
 			</div>
 		</div>
 		<div class="col-12 mb-2 d-flex justify-content-center">
-			<button type="button" class="custom-filled-button new-card-form__save m-2" [disabled]="isSaving" (click)="saveCardDetails()">
-				Save
+			<button type="button" class="custom-filled-button new-card-form__save m-2" [disabled]="isSaving || busy" (click)="saveCardDetails()">
+				Save (simran)
 			</button>
 		</div>
 	</div>

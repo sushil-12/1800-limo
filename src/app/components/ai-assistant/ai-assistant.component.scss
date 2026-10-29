@@ -769,3 +769,17 @@ $soft: #f3f4f6;
     padding-bottom: calc(8px + env(safe-area-inset-bottom));
   }
 }
+
+/* The card form is laid out for full pages; in the narrow panel every field takes a full row. */
+.booking-card-form {
+	margin-top: 8px;
+	padding: 8px 10px;
+	border-radius: 12px;
+	background: #fff;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+
+	::ng-deep .row > [class*='col-'] {
+		flex: 0 0 100%;
+		max-width: 100%;
+	}
+}

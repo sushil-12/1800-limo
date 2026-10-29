@@ -18,9 +18,19 @@ export const CARD_EXPIRY_FORMATS = {
 	},
 };
 
+/** The card fields as the reservation APIs take them in `loose_customer.card_details`. */
+export interface CardDetails {
+	name: string;
+	card_number: string;
+	exp_month: string;
+	exp_year: string;
+	cvv: string;
+}
+
 /**
  * Inline "New card details" form (same layout as the finalize-booking screen)
- * that saves a debit/credit card against an account.
+ * that saves a debit/credit card against an account, or (`collectOnly`) hands the
+ * validated card to its parent, which sends it with its own request.
  */
 @Component({
 	selector: 'app-new-card-form',
@@ -41,7 +51,13 @@ export class NewCardFormComponent implements OnInit {
 	/** Prefill for the card holder field */
 	@Input() defaultName: string = '';
 
+	/** Emit the card through `collected` instead of saving it to `accountId`. */
+	@Input() collectOnly: boolean = false;
+	/** Disables Save while the parent sends a collected card. */
+	@Input() busy: boolean = false;
+
 	@Output() saved = new EventEmitter<any>();
+	@Output() collected = new EventEmitter<CardDetails>();
 
 	cardForm: FormGroup;
 	expiryDateControl = new FormControl(moment());
@@ -71,11 +87,17 @@ export class NewCardFormComponent implements OnInit {
 			this.expiryDateControl.markAsTouched();
 			return;
 		}
+		const { name, card_number, exp_month, exp_year, cvv } = this.cardForm.value;
+		if (this.collectOnly) {
+			if (!this.busy) {
+				this.collected.emit({ name, card_number, exp_month: String(exp_month), exp_year: String(exp_year), cvv });
+			}
+			return;
+		}
 		if (!this.accountId || this.isSaving) {
 			return;
 		}
 
-		const { name, card_number, exp_month, exp_year, cvv } = this.cardForm.value;
 		const dataToSend = {
 			id: '',
 			acc_id: this.accountId,

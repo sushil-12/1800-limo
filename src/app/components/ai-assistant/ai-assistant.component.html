@@ -125,6 +125,12 @@
             </button>
           </div>
 
+          <!-- Booking: a new customer's card, sent straight to the 1800limo API -->
+          <div *ngIf="isLive(m) && m.booking?.card_request as request" class="booking-card-form">
+            <app-new-card-form [collectOnly]="true" [busy]="isStreaming" [defaultName]="request.card_holder"
+                               (collected)="sendCard(request, $event)"></app-new-card-form>
+          </div>
+
           <div class="message-meta">
             <span>{{ formatTime(m.timestamp) }}</span>
             <button *ngIf="m.failed" type="button" class="retry-link" (click)="assistant.retry()">· Tap to retry</button>

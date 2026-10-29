@@ -191,9 +191,8 @@
 									<td>
 										<p data-target="#sendEmailModal" style="white-space: pre" data-toggle="modal"
 											(click)="openModal(booking, 'Passenger')" id="box">
-											<span [innerHTML]="highlighText(booking?.passenger_name)"></span> |
-											<span class="font-weight-bolder"
-												[innerHTML]="highlighText( booking?.pax_tel)"></span>
+											<span class="font-weight-bolder" [innerHTML]="highlighText(booking?.passenger_name)"></span> |
+											<span [innerHTML]="highlighText( booking?.pax_tel)"></span>
 										</p>
 										<span class="loc-logo"
 											(click)="showLocationPointOnMap(booking.booking_id, 'pickup')">
@@ -207,10 +206,9 @@
 										<p data-target="#sendEmailModal" data-toggle="modal"
 											(click)="openModal(booking, 'Driver')"
 											*ngIf="booking?.affiliate_type != 'gig_operator'; else gigOperator">
-											<span class="text-capitalize"
+											<span class="font-weight-bolder text-capitalize"
 												[innerHTML]="highlighText(booking?.driver_name.split(' ')[0] + ' ' + booking?.driver_name.split(' ')[1].slice(0,1))"></span>&nbsp;|
-											<span class="font-weight-bolder"
-												[innerHTML]="highlighText(booking?.driver_cell_isd + booking?.driver_tel)"></span>
+											<span [innerHTML]="highlighText(booking?.driver_cell_isd + booking?.driver_tel)"></span>
 
 										</p>
 										<span class="loc-logo"

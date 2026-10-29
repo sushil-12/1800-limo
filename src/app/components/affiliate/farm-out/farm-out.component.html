@@ -157,9 +157,8 @@
 								<td>
 									<p data-target="#sendEmailModal" style="white-space: pre" data-toggle="modal"
 										(click)="openModal(booking, 'Passenger')" id="box">
-										<span [innerHTML]="highlighText(booking?.passenger_name)"></span> <br />
-										<span class="font-weight-bolder"
-											[innerHTML]="highlighText( booking?.pax_tel)"></span>
+										<span class="font-weight-bolder" [innerHTML]="highlighText(booking?.passenger_name)"></span> <br />
+										<span [innerHTML]="highlighText( booking?.pax_tel)"></span>
 									</p>
 								</td>
 								<td>
@@ -167,17 +166,17 @@
 									<p data-target="#sendEmailModal" [attr.data-toggle]="canShowContactInfo(booking?.booking_status) ? 'modal' : null"
 										(click)="openModal(booking, 'Driver')"
 										*ngIf="booking?.affiliate_type != 'gig_operator'; else gigOperator">
-										<span class="text-capitalize"
+										<span class="font-weight-bolder text-capitalize"
 											[innerHTML]="highlighText(booking?.driver_name.split(' ')[0] + ' ' + booking?.driver_name.split(' ')[1].slice(0,1))"></span><br />
-										<span class="font-weight-bolder" *ngIf="canShowContactInfo(booking?.booking_status)"
+										<span *ngIf="canShowContactInfo(booking?.booking_status)"
 											[innerHTML]="highlighText(booking?.driver_cell_isd + booking?.driver_tel)"></span>
 
 									</p>
 									<ng-template #gigOperator>
 										<p (click)="openModal(booking, 'Driver')">
-											<span class="text-capitalize"
+											<span class="font-weight-bolder text-capitalize"
 												[innerHTML]="highlighText(booking?.driver_name.split(' ')[0] + ' ' + booking?.driver_name.split(' ')[1].slice(0,1))"></span><br />
-											<span class="font-weight-bolder" *ngIf="canShowContactInfo(booking?.booking_status)"
+											<span *ngIf="canShowContactInfo(booking?.booking_status)"
 												[innerHTML]="highlighText(booking?.gig_cell_isd + booking?.gig_cell_mobile)"></span>
 										</p>
 									</ng-template>

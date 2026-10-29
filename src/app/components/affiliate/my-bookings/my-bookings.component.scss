@@ -890,6 +890,34 @@ button.view-button.dropdown-toggle::after {
 			white-space: nowrap;
 		}
 
+		// Buy Chauffeur Select sits above the Upcoming/Past/Custom tabs.
+		.bh-actions {
+			order: 2;
+		}
+
+		.bh-tabs {
+			order: 3;
+		}
+
+		// A compact Search button on the same row as the field.
+		.bh-search-input {
+			flex: 1 1 0;
+			min-width: 0;
+		}
+
+		.bh-search-btn {
+			flex: 0 0 auto;
+			gap: 5px;
+			height: 34px;
+			padding: 0 12px;
+			font-size: 13px;
+
+			svg {
+				width: 14px;
+				height: 14px;
+			}
+		}
+
 		.bh-cta {
 			gap: 8px;
 			padding: 3px 14px 3px 3px;

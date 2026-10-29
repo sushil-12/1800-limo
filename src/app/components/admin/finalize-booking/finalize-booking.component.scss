@@ -822,11 +822,19 @@ tbody {
         padding: 6px 16px;
         cursor: pointer;
         white-space: nowrap;
-        transition: background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+        box-shadow: 0 4px 0 #a9a9a9, 0 6px 12px rgba(0, 0, 0, .15);
+        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.15s ease, transform 0.15s ease;
 
         &:hover:not(.active) {
             color: #000;
-            border-color: var(--green-color);
+            border-color: #4169e1;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 0 #a9a9a9, 0 8px 14px rgba(0, 0, 0, .18);
+        }
+
+        &:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #a9a9a9, 0 2px 4px rgba(0, 0, 0, .15);
         }
 
         &:focus {
@@ -834,14 +842,19 @@ tbody {
         }
 
         &:focus-visible {
-            box-shadow: 0 0 0 3px rgba(51, 198, 88, 0.35);
+            box-shadow: 0 4px 0 #a9a9a9, 0 0 0 3px rgba(65, 105, 225, 0.35);
         }
 
         &.active {
-            background-color: var(--green-color);
-            border-color: var(--green-color);
+            background: linear-gradient(180deg, #3a9bff, #2f6fe0);
+            border-color: #2a5cc7;
             color: #fff;
-            box-shadow: 0px 5px 10px -1px rgb(0 0 0 / 30%);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, .25);
+            box-shadow: 0 4px 0 #1d4396, 0 8px 16px rgba(47, 111, 224, .35), inset 0 1px 0 rgba(255, 255, 255, .3);
+
+            &:focus-visible {
+                box-shadow: 0 4px 0 #1d4396, 0 0 0 3px rgba(65, 105, 225, 0.35);
+            }
         }
 
         .bi {

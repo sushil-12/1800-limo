@@ -699,14 +699,19 @@
                 </div>
                 <div class="row">
 
-                    <!-- RADIO BUTTONS -->
+                    <!-- PAYMENT METHOD TOGGLE -->
                     <div class="col-md-12 cardSection">
-                        <div class="radio">
-                            <input id="card" name="paymentMethod" type="radio" checked (click)="changeDetection('card')"
-                                style="margin-right: 10px;">
-                            <label for="card" class="radio-label">Payment with Card</label>
+                        <div class="payment-method-toggle" role="group" aria-label="Payment method">
+                            <button type="button" class="pm-btn" [class.active]="paymentMethod == 'card'"
+                                [attr.aria-pressed]="paymentMethod == 'card'" (click)="changeDetection('card')">
+                                <i class="bi bi-credit-card-fill"></i> Payment with Card
+                            </button>
+                            <button type="button" class="pm-btn" [class.active]="paymentMethod == 'cash'"
+                                [attr.aria-pressed]="paymentMethod == 'cash'" (click)="changeDetection('cash')">
+                                <i class="bi bi-cash-stack"></i> Payment with Cash
+                            </button>
                         </div>
-                        <div class="methodCard" *ngIf="paymentMethod=='card'">
+                        <div class="methodCard mt-3" *ngIf="paymentMethod=='card'">
                             <table class="table table-borderless">
                                 <thead class="bg-transparent">
                                     <tr>
@@ -735,13 +740,6 @@
 
 
 
-                    </div>
-                    <div class="col-md-12 my-3 cardSection">
-                        <div class="radio">
-                            <input id="cash" name="paymentMethod" type="radio" (click)="changeDetection('cash')"
-                                style="margin-right: 10px;">
-                            <label for="cash" class="radio-label">Payment with Cash</label>
-                        </div>
                     </div>
 
                 </div>

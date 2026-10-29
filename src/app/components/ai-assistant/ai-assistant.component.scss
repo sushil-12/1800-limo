@@ -641,6 +641,38 @@ $soft: #f3f4f6;
   }
 }
 
+/* Booking menu options: one full-width button per choice (labels can be long addresses) */
+.booking-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.booking-option {
+  border: 1px solid #fed7aa;
+  background: white;
+  color: $accent-dark;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  line-height: 1.35;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #fff7ed;
+    border-color: $accent;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
 /* Quick replies */
 .quick-replies {
   display: flex;

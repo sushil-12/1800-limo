@@ -4,7 +4,7 @@ import {
 import { NavigationEnd, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { AiAssistantService, AiBookingCard, AiCardRequest, AiChatMessage } from 'src/app/services/ai-assistant.service';
+import { AiAssistantService, AiBookingCard, AiBookingOption, AiCardRequest, AiChatMessage } from 'src/app/services/ai-assistant.service';
 import { CardDetails } from '../shared/new-card-form/new-card-form.component';
 
 /** Routes that already have their own chat panel in the same corner. */
@@ -145,6 +145,11 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 	pickCard(card: AiBookingCard): void {
 		if (this.isStreaming) return;
 		this.assistant.send(String(card.number), card.title);
+	}
+
+	pickOption(option: AiBookingOption): void {
+		if (this.isStreaming) return;
+		this.assistant.send(String(option.number), option.label);
 	}
 
 	/** The new customer's card goes straight to the 1800limo API, never to the assistant. */

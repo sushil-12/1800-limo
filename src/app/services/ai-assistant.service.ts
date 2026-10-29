@@ -15,6 +15,13 @@ export interface AiBookingCard {
 	images: string[];
 }
 
+/** One option of any other numbered booking menu (places, airports, terminals, customers...).
+ * Picking it sends `number`. */
+export interface AiBookingOption {
+	number: number;
+	label: string;
+}
+
 /**
  * A changed booking for a new customer, waiting for their card (limoagent EDIT_BOOKING_FLOW.md).
  * The card form adds the card to `payload.loose_customer.card_details` and this service sends it
@@ -34,6 +41,8 @@ export interface AiBooking {
 	active: boolean;
 	cards_kind: 'category' | 'vehicle' | null;
 	cards: AiBookingCard[];
+	/** Every other numbered menu, as buttons (in place of the "1. ..." lines). */
+	options?: AiBookingOption[];
 	/** Suggested answers, shown as buttons. */
 	replies: string[];
 	/** Show the card form; see AiCardRequest. */
@@ -56,6 +65,8 @@ export interface AiChatMessage {
 const AI_CHAT_URL = `${environment['openAIUrl']}/v1/chat`;
 const STORAGE_KEY = 'ai_assistant_chat';
 const CONVERSATION_KEY = 'ai_assistant_conversation';
+/** Whose chat is stored: a sign-in, sign-out or "login as user" in this tab starts a new one. */
+const OWNER_KEY = 'ai_assistant_owner';
 /** POST /v1/chat limits (limoagent docs/API.md): messages per request, characters per message. */
 const MAX_HISTORY = 30;
 const MAX_CHARS = 4000;
@@ -82,9 +93,9 @@ export class AiAssistantService {
 		return this.messages$.value;
 	}
 
-	open(): void { this.isOpen$.next(true); }
+	open(): void { this.syncOwner(); this.isOpen$.next(true); }
 	close(): void { this.isOpen$.next(false); }
-	toggle(): void { this.isOpen$.next(!this.isOpen$.value); }
+	toggle(): void { this.syncOwner(); this.isOpen$.next(!this.isOpen$.value); }
 
 	/** Start a new conversation, cancelling any reply in flight. */
 	clear(): void {
@@ -104,6 +115,7 @@ export class AiAssistantService {
 	send(text: string, display?: string): void {
 		const content = text.trim();
 		if (!content || this.isStreaming$.value) return;
+		this.syncOwner();
 
 		const user: AiChatMessage = { id: this.newId(), role: 'user', content, display, timestamp: new Date() };
 		this.messages$.next([...this.messages, user]);
@@ -116,7 +128,7 @@ export class AiAssistantService {
 	 * Plain fetch for the same reason as requestReply: a 401 here must not log the user out.
 	 */
 	async submitCard(request: AiCardRequest, card: CardDetails): Promise<void> {
-		if (this.isStreaming$.value) return;
+		if (this.isStreaming$.value || this.syncOwner()) return; // the form belonged to another user's chat
 		const payload = JSON.parse(JSON.stringify(request.payload ?? {}));
 		payload.loose_customer = { ...(payload.loose_customer || {}), card_details: { ...card } };
 		const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
@@ -160,7 +172,7 @@ export class AiAssistantService {
 
 	/** Re-ask the last user message after a failed reply. */
 	retry(): void {
-		if (this.isStreaming$.value) return;
+		if (this.isStreaming$.value || this.syncOwner()) return;
 		const msgs = [...this.messages];
 		while (msgs.length && msgs[msgs.length - 1].role === 'assistant') msgs.pop();
 		if (!msgs.length) return;
@@ -312,6 +324,29 @@ export class AiAssistantService {
 			this.emitScheduled = false;
 			this.zone.run(() => this.messages$.next([...this.messages]));
 		});
+	}
+
+	/**
+	 * Start a new chat when the signed-in user is not the one the stored chat belongs to, so one
+	 * user's history (name, bookings) never goes to the assistant as another's. True if it reset.
+	 */
+	private syncOwner(): boolean {
+		const owner = this.currentOwner();
+		let saved: string | null = null;
+		try { saved = sessionStorage.getItem(OWNER_KEY); } catch { }
+		if (saved === owner) return false;
+		try { sessionStorage.setItem(OWNER_KEY, owner); } catch { }
+		if (saved === null && !this.messages.length) return false;
+		this.clear();
+		return true;
+	}
+
+	private currentOwner(): string {
+		try {
+			const id = this.authService.currentUserValue?.id;
+			if (id != null && this.authService.getAccessToken()) return `u${id}`;
+		} catch { }
+		return 'guest';
 	}
 
 	private persist(): void {

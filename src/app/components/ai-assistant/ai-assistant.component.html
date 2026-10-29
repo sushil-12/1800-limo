@@ -117,6 +117,14 @@
             </div>
           </div>
 
+          <!-- Booking: any other numbered menu (places, airports, terminals, customers) as buttons -->
+          <div *ngIf="isLive(m) && m.booking?.options?.length" class="booking-options" role="list">
+            <button *ngFor="let option of m.booking?.options" type="button" class="booking-option" role="listitem"
+                    [disabled]="isStreaming" (click)="pickOption(option)">
+              {{ option.label }}
+            </button>
+          </div>
+
           <!-- Booking: suggested answers for the current step -->
           <div *ngIf="isLive(m) && !isStreaming && m.booking?.replies?.length" class="booking-replies">
             <button *ngFor="let reply of m.booking?.replies" type="button" class="quick-reply"

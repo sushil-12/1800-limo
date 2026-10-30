@@ -60,6 +60,11 @@ export class HttpConfigInterceptor implements HttpInterceptor {
 					return throwError(() => errorData);
 				}
 				this.spinner.hide()
+				// Guest booking with an already-registered phone: the booking form shows
+				// its own login popup from errors.existing_account, so skip the generic dialog.
+				if (errorData.status == 428) {
+					return throwError(() => errorData);
+				}
 				if (errorData.status == 401) {
 					this.errors = {
 						errors: {

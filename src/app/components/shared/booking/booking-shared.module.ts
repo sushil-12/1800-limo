@@ -13,6 +13,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatDialogModule } from '@angular/material/dialog';
 import { GoogleMapsModule } from '@angular/google-maps';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { NgOtpInputModule } from 'ng-otp-input';
 
 import { SharedModule } from '../shared.module';
 import { BookingComponent } from './booking.component';
@@ -44,6 +45,7 @@ import { BookingTripPreviewModule } from '../booking-trip-preview/booking-trip-p
 		MatDialogModule,
 		GoogleMapsModule,
 		DragDropModule,
+		NgOtpInputModule,
 		SharedModule,
 		BookingTripPreviewModule,
 	],

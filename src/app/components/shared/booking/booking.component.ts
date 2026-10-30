@@ -40,6 +40,10 @@ import {
 	formatAffiliateDistance,
 	readAffiliateLookupResponse
 } from '../../../utils/affiliate-lookup';
+import { AuthService } from '../../../services/auth.service';
+import { ReCaptchaService } from '../../../services/re-captcha.service';
+import { NgOtpInputComponent } from 'ng-otp-input';
+import { environment } from '../../../../environments/environment';
 
 declare var $: any
 console.log('BookingComponent new version form ,,,loaded');
@@ -296,6 +300,22 @@ export class BookingComponent implements OnInit, OnDestroy {
 	is_booking_edit_case: boolean = false
 	reset_button: boolean = false
 	submitBookingForm: boolean;
+	/** 428 from quote/create-reservation: the guest's phone belongs to an existing individual account. */
+	existingAccount: any = null
+	existingAccountMessage: string = ''
+	existingAccountOtpSent: boolean = false
+	existingAccountOtp: string = ''
+	@ViewChild('existingAccountOtpInput') existingAccountOtpInput: NgOtpInputComponent;
+	readonly existingAccountOtpConfig = {
+		length: 6,
+		allowNumbersOnly: true,
+		inputStyles: { width: '46px', height: '52px', 'font-size': '20px', 'border-radius': '8px', margin: '0 4px' }
+	}
+	existingAccountBusy: boolean = false
+	private existingAccountUserId: any = null
+	private existingAccountFamilyId: any = null
+	/** Guest-entered values carried into the individual form after the OTP login (router state). */
+	private guestBookingPrefill: Record<string, any> = null
 	numberOfHoursError: boolean = false;
 	/** Set when the last outbound route contained a zero-distance leg on a non-charter booking. */
 	hasInvalidRoutePoint: boolean = false;
@@ -413,10 +433,15 @@ export class BookingComponent implements OnInit, OnDestroy {
 		private affiliateService: AffiliateService,
 		private $quotebot: QuotebotService,
 		private zone: NgZone,
+		private authService: AuthService,
+		private recaptchaService: ReCaptchaService,
 	) { }
 
 	ngOnInit(): void {
 		this.currentUser = JSON.parse(localStorage.getItem("currentUser"))
+		if (this.isIndividualMode) {
+			this.guestBookingPrefill = (this.$router.getCurrentNavigation()?.extras?.state ?? history.state)?.guestBookingPrefill || null
+		}
 		if (this.isTravelAgentMode) {
 			this.isTravelShare = true;
 			this.isCreatedByAdmin = false;
@@ -5302,6 +5327,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 			if (response?.data) {
 				this.chosen_user['name'] = `${response.data.first_name} ${response.data.middle_name ?? ''} ${response.data.last_name}`
 			}
+			this.applyGuestBookingPrefill()
 		})
 	}
 
@@ -8387,6 +8413,10 @@ export class BookingComponent implements OnInit, OnDestroy {
 					else {
 						this.navigatePostSave(response)
 					}
+				}, (err: any) => {
+					if (err?.status === 428) {
+						this.openExistingAccountModal(err)
+					}
 				})
 			}
 
@@ -8756,6 +8786,157 @@ export class BookingComponent implements OnInit, OnDestroy {
 			return
 		}
 		this.$router.navigate(['/admin/daily-bookings-admin'])
+	}
+
+	/** The guest's phone is already registered: offer an OTP login instead of the generic error dialog. */
+	private openExistingAccountModal(err: any) {
+		const errors = (err?.error?.data ?? err?.error)?.errors || {}
+		this.existingAccount = errors.existing_account || null
+		this.existingAccountMessage = errors.error || ''
+		this.existingAccountOtpSent = false
+		this.existingAccountOtp = ''
+		this.existingAccountBusy = false
+		this.$spinner.hide()
+		$('#existingAccountModal').modal('show')
+	}
+
+	/** Same payload the /login page sends to login-otp, built from the existing account. */
+	sendExistingAccountOtp() {
+		if (!this.existingAccount || this.existingAccountBusy) {
+			return
+		}
+		this.existingAccountBusy = true
+		this.recaptchaService.execute('login').then(recaptchaToken => {
+			this.authService.login({
+				phone: this.existingAccount.mobile,
+				role: 'individual',
+				countryCode: this.existingAccount.mobileIsd,
+				phoneCountry: this.existingAccount.mobileCountry,
+				recaptchaToken
+			}).subscribe((response: any) => {
+				this.existingAccountBusy = false
+				this.existingAccountOtpSent = true
+				this.existingAccountUserId = response?.data?.id
+				this.existingAccountFamilyId = response?.data?.family_data?.id ?? null
+				this.existingAccountOtp = ''
+				// the boxes render on the next tick (*ngIf); fill them there
+				setTimeout(() => {
+					this.existingAccountOtpInput?.setValue('')
+					// non-production returns the OTP, same as the /otp page autofill
+					if (environment['environmentName'] !== 'Production' && response?.data?.otp) {
+						this.existingAccountOtpInput?.setValue(String(response.data.otp))
+						this.existingAccountOtp = String(response.data.otp)
+					}
+				}, 0)
+			}, () => {
+				this.existingAccountBusy = false
+			})
+		}).catch(() => {
+			this.existingAccountBusy = false
+		})
+	}
+
+	onExistingAccountOtpChange(value: string) {
+		this.existingAccountOtp = value
+		if (value?.length === 6) {
+			this.verifyExistingAccountOtp()
+		}
+	}
+
+	verifyExistingAccountOtp() {
+		if (!/^\d{6}$/.test(this.existingAccountOtp || '') || this.existingAccountBusy) {
+			return
+		}
+		this.existingAccountBusy = true
+		this.authService.verifyOtp({
+			otp: this.existingAccountOtp,
+			userId: this.existingAccountUserId,
+			family_id: this.existingAccountFamilyId
+		}).subscribe((response: any) => {
+			this.existingAccountBusy = false
+			this.storeLoginSession(response)
+			const prefill = this.collectGuestBookingPrefill()
+			// navigate once the modal is gone so its backdrop doesn't outlive this component
+			$('#existingAccountModal').one('hidden.bs.modal', () => {
+				this.zone.run(() => {
+					this.$router.navigate(['/individual/create-new-booking-v2'], {
+						queryParams: { ...this.$routeurl.snapshot.queryParams, created_by: 'individual' },
+						state: { guestBookingPrefill: prefill }
+					})
+				})
+			}).modal('hide')
+		}, () => {
+			this.existingAccountBusy = false
+		})
+	}
+
+	/** Mirrors what OtpComponent stores after a successful /login. */
+	private storeLoginSession(response: any) {
+		const user = response?.data?.user
+		localStorage.setItem('userData', JSON.stringify({
+			Phone: user?.phone,
+			RoleName: user?.roleName,
+			PhoneCountry: user?.phoneCountry,
+			profile_picture: user?.profile_picture
+		}))
+		localStorage.setItem('currentUser', JSON.stringify(user))
+		localStorage.setItem('access_token', response?.data?.access_token)
+		localStorage.setItem('currencySymbol', JSON.stringify(response?.currency?.symbol))
+		if (response?.data?.is_family_member) {
+			localStorage.setItem('is_family_member', response?.data?.is_family_member)
+			localStorage.setItem('family_member_data', JSON.stringify(response?.data?.family_member_data))
+		}
+		if (response?.data?.invite_link) {
+			localStorage.setItem('invite_link', response?.data?.invite_link)
+		}
+		else {
+			localStorage.removeItem('invite_link')
+		}
+	}
+
+	/**
+	 * Guest fields that setValueByBookNow() doesn't rebuild from quotebot_form/selected_vehicle.
+	 * Route, vehicle and affiliate come back through the same query params + storage.
+	 */
+	private readonly guestCarryOverFields = [
+		'passenger_name', 'passenger_email', 'passenger_cell', 'passenger_cell_isd', 'passenger_cell_country',
+		'total_passengers', 'luggage_count', 'booking_instructions', 'return_booking_instructions',
+		'pickup_date', 'pickup_time', 'return_pickup_date', 'return_pickup_time',
+		'pickup_airline', 'pickup_airline_option', 'pickup_airline_name', 'pickup_flight',
+		'origin_airport_city', 'departing_airport_city',
+		'dropoff_airline', 'dropoff_airline_option', 'dropoff_airline_name', 'dropoff_flight',
+		'return_pickup_airline', 'return_pickup_airline_option', 'return_pickup_airline_name', 'return_pickup_flight',
+		'return_dropoff_airline', 'return_dropoff_airline_option', 'return_dropoff_airline_name', 'return_dropoff_flight',
+		'cruise_port', 'cruise_name', 'cruise_time', 'return_cruise_port', 'return_cruise_name', 'return_cruise_time',
+		'meet_greet_choices', 'meet_greet_choices_name', 'return_meet_greet_choices', 'return_meet_greet_choices_name',
+		'fbo_name', 'fbo_address', 'return_fbo_name', 'return_fbo_address',
+	]
+
+	private collectGuestBookingPrefill(): Record<string, any> {
+		const value = this.BookingForm.getRawValue()
+		const prefill: Record<string, any> = {}
+		this.guestCarryOverFields.forEach((field) => {
+			if (value[field] !== null && value[field] !== undefined && value[field] !== '') {
+				prefill[field] = value[field]
+			}
+		})
+		return prefill
+	}
+
+	/**
+	 * Runs after both the quotebot prefill and the account autofill (either can finish last),
+	 * so the values the guest typed win over the defaults.
+	 */
+	private applyGuestBookingPrefill() {
+		if (!this.guestBookingPrefill) {
+			return
+		}
+		this.BookingForm.patchValue(this.guestBookingPrefill)
+		try {
+			this.PaxTelObject?.setCountry(this.BookingForm.get('passenger_cell_country').value);
+		} catch {
+			console.error('Set Country Value is null.')
+		}
 	}
 
 	/** Paid / paid-in-cash bookings are locked — only repeat/return/round may reuse them. */
@@ -11319,6 +11500,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 			}
 		}, 5000)
 			this.runEmbeddedQuote();
+		this.applyGuestBookingPrefill()
 	}
 
 	// numbers in red and seperated to next line

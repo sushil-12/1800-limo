@@ -35,6 +35,45 @@ export interface AiCardRequest {
 	card_holder: string;
 }
 
+export interface AiLabelValue {
+	label: string;
+	value: string;
+}
+
+/** One leg of the booking to confirm: pickup, stops and drop-off in order, then its details. */
+export interface AiPreviewLeg {
+	title: string;
+	when: string;
+	points: { type: 'pickup' | 'stop' | 'dropoff'; label: string }[];
+	distance: string | null;
+	/** Flights, cruise, meet & greet, special instructions. */
+	details: AiLabelValue[];
+}
+
+/** The booking to confirm, shown as a preview card with "Confirm booking?". */
+export interface AiBookingPreview {
+	service: string;
+	legs: AiPreviewLeg[];
+	vehicle: { title: string; subtitle: string | null; size: string | null; image: string | null } | null;
+	/** Passengers, operator, driver, customer, passenger. */
+	rows: AiLabelValue[];
+	prices: { label: string; amount: string; lines: AiLabelValue[] }[];
+	total: string | null;
+	notes: string[];
+}
+
+/** The booking just created, shown as a success card. */
+export interface AiBooked {
+	reservation_id: string;
+	return_reservation_id: string | null;
+	service: string;
+	legs: { title: string; when: string; from: string; to: string; stops: number }[];
+	vehicle: string | null;
+	passenger: string | null;
+	total: string | null;
+	message: string;
+}
+
 /** The booking step behind a `reply_type: "booking"` answer (the `booking` SSE event). */
 export interface AiBooking {
 	/** The next message in this conversation goes to the booking. */
@@ -47,6 +86,8 @@ export interface AiBooking {
 	replies: string[];
 	/** Show the card form; see AiCardRequest. */
 	card_request?: AiCardRequest | null;
+	preview?: AiBookingPreview | null;
+	booked?: AiBooked | null;
 }
 
 export interface AiChatMessage {

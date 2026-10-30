@@ -186,6 +186,11 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 		this.brokenPhotos.add(src);
 	}
 
+	/** The booking preview's vehicle photo: shown while it is an http(s) URL that loads. */
+	photoOk(src: string | null): boolean {
+		return !!src && /^https?:\/\//.test(src) && !this.brokenPhotos.has(src);
+	}
+
 	private photos(card: AiBookingCard): string[] {
 		return (card.images || []).filter(src => /^https?:\/\//.test(src) && !this.brokenPhotos.has(src));
 	}

@@ -67,7 +67,7 @@
       </div>
 
       <div *ngFor="let m of messages; trackBy: trackById" class="message-row" [class.from-user]="m.role === 'user'"
-           [class.wide]="!!m.booking?.cards?.length">
+           [class.wide]="!!m.booking?.cards?.length || !!m.booking?.preview || !!m.booking?.booked">
         <div *ngIf="m.role === 'assistant'" class="avatar small" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z" />
@@ -82,6 +82,121 @@
             </span>
             <span *ngIf="m.content" class="md" [innerHTML]="renderMarkdown(m.content)"></span><span
                   *ngIf="m.streaming && m.content" class="caret"></span>
+          </div>
+
+          <!-- Booking: the booking to confirm -->
+          <div *ngIf="m.booking?.preview as p" class="booking-preview" aria-label="Booking preview">
+            <div class="preview-head">
+              <span class="preview-title">Review your booking</span>
+              <span class="preview-chip">{{ p.service }}</span>
+            </div>
+
+            <div *ngIf="p.vehicle as v" class="preview-vehicle">
+              <div class="vehicle-photo">
+                <img *ngIf="photoOk(v.image); else noVehiclePhoto" [src]="v.image"
+                     [alt]="v.title" loading="lazy" (error)="photoFailed(v.image || '')">
+                <ng-template #noVehiclePhoto>
+                  <svg class="photo-placeholder" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M18.9 6c-.2-.6-.8-1-1.4-1h-11c-.7 0-1.2.4-1.4 1L3 12v8c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-1h12v1c0 .6.4 1 1 1h1c.6 0 1-.4 1-1v-8l-2.1-6zM6.5 16c-.8 0-1.5-.7-1.5-1.5S5.7 13 6.5 13s1.5.7 1.5 1.5S7.3 16 6.5 16zm11 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
+                  </svg>
+                </ng-template>
+              </div>
+              <div class="vehicle-info">
+                <div class="vehicle-title">{{ v.title }}</div>
+                <div *ngIf="v.subtitle" class="vehicle-sub">{{ v.subtitle }}</div>
+                <div *ngIf="v.size" class="vehicle-sub">{{ v.size }}</div>
+              </div>
+            </div>
+
+            <section *ngFor="let leg of p.legs" class="preview-leg">
+              <div class="leg-head">
+                <span class="leg-title">{{ leg.title }}</span>
+                <span class="leg-when">{{ leg.when }}</span>
+              </div>
+              <ol class="route">
+                <li *ngFor="let point of leg.points" [class]="'route-point ' + point.type">
+                  <span class="point-kind">{{ point.type === 'pickup' ? 'Pickup' : point.type === 'stop' ? 'Stop' : 'Drop-off' }}</span>
+                  <span class="point-label">{{ point.label }}</span>
+                </li>
+              </ol>
+              <div *ngIf="leg.distance" class="leg-distance">{{ leg.distance }}</div>
+              <dl *ngIf="leg.details.length" class="preview-rows">
+                <ng-container *ngFor="let row of leg.details">
+                  <dt>{{ row.label }}</dt>
+                  <dd>{{ row.value }}</dd>
+                </ng-container>
+              </dl>
+            </section>
+
+            <dl class="preview-rows boxed">
+              <ng-container *ngFor="let row of p.rows">
+                <dt>{{ row.label }}</dt>
+                <dd>{{ row.value }}</dd>
+              </ng-container>
+            </dl>
+
+            <div *ngIf="p.prices.length" class="preview-prices">
+              <details *ngFor="let price of p.prices" class="price">
+                <summary>
+                  <span>{{ price.label }}</span>
+                  <span class="price-amount">{{ price.amount }}</span>
+                </summary>
+                <div *ngFor="let line of price.lines" class="price-line">
+                  <span>{{ line.label }}</span><span>{{ line.value }}</span>
+                </div>
+              </details>
+              <div *ngIf="p.total" class="price-total">
+                <span>Total</span>
+                <span>{{ p.total }}</span>
+              </div>
+            </div>
+
+            <ul *ngIf="p.notes.length" class="preview-notes">
+              <li *ngFor="let note of p.notes">{{ note }}</li>
+            </ul>
+          </div>
+
+          <!-- Booking: the booking just created -->
+          <div *ngIf="m.booking?.booked as b" class="booking-success" role="status">
+            <div class="success-head">
+              <span class="success-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+              <div>
+                <div class="success-title">Booking confirmed</div>
+                <div class="success-sub">{{ b.message }}</div>
+              </div>
+            </div>
+            <div class="success-ids">
+              <div class="success-id">
+                <span class="id-label">{{ b.return_reservation_id ? 'Outbound booking' : 'Booking number' }}</span>
+                <span class="id-value">#{{ b.reservation_id }}</span>
+              </div>
+              <div *ngIf="b.return_reservation_id" class="success-id">
+                <span class="id-label">Return booking</span>
+                <span class="id-value">#{{ b.return_reservation_id }}</span>
+              </div>
+            </div>
+            <div *ngFor="let leg of b.legs" class="success-leg">
+              <div class="leg-head">
+                <span class="leg-title">{{ leg.title }}</span>
+                <span class="leg-when">{{ leg.when }}</span>
+              </div>
+              <div class="success-route">
+                <span>{{ leg.from }}</span>
+                <span class="route-arrow" aria-hidden="true">↓</span>
+                <span>{{ leg.to }}</span>
+              </div>
+              <div *ngIf="leg.stops" class="leg-distance">{{ leg.stops }} extra stop{{ leg.stops > 1 ? 's' : '' }}</div>
+            </div>
+            <dl class="preview-rows">
+              <dt>Service</dt><dd>{{ b.service }}</dd>
+              <ng-container *ngIf="b.vehicle"><dt>Vehicle</dt><dd>{{ b.vehicle }}</dd></ng-container>
+              <ng-container *ngIf="b.passenger"><dt>Passenger</dt><dd>{{ b.passenger }}</dd></ng-container>
+              <ng-container *ngIf="b.total"><dt>Total</dt><dd class="strong">{{ b.total }}</dd></ng-container>
+            </dl>
           </div>
 
           <!-- Booking: vehicle categories / vehicles as photo cards -->

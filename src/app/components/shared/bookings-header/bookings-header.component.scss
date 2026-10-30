@@ -360,7 +360,7 @@
 		gap: 6px;
 		padding: 12px 26px;
 		border-radius: 50px;
-		background: #151a2e;
+		background: #176535;
 		color: var(--bh-active-ink);
 		font-size: 17px;
 		font-weight: 700;
@@ -460,9 +460,9 @@
 			}
 		}
 
-		// One column: title, tabs, the role button (left), search, then the
-		// toolbar (Reset/Print, right) under the search. `display: contents`
-		// lifts the title row's pieces into the card so they can be reordered.
+		// One column: title, tabs, a row with the role button (left) and the
+		// toolbar (Reset/Print, right), then search. `display: contents` lifts
+		// the title row's pieces into the card so they can be reordered.
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
@@ -471,8 +471,7 @@
 			order: 6;
 		}
 
-		.bh-head,
-		.bh-head-end {
+		.bh-head {
 			display: contents;
 		}
 
@@ -484,20 +483,33 @@
 			order: 2;
 		}
 
-		.bh-actions {
+		.bh-head-end {
 			order: 3;
+			flex-wrap: nowrap;
+			gap: 8px;
+			margin-left: 0;
+
+			// Neither slot has content on this page: drop the row and its gap.
+			&:not(:has(> div > *)) {
+				display: none;
+			}
+		}
+
+		.bh-actions {
+			order: 1;
 			justify-content: flex-start;
+		}
+
+		.bh-toolbar {
+			order: 2;
+			flex-wrap: nowrap;
+			justify-content: flex-end;
+			gap: 8px;
+			margin-left: auto;
 		}
 
 		.bh-search {
 			order: 4;
-		}
-
-		.bh-toolbar {
-			order: 5;
-			flex-wrap: nowrap;
-			justify-content: flex-end;
-			gap: 8px;
 		}
 
 		.bh-range,
@@ -601,9 +613,9 @@
 			}
 		}
 
-		// Compact pill lined up under the text (38px icon + 12px gap).
+		// Compact pill on its own row, at the right edge.
 		.bh-banner-cta {
-			margin-left: 50px;
+			margin-left: auto;
 			gap: 4px;
 			padding: 7px 16px;
 			font-size: 14px;

@@ -275,7 +275,7 @@ input::-webkit-input-placeholder {
 }
 
 .booking-price {
-	margin-top: 10px;
+	margin-top: 10px !important;
 }
 
 .preview-output-field {
@@ -894,8 +894,8 @@ button.view-button.dropdown-toggle::after {
 			white-space: nowrap;
 		}
 
-		// Buy Chauffeur Select sits above the Upcoming/Past/Custom tabs.
-		.bh-actions {
+		// Buy Chauffeur Select + Reset sit above the Upcoming/Past/Custom tabs.
+		.bh-head-end {
 			order: 2;
 		}
 

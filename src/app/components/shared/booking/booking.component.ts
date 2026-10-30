@@ -3012,6 +3012,11 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return this.userRole === 'admin' || (!!status && !['pending', 'rejected', 'rejection'].includes(status));
 	}
 
+	/** Affiliates see the passenger email & cell blurred until they accept a pending booking. */
+	get blurPassengerContact(): boolean {
+		return this.userRole === 'affiliate' && this.bookingResponse?.booking_status === 'pending';
+	}
+
 	/** Affiliate names carry the phone in "(...)"; drop it while contact info is hidden. */
 	affiliateDisplayName(name: any, isReturn = false): string {
 		const status = isReturn

@@ -736,6 +736,7 @@
 									Passenger Email
 								</mat-label>
 								<input matInput placeholder="Passenger Email" type="text" formControlName="passenger_email"
+									[class.blur-contact]="blurPassengerContact"
 									(focus)="$event.target.select()" />
 								<span matSuffix class="select-arrow-btn field-icon-btn" aria-hidden="true">
 									<svg viewBox="0 0 24 24" width="24px" height="24px" focusable="false" aria-hidden="true">
@@ -764,6 +765,7 @@
 								</mat-label>
 								<input pattern="[0-9+]*" maxlength="16" matInput #passenger_cellInput
 									placeholder="1234567890" formControlName="passenger_cell" class="phoneNumberClass"
+									[class.blur-contact]="blurPassengerContact"
 									tabindex="1" (focus)="$event.target.select()" (keypress)="numberOnly($event)"
 									(input)="validatePassengerPhone()" (blur)="validatePassengerPhone()" />
 							</mat-form-field>
@@ -4717,7 +4719,7 @@
 				<h5 class="modal-title font-weight-bold" id="existingAccountModalLabel">Account Already Exists</h5>
 			</div>
 			<div class="modal-body py-3">
-				<p class="text-center mb-3" *ngIf="existingAccountMessage">{{ existingAccountMessage }}</p>
+				<p class="text-center mb-3" *ngIf="existingAccountMessage">Please Login as an individual to proceed with your booking. Your details will be automatically filled in</p>
 				<div class="existing-account-details" *ngIf="existingAccount">
 					<div class="d-flex justify-content-between mb-1">
 						<span class="text-muted">Name</span>

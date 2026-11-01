@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } fr
 import { ActivatedRoute } from '@angular/router';
 import { io, Socket } from 'socket.io-client';
 import { environment } from '../../../../environments/environment';
+import { LimoRtShareClient, isShareToken } from './limo-rt-share-client';
 
 declare var google: any;
 
@@ -27,6 +28,9 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   readonly socketSecret = 'limoapi_notifications_secret_2024_xyz789';
 
   socket: Socket | null = null;
+  /** True for a signed share link (limo-rt): view only, no chat. */
+  viewerMode = false;
+  private shareClient: LimoRtShareClient | null = null;
   currentUserId: number | null = null;
   private googleMap: any = null;
   private markers: { driver: any; pickup: any; dropoff: any } = { driver: null, pickup: null, dropoff: null };
@@ -60,7 +64,14 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   constructor(private route: ActivatedRoute) {}
 
   ngOnInit(): void {
-    this.initializeSocket();
+    const trackingId = this.route.snapshot.paramMap.get('tracking_id');
+    if (isShareToken(trackingId)) {
+      this.initializeShareTracking(trackingId as string);
+    } else {
+      // Legacy links (/live-ride-tracking/<customer id>) on the Node service. Remove after
+      // the limo-rt cutover, together with initializeSocket() and the chat wiring.
+      this.initializeSocket();
+    }
   }
 
   ngAfterViewInit(): void {
@@ -68,6 +79,9 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   ngOnDestroy(): void {
+    this.shareClient?.stop();
+    this.shareClient = null;
+
     // Clear connection check interval
     if (this.connectionCheckInterval) {
       clearInterval(this.connectionCheckInterval);
@@ -305,6 +319,67 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       this.error = `Failed to initialize connection: ${error.message || 'Unknown error'}`;
       this.status = 'Initialization Error';
     }
+  }
+
+  /**
+   * Signed share link: read-only tracking over limo-rt. The ride summary and live frames are
+   * mapped onto the same `rideData` / `pathHistory` the legacy path fills, so the map and the
+   * panel are unchanged.
+   */
+  private initializeShareTracking(token: string): void {
+    this.viewerMode = true;
+    const socketUrl = (environment as any).rtSocketUrl as string | undefined;
+    if (!socketUrl) {
+      this.error = 'Live tracking is not available right now.';
+      return;
+    }
+    this.shareClient = new LimoRtShareClient(socketUrl, token, {
+      onRide: (ride) => {
+        this.currentBookingId = ride.ride_id;
+        this.rideData = {
+          booking_id: ride.ride_id,
+          status: ride.status,
+          driver_id: null,
+          driver_name: ride.driver_first_name || 'Your chauffeur',
+          driver_phone: null,
+          vehicle_info: 'Vehicle',
+          vehicle_plate: '',
+          pickup: { address: ride.pickup.address, lat: ride.pickup.lat ?? NaN, lng: ride.pickup.lng ?? NaN },
+          dropoff: { address: ride.dropoff.address, lat: ride.dropoff.lat ?? NaN, lng: ride.dropoff.lng ?? NaN },
+          driver_lat: NaN,
+          driver_lng: NaN,
+          pickup_time: null
+        };
+        setTimeout(() => this.updateMapVisuals(), 100);
+      },
+      onLocation: (lat, lng) => {
+        this.processRideData({ latitude: lat, longitude: lng, bookingId: this.currentBookingId }, 'driver_loc');
+      },
+      onStatus: (status) => {
+        if (this.rideData) {
+          this.rideData = { ...this.rideData, status };
+          this.lastRouteUpdate = 0;
+          setTimeout(() => this.updateMapVisuals(), 100);
+        }
+      },
+      onPresence: (online) => {
+        this.status = online ? 'Connected' : 'Driver connection lost, showing last known location';
+      },
+      onConnection: (state) => {
+        this.status = state === 'connected' ? 'Connected' : state === 'connecting' ? 'Connecting...' : 'Reconnecting...';
+        if (state === 'connected') this.error = null;
+      },
+      onExpired: (reason) => {
+        const over = this.rideData && ['ended', 'finalized', 'cancelled'].includes(this.rideData.status);
+        if (!over) {
+          this.error = reason === 'expired'
+            ? 'This tracking link has expired.'
+            : 'This tracking link is not valid.';
+        }
+        this.status = 'Disconnected';
+      }
+    });
+    this.shareClient.start();
   }
 
   private processRideData(incomingData: any, type: string): void {
@@ -663,10 +738,16 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
 
   getStatusText(status: string): string {
     const map: { [key: string]: string } = {
+      'assigned': 'Driver Assigned',
       'en_route_pu': 'Driver Arriving',
       'on_location': 'Driver Arrived',
+      'start_ride': 'Ride In Progress',
+      'passenger_drop': 'At a Stop',
+      'passenger_pick': 'Ride In Progress',
       'en_route_do': 'Heading to Destination',
-      'ended': 'Trip Completed'
+      'ended': 'Trip Completed',
+      'finalized': 'Trip Completed',
+      'cancelled': 'Ride Cancelled'
     };
     return map[status] || status || 'In Progress';
   }

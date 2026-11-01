@@ -6,6 +6,8 @@ export const environment = {
 	production: false,
 	environmentName: 'Development',
 	serverUrl: "http://10.20.10.132:8000/api/",
+	// limo-rt socket for signed share links (/live-ride-tracking/<token>). Empty = token links show "not available".
+	rtSocketUrl: 'ws://10.20.10.132:9100/rt/v1/ws',
 	mistralSecretKey: "WvrrM5g1bmpJZjb3Go4d8tnUfZkNogmP",
 	recaptchaEnterpriseKey: "6Lev_gstAAAAACll6pekSq467NHhw3Di-CGuV5_I",
 	recaptchaKey: "6Lcf2MYqAAAAAMPwdv97BZ_LBwX-1e9y2NcFsoIn",

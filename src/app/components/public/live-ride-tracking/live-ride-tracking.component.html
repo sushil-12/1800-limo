@@ -52,7 +52,7 @@
       </div>
       <div class="driver-actions">
         <button
-          *ngIf="rideData.booking_id"
+          *ngIf="rideData.booking_id && !viewerMode"
           type="button"
           (click)="chatOpen = !chatOpen; chatUnread = 0"
           class="chat-button"
@@ -115,7 +115,7 @@
   <!-- Driver Chat — mounted as soon as the booking is known so messages arriving while it's
        closed still raise the unread badge. -->
   <app-ride-chat
-    *ngIf="rideData?.booking_id"
+    *ngIf="rideData?.booking_id && !viewerMode"
     [socket]="socket"
     [serverUrl]="socketUrl"
     [secret]="socketSecret"

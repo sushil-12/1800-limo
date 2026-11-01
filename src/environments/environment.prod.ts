@@ -2,6 +2,8 @@ export const environment = {
 	production: true,
 	environmentName: 'Production',
 	serverUrl: "https://api.1800limo.com/api/",
+	// limo-rt socket for signed share links (/live-ride-tracking/<token>). Empty = token links show "not available".
+	rtSocketUrl: 'wss://rt.1800limo.com/rt/v1/ws',
 	mistralSecretKey: "WvrrM5g1bmpJZjb3Go4d8tnUfZkNogmP",
 	// TODO: point at this environment's AI chat server
 	openAIUrl: "http://10.20.10.132:9000",

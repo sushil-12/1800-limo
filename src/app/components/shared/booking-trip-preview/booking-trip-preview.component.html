@@ -221,18 +221,20 @@
 						</div>
 						<div class="rcpt-row" *ngIf="bookingPreview?.passenger_email">
 							<span class="rcpt-row-label">Email</span>
-							<a class="rcpt-row-value rcpt-link" href="mailto:{{bookingPreview?.passenger_email}}">
+							<a class="rcpt-row-value rcpt-link" href="mailto:{{bookingPreview?.passenger_email}}"
+								[class.blur-contact]="blurPassengerContact">
 								<i class="bi bi-envelope"></i>
-								{{ textFormatter(bookingPreview?.passenger_email) }}
+								<span class="contact-value">{{ textFormatter(bookingPreview?.passenger_email) }}</span>
 							</a>
 						</div>
 						<div class="rcpt-row" *ngIf="bookingPreview?.passenger_cell">
 							<span class="rcpt-row-label">Phone</span>
 							<a class="rcpt-row-value rcpt-link"
-								href="tel:{{bookingPreview?.passenger_cell_isd}}{{bookingPreview?.passenger_cell}}">
+								href="tel:{{bookingPreview?.passenger_cell_isd}}{{bookingPreview?.passenger_cell}}"
+								[class.blur-contact]="blurPassengerContact">
 								<i class="bi bi-telephone"></i>
-								({{ bookingPreview?.passenger_cell_isd }}) {{
-								textFormatter(bookingPreview?.passenger_cell) }}
+								<span class="contact-value">({{ bookingPreview?.passenger_cell_isd }}) {{
+								textFormatter(bookingPreview?.passenger_cell) }}</span>
 							</a>
 						</div>
 					</div>

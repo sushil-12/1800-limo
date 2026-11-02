@@ -8925,6 +8925,12 @@ export class BookingComponent implements OnInit, OnDestroy {
 				prefill[field] = value[field]
 			}
 		})
+		// stops live in FormArrays (patchValue can't create rows), and quotebot_form misses
+		// stops added/edited on the guest form — carry them and rebuild in applyGuestBookingPrefill
+		prefill['extra_stops'] = this.stripInternalStopFields(value.extra_stops)
+		prefill['return_extra_stops'] = value.service_type === 'round_trip'
+			? this.stripInternalStopFields(value.return_extra_stops)
+			: []
 		return prefill
 	}
 
@@ -8936,7 +8942,14 @@ export class BookingComponent implements OnInit, OnDestroy {
 		if (!this.guestBookingPrefill) {
 			return
 		}
-		this.BookingForm.patchValue(this.guestBookingPrefill)
+		const { extra_stops, return_extra_stops, ...fields } = this.guestBookingPrefill
+		this.BookingForm.patchValue(fields)
+		if (Array.isArray(extra_stops)) {
+			this.prefillExtraStops(extra_stops)
+		}
+		if (Array.isArray(return_extra_stops)) {
+			this.prefillExtraStops(return_extra_stops, true)
+		}
 		try {
 			this.PaxTelObject?.setCountry(this.BookingForm.get('passenger_cell_country').value);
 		} catch {

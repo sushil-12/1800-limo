@@ -547,7 +547,9 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 			endDate: dayjs(this.endDate)
 		};
 
-		this.runBookingsSearch();
+		// Picking a tab drops the search so the tab's own list shows.
+		clearTimeout(this.timer);
+		this.runBookingsSearch("");
 	}
 
 	handleCheckboxSort(value: any) {

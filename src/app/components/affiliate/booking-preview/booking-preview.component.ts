@@ -1209,6 +1209,11 @@ export class BookingPreviewComponent implements OnInit {
     }
   }
 
+  /** Affiliates see the passenger email & cell blurred until they accept a pending booking. */
+  get blurPassengerContact(): boolean {
+    return this.userRole === 'affiliate' && this.bookingPreview?.booking_status === 'pending';
+  }
+
   /** Driver/affiliate email & phone stay hidden from non-admins until the booking is accepted.
    *  An unsaved booking has no status yet (undefined), so they stay hidden then too. */
   canShowContactInfo(status: any): boolean {

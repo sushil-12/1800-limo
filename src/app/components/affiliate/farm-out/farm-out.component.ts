@@ -259,6 +259,10 @@ export class FarmOutComponent implements OnInit {
 	}
 
 	selectTab(tab: string) {
+		// Picking a tab drops the search so the tab's own list shows.
+		clearTimeout(this.timer);
+		this.searchText = "";
+		this.saveCookie('farmout_search', "");
 		this.listTab = tab;
 		localStorage.setItem('farmOutBookingsTab', tab);
 		this.handleChangeCheckbox(tab == 'custom');

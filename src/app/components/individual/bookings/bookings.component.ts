@@ -472,6 +472,10 @@ export class BookingsComponent implements OnInit {
 	}
 
 	selectTab(tab: string) {
+		// Picking a tab drops the search so the tab's own list shows.
+		clearTimeout(this.timer);
+		this.searchText = "";
+		this.saveCookie('indv_search', "");
 		this.listTab = tab;
 		localStorage.setItem('indvBookingsTab', tab);
 		this.useDateFilter = tab == 'custom';

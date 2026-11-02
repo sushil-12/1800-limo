@@ -268,6 +268,10 @@ export class MyBookingsComponent implements OnInit {
 
 	selectTab(tab: string) {
 		this.showNeedsAction = false;
+		// Picking a tab drops the search so the tab's own list shows.
+		clearTimeout(this.timer);
+		this.searchText = "";
+		this.saveCookie('affiliate_search', "");
 		this.listTab = tab;
 		localStorage.setItem('affiliateBookingsTab', tab);
 		this.useDateFilter = tab == 'custom';

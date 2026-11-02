@@ -360,6 +360,10 @@ export class BookingComponent implements OnInit {
 	}
 
 	selectTab(tab: string) {
+		// Picking a tab drops the search so the tab's own list shows.
+		clearTimeout(this.timer);
+		this.searchText = "";
+		this.saveCookie('ta_search', "");
 		this.listTab = tab;
 		localStorage.setItem('travelBookingsTab', tab);
 		this.useDateFilter = tab == 'custom';

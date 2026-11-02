@@ -7,6 +7,11 @@
     {{ error }}
   </div>
 
+  <!-- Connection chip (share links): reconnecting, driver offline, old position -->
+  <div *ngIf="connectionNote && !error" class="connection-chip" role="status" aria-live="polite">
+    {{ connectionNote }}
+  </div>
+
   <!-- Recenter Button -->
   <button
     *ngIf="rideData"
@@ -29,7 +34,18 @@
     <!-- Header Status -->
     <div class="status-header">
       <div class="status-label">Current Status</div>
-      <h1 class="status-text">{{ getStatusText(rideData.status) }}</h1>
+      <h1 class="status-text" aria-live="polite">{{ statusTitle() }}</h1>
+      <!-- Traffic-aware ETA from limo-rt (share links) -->
+      <div *ngIf="eta" class="eta-block" aria-live="polite">
+        <div class="eta-main">
+          <span class="eta-minutes">{{ eta.text }}</span>
+          <span class="eta-to">{{ eta.label }}</span>
+        </div>
+        <div class="eta-arrive">Arrives {{ eta.arriveAt | date:'shortTime' }}</div>
+        <div *ngIf="eta.finalText" class="eta-arrive">
+          Destination: {{ eta.finalText }} · {{ eta.finalArriveAt | date:'shortTime' }}
+        </div>
+      </div>
     </div>
 
     <!-- Driver Section -->
@@ -42,7 +58,8 @@
         </div>
         <div class="driver-details">
           <div class="driver-name">{{ rideData.driver_name }}</div>
-          <div class="driver-rating">
+          <!-- Share links carry no rating or vehicle: show nothing rather than made-up values. -->
+          <div *ngIf="!viewerMode" class="driver-rating">
             <span>★ 5.0</span> • <span>{{ rideData.vehicle_info }}</span>
           </div>
           <div *ngIf="rideData.vehicle_plate" class="vehicle-plate">
@@ -88,11 +105,20 @@
           <div class="timeline-time">
             {{ rideData.pickup_time ? (rideData.pickup_time | date:'shortTime') : '--:--' }}
           </div>
-          <div *ngIf="estimatedTimeToPickup && (rideData.status.includes('pu') || rideData.status === 'en_route')" 
+          <div *ngIf="!viewerMode && estimatedTimeToPickup && (rideData.status.includes('pu') || rideData.status === 'en_route')"
                class="timeline-eta">
             <span class="eta-label">ETA:</span> {{ estimatedTimeToPickup }}
             <span *ngIf="estimatedDistanceToPickup" class="eta-distance">({{ estimatedDistanceToPickup }})</span>
           </div>
+        </div>
+      </div>
+
+      <!-- Extra stops (share links) -->
+      <div *ngFor="let stop of stops" class="timeline-item">
+        <div class="timeline-marker stop-marker">{{ stop.number }}</div>
+        <div class="timeline-content">
+          <div class="timeline-label">Stop {{ stop.number }}</div>
+          <div class="timeline-address">{{ stop.address || 'Address not available' }}</div>
         </div>
       </div>
 

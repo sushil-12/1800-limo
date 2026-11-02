@@ -6,10 +6,29 @@
  * Flow (contract v1):
  *   GET  {rest}/share/ride            (Bearer <token>) -> pickup, dropoff, stops, driver name
  *   WS   {socket}  hello {token, app: "web"} -> welcome {ride_id}
- *                  subscribe {ride_id, last_seq: 0} -> replay, latest location, subscribed
- *                  then live `loc` / `ride.status` / `driver.presence`
+ *                  subscribe {ride_id, last_seq} -> replay, latest location, latest ETA, subscribed
+ *                  then live `loc` / `ride.status` / `ride.eta` / `driver.presence`
  * Chat is never sent to share viewers, so this client has none.
  */
+
+/** A stop as `ride.status` carries it (`data.stop`): the stop the driver is at or just left. */
+export interface StatusStop {
+  index: number;
+  number: number;
+  total: number;
+}
+
+/** `ride.eta` (eta_v 1): traffic-aware ETA computed by limo-rt for the leg the driver is on. */
+export interface RideEta {
+  leg: 'pickup' | 'stop' | 'dropoff';
+  target: { kind: string; index: number | null; number: number | null; total: number | null; lat: number; lng: number };
+  duration_s: number;
+  distance_m: number;
+  /** Encoded polyline of the current leg (Google format). */
+  polyline: string | null;
+  /** Total to the final dropoff on a multi-stop ride. */
+  final: { duration_s: number; distance_m: number } | null;
+}
 
 export interface SharedRideEnd {
   address: string | null;
@@ -31,7 +50,9 @@ export interface SharedRide {
 export interface ShareClientHandlers {
   onRide(ride: SharedRide): void;
   onLocation(lat: number, lng: number, heading: number | null): void;
-  onStatus(status: string, cancelledBy: string | null): void;
+  /** `stop` is undefined when the frame says nothing about stops (keep the current one). */
+  onStatus(status: string, cancelledBy: string | null, stop: StatusStop | null | undefined): void;
+  onEta(eta: RideEta): void;
   onPresence(online: boolean): void;
   onConnection(state: 'connecting' | 'connected' | 'reconnecting'): void;
   /** Terminal: the link is invalid or the ride is over. No more reconnects. */
@@ -47,6 +68,26 @@ export function isShareToken(trackingId: string | null): boolean {
   return !!trackingId && trackingId.split('.').length === 3;
 }
 
+/** Google encoded polyline -> points (the Maps script here loads no geometry library). */
+export function decodePolyline(encoded: string): Array<{ lat: number; lng: number }> {
+  const points: Array<{ lat: number; lng: number }> = [];
+  let index = 0, lat = 0, lng = 0;
+  while (index < encoded.length) {
+    for (const axis of [0, 1]) {
+      let result = 0, shift = 0, byte: number;
+      do {
+        byte = encoded.charCodeAt(index++) - 63;
+        result |= (byte & 0x1f) << shift;
+        shift += 5;
+      } while (byte >= 0x20 && index < encoded.length);
+      const delta = result & 1 ? ~(result >> 1) : result >> 1;
+      if (axis === 0) lat += delta; else lng += delta;
+    }
+    points.push({ lat: lat / 1e5, lng: lng / 1e5 });
+  }
+  return points;
+}
+
 /** `wss://host/rt/v1/ws` -> `https://host/rt/v1`. */
 export function restBaseFromSocketUrl(socketUrl: string): string {
   const url = new URL(socketUrl);
@@ -59,6 +100,8 @@ export function restBaseFromSocketUrl(socketUrl: string): string {
 export class LimoRtShareClient {
   private ws: WebSocket | null = null;
   private rideId: string | null = null;
+  /** Highest durable seq applied, so a reconnect replays only what was missed. */
+  private lastSeq = 0;
   private attempt = 0;
   private stopped = false;
   private lastReceivedAt = 0;
@@ -142,11 +185,32 @@ export class LimoRtShareClient {
     let frame: any;
     try { frame = JSON.parse(text); } catch { return; }
     const data = frame?.data || {};
+    if (typeof frame?.seq === 'number') {
+      if (frame.seq <= this.lastSeq) return; // already applied (replay overlap)
+      this.lastSeq = frame.seq;
+    }
     switch (frame?.type) {
       case 'welcome':
         this.attempt = 0;
         this.handlers.onConnection('connected');
-        this.send({ type: 'subscribe', ride_id: this.rideId, data: { last_seq: 0 } });
+        this.send({ type: 'subscribe', ride_id: this.rideId, data: { last_seq: this.lastSeq } });
+        break;
+      case 'resync.required':
+        // Too much was missed to replay: reload the summary, then replay from scratch.
+        this.lastSeq = 0;
+        this.resync();
+        break;
+      case 'ride.eta':
+        if (typeof data.duration_s === 'number') {
+          this.handlers.onEta({
+            leg: data.leg,
+            target: data.target,
+            duration_s: data.duration_s,
+            distance_m: data.distance_m ?? 0,
+            polyline: data.route?.polyline || null,
+            final: data.final ? { duration_s: data.final.duration_s, distance_m: data.final.distance_m } : null,
+          });
+        }
         break;
       case 'loc':
         if (typeof data.lat === 'number' && typeof data.lng === 'number') {
@@ -154,14 +218,23 @@ export class LimoRtShareClient {
         }
         break;
       case 'subscribed':
+        // Carries the current status but no stop: keep the stop the replay left in place.
+        if (data.status) {
+          this.handlers.onStatus(data.status, null, undefined);
+          if (TERMINAL.includes(data.status)) this.expire('expired');
+        }
+        break;
       case 'ride.status':
         if (data.status) {
-          this.handlers.onStatus(data.status, data.cancelled_by ?? null);
+          const stop = data.stop && typeof data.stop.index === 'number'
+            ? { index: data.stop.index, number: data.stop.number, total: data.stop.total }
+            : null;
+          this.handlers.onStatus(data.status, data.cancelled_by ?? null, stop);
           if (TERMINAL.includes(data.status)) this.expire('expired');
         }
         break;
       case 'ride.cancelled': // servers from before ride.status carried cancellations
-        this.handlers.onStatus('cancelled', data.by ?? null);
+        this.handlers.onStatus('cancelled', data.by ?? null, null);
         this.expire('expired');
         break;
       case 'driver.presence':
@@ -171,6 +244,19 @@ export class LimoRtShareClient {
         if (data.code === 'share_expired') this.expire('expired');
         else if (data.code === 'unauthorized' || data.code === 'forbidden_ride') this.expire('invalid');
         break;
+    }
+  }
+
+  /** Reload the ride summary over REST (stops, status) after a replay gap. */
+  private async resync(): Promise<void> {
+    try {
+      const response = await fetch(`${restBaseFromSocketUrl(this.socketUrl)}/share/ride`, {
+        headers: { Accept: 'application/json', Authorization: `Bearer ${this.token}` },
+      });
+      if (response.status === 403) return this.expire('expired');
+      if (response.ok && !this.stopped) this.handlers.onRide((await response.json()) as SharedRide);
+    } catch {
+      // The socket keeps the live state; the next resync or reload fills the rest.
     }
   }
 

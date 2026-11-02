@@ -2,9 +2,25 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } fr
 import { ActivatedRoute } from '@angular/router';
 import { io, Socket } from 'socket.io-client';
 import { environment } from '../../../../environments/environment';
-import { LimoRtShareClient, isShareToken } from './limo-rt-share-client';
+import { LimoRtShareClient, RideEta, SharedRide, decodePolyline, isShareToken } from './limo-rt-share-client';
 
 declare var google: any;
+
+/** Directions API is billed per request: re-ask at most this often (status changes force it). */
+const ROUTE_REFRESH_MS = 30_000;
+/** No location for this long on a moving leg: tell the viewer the position may be old. */
+const STALE_FIX_MS = 15_000;
+const TERMINAL_STATUSES = ['ended', 'finalized', 'cancelled', 'rejected'];
+
+interface EtaView {
+  /** "4 min" or "Arriving now". */
+  text: string;
+  arriveAt: Date;
+  /** "to pickup", "to stop 2 of 3", "to destination". */
+  label: string;
+  finalText: string | null;
+  finalArriveAt: Date | null;
+}
 
 
 @Component({
@@ -31,6 +47,23 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   /** True for a signed share link (limo-rt): view only, no chat. */
   viewerMode = false;
   private shareClient: LimoRtShareClient | null = null;
+  /** Share mode: extra stops in booking order, and the last one served (0-based, or null). */
+  stops: SharedRide['stops'] = [];
+  private currentStopIndex: number | null = null;
+  /** Share mode: what the viewer should know about the connection, shown as a chip. */
+  connectionNote: string | null = null;
+  eta: EtaView | null = null;
+  private socketConnected = false;
+  private driverOnline = true;
+  private lastFixAt = 0;
+  /** Latest ETA and when it arrived; the countdown runs from the local receipt time, so a
+   * skewed device clock doesn't shift it. `fromServer` = limo-rt's traffic-aware ride.eta. */
+  private etaBase: { eta: RideEta; receivedAt: number; fromServer: boolean } | null = null;
+  private etaRoute: any = null;
+  private stopMarkers: any[] = [];
+  private stopMarkersKey = '';
+  private tickTimer: any = null;
+  private mapUpdateTimer: any = null;
   currentUserId: number | null = null;
   private googleMap: any = null;
   private markers: { driver: any; pickup: any; dropoff: any } = { driver: null, pickup: null, dropoff: null };
@@ -81,6 +114,8 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   ngOnDestroy(): void {
     this.shareClient?.stop();
     this.shareClient = null;
+    clearInterval(this.tickTimer);
+    clearTimeout(this.mapUpdateTimer);
 
     // Clear connection check interval
     if (this.connectionCheckInterval) {
@@ -116,6 +151,16 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       suppressMarkers: true,
       preserveViewport: true,
       polylineOptions: { strokeColor: '#111827', strokeWeight: 5, strokeOpacity: 0.9 }
+    });
+
+    // Same look, drawn from limo-rt's ride.eta polyline (share links) instead of Directions.
+    this.etaRoute = new google.maps.Polyline({
+      map: this.googleMap,
+      path: [],
+      strokeColor: '#111827',
+      strokeWeight: 5,
+      strokeOpacity: 0.9,
+      zIndex: 10
     });
 
     // Route Line (Blue) - Pickup to Dropoff (always visible)
@@ -335,55 +380,179 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
     }
     this.shareClient = new LimoRtShareClient(socketUrl, token, {
       onRide: (ride) => {
+        const statusChanged = this.rideData?.status !== ride.status;
         this.currentBookingId = ride.ride_id;
+        this.stops = ride.stops || [];
+        this.currentStopIndex = ride.current_stop_index;
         this.rideData = {
           booking_id: ride.ride_id,
           status: ride.status,
           driver_id: null,
           driver_name: ride.driver_first_name || 'Your chauffeur',
           driver_phone: null,
-          vehicle_info: 'Vehicle',
+          vehicle_info: null,
           vehicle_plate: '',
           pickup: { address: ride.pickup.address, lat: ride.pickup.lat ?? NaN, lng: ride.pickup.lng ?? NaN },
           dropoff: { address: ride.dropoff.address, lat: ride.dropoff.lat ?? NaN, lng: ride.dropoff.lng ?? NaN },
-          driver_lat: NaN,
-          driver_lng: NaN,
+          // A resync reloads the summary: keep the car where it is.
+          driver_lat: this.rideData?.driver_lat ?? NaN,
+          driver_lng: this.rideData?.driver_lng ?? NaN,
           pickup_time: null
         };
-        setTimeout(() => this.updateMapVisuals(), 100);
+        if (statusChanged) this.targetChanged();
+        this.scheduleMapUpdate();
       },
       onLocation: (lat, lng) => {
+        this.lastFixAt = Date.now();
         this.processRideData({ latitude: lat, longitude: lng, bookingId: this.currentBookingId }, 'driver_loc');
+        this.updateConnectionNote();
       },
-      onStatus: (status) => {
-        if (this.rideData) {
-          this.rideData = { ...this.rideData, status };
-          this.lastRouteUpdate = 0;
-          setTimeout(() => this.updateMapVisuals(), 100);
+      onStatus: (status, _cancelledBy, stop) => {
+        if (!this.rideData) return;
+        if (stop !== undefined) {
+          // passenger_drop / passenger_pick carry the stop; any other status leaves the stops.
+          if (stop) this.currentStopIndex = stop.index;
+          else if (status === 'start_ride' || status === 'en_route_pu' || status === 'on_location') this.currentStopIndex = null;
+        }
+        if (this.rideData.status === status && stop === undefined) return; // `subscribed` repeating it
+        this.rideData = { ...this.rideData, status };
+        this.targetChanged();
+        if (TERMINAL_STATUSES.includes(status)) {
+          this.etaBase = null;
+          this.eta = null;
+        }
+        this.updateConnectionNote();
+        this.scheduleMapUpdate();
+      },
+      onEta: (eta) => {
+        this.etaBase = { eta, receivedAt: Date.now(), fromServer: true };
+        this.refreshEta();
+        if (eta.polyline && this.etaRoute) {
+          const path = decodePolyline(eta.polyline);
+          const first = this.etaRoute.getPath().getLength() === 0;
+          this.etaRoute.setPath(path);
+          this.directionsRenderer?.setDirections({ routes: [] });
+          this.routeCalculated = true;
+          if (first && path.length > 1) {
+            const bounds = new google.maps.LatLngBounds();
+            path.forEach((p) => bounds.extend(p));
+            this.fitMapToBounds(bounds);
+          }
         }
       },
       onPresence: (online) => {
-        this.status = online ? 'Connected' : 'Driver connection lost, showing last known location';
+        this.driverOnline = online;
+        this.updateConnectionNote();
       },
       onConnection: (state) => {
+        this.socketConnected = state === 'connected';
         this.status = state === 'connected' ? 'Connected' : state === 'connecting' ? 'Connecting...' : 'Reconnecting...';
         if (state === 'connected') this.error = null;
+        this.updateConnectionNote();
       },
       onExpired: (reason) => {
-        const over = this.rideData && ['ended', 'finalized', 'cancelled'].includes(this.rideData.status);
+        const over = this.rideData && TERMINAL_STATUSES.includes(this.rideData.status);
         if (!over) {
           this.error = reason === 'expired'
             ? 'This tracking link has expired.'
             : 'This tracking link is not valid.';
         }
         this.status = 'Disconnected';
+        this.socketConnected = false;
+        this.connectionNote = null;
+        clearInterval(this.tickTimer);
       }
     });
     this.shareClient.start();
+    // Counts the ETA down between server refreshes and notices a location that stopped coming.
+    this.tickTimer = setInterval(() => {
+      this.refreshEta();
+      this.updateConnectionNote();
+    }, 5000);
+  }
+
+  /** The leg changed (status or stop): the old ETA and route belong to the previous target. */
+  private targetChanged(): void {
+    this.etaBase = null;
+    this.eta = null;
+    this.etaRoute?.setPath([]);
+    this.lastRouteUpdate = 0;
+    this.routeCalculated = false;
+  }
+
+  /** Where the driver is heading now; mirrors limo-rt's `target_for` (eta.py). */
+  private routeTarget(): { kind: 'pickup' | 'stop' | 'dropoff'; point: any; number?: number } | null {
+    const d = this.rideData;
+    if (!d?.status) return null;
+    const status: string = d.status;
+    const valid = (p: any) => p && typeof p.lat === 'number' && !isNaN(p.lat) && typeof p.lng === 'number' && !isNaN(p.lng);
+    const pickup = valid(d.pickup) ? { kind: 'pickup' as const, point: d.pickup } : null;
+    const dropoff = valid(d.dropoff) ? { kind: 'dropoff' as const, point: d.dropoff } : null;
+
+    if (status === 'en_route_pu' || status === 'en_route' || (!this.viewerMode && status.includes('pu'))) return pickup;
+    if (status === 'on_location' || TERMINAL_STATUSES.includes(status)) return null;
+    if (!this.viewerMode || !this.stops.length) return dropoff; // legacy path: no stop data
+    if (status === 'en_route_do') return dropoff;
+    if (status !== 'start_ride' && status !== 'passenger_pick') return null; // assigned, or at a stop
+    const index = status === 'start_ride' || this.currentStopIndex === null ? 0 : this.currentStopIndex + 1;
+    // A stop without coordinates can't be routed to: head for the next one that has them.
+    for (let i = index; i < this.stops.length; i++) {
+      const stop = this.stops[i];
+      if (valid(stop)) return { kind: 'stop', point: { lat: stop.lat, lng: stop.lng }, number: stop.number };
+    }
+    return dropoff;
+  }
+
+  /** Rebuild the displayed ETA from the latest one, counted down by the time since it came. */
+  private refreshEta(): void {
+    if (!this.etaBase) return;
+    const { eta, receivedAt } = this.etaBase;
+    const elapsed = Date.now() - receivedAt;
+    const minutes = (seconds: number) => Math.max(0, Math.round((seconds * 1000 - elapsed) / 60000));
+    const text = (seconds: number) => (minutes(seconds) < 1 ? 'Arriving now' : `${minutes(seconds)} min`);
+    const target = eta.target;
+    const label = eta.leg === 'pickup'
+      ? 'to pickup'
+      : eta.leg === 'stop' && target?.number
+        ? `to stop ${target.number}${target.total ? ` of ${target.total}` : ''}`
+        : 'to destination';
+    this.eta = {
+      text: text(eta.duration_s),
+      arriveAt: new Date(receivedAt + eta.duration_s * 1000),
+      label,
+      finalText: eta.final ? text(eta.final.duration_s) : null,
+      finalArriveAt: eta.final ? new Date(receivedAt + eta.final.duration_s * 1000) : null
+    };
+  }
+
+  /** Share mode: one short line about the connection, or null when everything is live. */
+  private updateConnectionNote(): void {
+    if (!this.viewerMode) return;
+    const status = this.rideData?.status;
+    let note: string | null = null;
+    if (status && TERMINAL_STATUSES.includes(status)) {
+      note = null;
+    } else if (!this.socketConnected) {
+      note = 'Reconnecting…';
+    } else if (!this.driverOnline) {
+      note = 'Driver connection lost, showing last known location';
+    } else if (this.lastFixAt && Date.now() - this.lastFixAt > STALE_FIX_MS && this.routeTarget()) {
+      note = 'Updating location…';
+    }
+    this.connectionNote = note;
+    // A position that may be old is drawn faded.
+    this.markers.driver?.setOpacity(note ? 0.5 : 1);
+  }
+
+  private scheduleMapUpdate(): void {
+    if (this.mapUpdateTimer) return;
+    this.mapUpdateTimer = setTimeout(() => {
+      this.mapUpdateTimer = null;
+      this.updateMapVisuals();
+    }, 100);
   }
 
   private processRideData(incomingData: any, type: string): void {
-    console.log('Processing ride data:', { type, data: incomingData });
     let lat: number, lng: number, bookingId: any;
 
     // Extract Driver Location from driver.location.update event
@@ -396,11 +565,8 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       // Additional validation: only process if bookingId matches current ride
       if (this.currentBookingId && bookingId && 
           bookingId.toString() !== this.currentBookingId.toString()) {
-        console.log('Skipping driver location - bookingId mismatch');
         return;
       }
-      
-      console.log('Extracted driver location:', { lat, lng, bookingId, rawData: incomingData });
     } else {
       // Extract from active_ride or user.notifications payload
       const d = incomingData.data || incomingData;
@@ -423,8 +589,6 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       const last = this.pathHistory[this.pathHistory.length - 1];
       if (!last || Math.abs(last.lat - lat) > 0.0001 || Math.abs(last.lng - lng) > 0.0001) {
         this.pathHistory = [...this.pathHistory, { lat, lng }];
-        // Update map after path history changes
-        setTimeout(() => this.updateMapVisuals(), 100);
       }
     }
 
@@ -434,10 +598,9 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
         driver_lat: lat,
         driver_lng: lng
       };
-      // Force route recalculation on driver location update (for ETA updates)
-      this.lastRouteUpdate = 0;
-      // Update map after driver location changes
-      setTimeout(() => this.updateMapVisuals(), 100);
+      // The route (and ETA) refresh on their own timer: a Directions request per fix
+      // would be one a second with limo-rt.
+      this.scheduleMapUpdate();
       return;
     }
 
@@ -476,8 +639,8 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       pickup_time: (data.timestamps && data.timestamps.pickup_time) || data.pickup_datetime || data.pickupDateTime
     };
 
-    // Update map visuals after data changes
-    setTimeout(() => this.updateMapVisuals(), 100);
+    this.lastRouteUpdate = 0; // status may have changed the leg
+    this.scheduleMapUpdate();
   }
 
   private updateMapVisuals(): void {
@@ -558,6 +721,8 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       this.markers.dropoff.setVisible(false);
     }
 
+    this.updateStopMarkers();
+
     // Update Path History
     if (this.historyPolyline) {
       this.historyPolyline.setPath(this.pathHistory);
@@ -565,10 +730,17 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
 
     // Route Logic - Calculate routes
     const now = Date.now();
-    // Update driver route more frequently (every 3 seconds) when driver is moving
-    const shouldUpdateDriverRoute = !this.routeCalculated || (now - this.lastRouteUpdate > 3000);
+    const target = this.routeTarget();
+    // limo-rt already sends a traffic-aware route + ETA for this leg: no Directions call.
+    const serverRoute = !!this.etaBase?.fromServer && !!target;
+    const shouldUpdateDriverRoute = !serverRoute && (!this.routeCalculated || (now - this.lastRouteUpdate > ROUTE_REFRESH_MS));
     const directionsService = new google.maps.DirectionsService();
     const hasDriver = this.rideData.driver_lat && !isNaN(this.rideData.driver_lat);
+    if (!target) {
+      // Nobody is driving towards anything (arrived, at a stop, over): no route line.
+      this.directionsRenderer?.setDirections({ routes: [] });
+      this.etaRoute?.setPath([]);
+    }
 
     // ALWAYS show pickup to dropoff route if both locations are available
     // This route is static and only needs to be calculated once when coordinates are available
@@ -579,16 +751,22 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       
       // Calculate pickup-to-dropoff route if not already calculated
       if (!this.pickupToDropoffRouteCalculated && this.directionsRendererPickupToDropoff) {
+        this.pickupToDropoffRouteCalculated = true; // one request in flight, not one per update
         directionsService.route({
           origin: this.rideData.pickup,
           destination: this.rideData.dropoff,
+          // Through the extra stops (share links know them); Directions allows 25.
+          waypoints: this.stops
+            .filter((s) => typeof s.lat === 'number' && typeof s.lng === 'number')
+            .slice(0, 25)
+            .map((s) => ({ location: { lat: s.lat, lng: s.lng }, stopover: true })),
           travelMode: google.maps.TravelMode.DRIVING
         }, (response: any, status: any) => {
           if (status === 'OK') {
             this.directionsRendererPickupToDropoff.setDirections(response);
-            this.pickupToDropoffRouteCalculated = true;
-            console.log('Pickup to dropoff route calculated');
           } else {
+            // Not retried: with location updates every second a failing route would be
+            // requested every second. The trip line just stays off.
             console.error('Failed to calculate pickup-to-dropoff route:', status);
           }
         });
@@ -597,48 +775,49 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
 
     // Calculate driver route (to pickup or dropoff based on status)
     // This route updates frequently as driver moves
-    if (shouldUpdateDriverRoute && hasDriver) {
-      let origin = { lat: this.rideData.driver_lat, lng: this.rideData.driver_lng };
-      let destination = null;
+    if (shouldUpdateDriverRoute && hasDriver && target) {
+      const origin = { lat: this.rideData.driver_lat, lng: this.rideData.driver_lng };
+      const destination = target.point;
+      // Set before the answer comes back, so the next location update doesn't ask again.
+      this.lastRouteUpdate = now;
+      const sameTarget = () => {
+        const current = this.routeTarget()?.point;
+        return !!current && current.lat === destination.lat && current.lng === destination.lng;
+      };
 
-      // Determine destination based on ride status
-      if (this.rideData.status.includes('pu') || this.rideData.status === 'en_route' || 
-          this.rideData.status === 'en_route_pu') {
-        // Driver heading to pickup
-        if (this.rideData.pickup && this.rideData.pickup.lat && !isNaN(this.rideData.pickup.lat)) {
-          destination = this.rideData.pickup;
-        }
-      } else if (this.rideData.status === 'on_location') {
-        // Driver at pickup, no route needed
-        destination = null;
-      } else {
-        // Driver heading to dropoff
-        if (this.rideData.dropoff && this.rideData.dropoff.lat && !isNaN(this.rideData.dropoff.lat)) {
-          destination = this.rideData.dropoff;
-        }
-      }
-
-      if (destination && destination.lat && !isNaN(destination.lat) && 
-          destination.lng && !isNaN(destination.lng)) {
+      {
         directionsService.route({
           origin: origin,
           destination: destination,
           travelMode: google.maps.TravelMode.DRIVING
         }, (response: any, status: any) => {
+          // A server ETA (or a new leg) arrived while this was in flight: it's out of date.
+          if (this.etaBase?.fromServer || !sameTarget()) return;
           if (status === 'OK') {
             const isFirstCalculation = !this.routeCalculated;
             this.directionsRenderer.setDirections(response);
-            this.lastRouteUpdate = now;
             this.routeCalculated = true;
-            
-            // Extract estimated time and distance for pickup route
-            if (destination === this.rideData.pickup && response.routes && response.routes[0]) {
-              const route = response.routes[0];
-              const leg = route.legs[0];
-              if (leg) {
-                this.estimatedTimeToPickup = leg.duration?.text || null;
-                this.estimatedDistanceToPickup = leg.distance?.text || null;
-              }
+
+            const leg = response.routes?.[0]?.legs?.[0];
+            if (leg && target.kind === 'pickup') {
+              this.estimatedTimeToPickup = leg.duration?.text || null;
+              this.estimatedDistanceToPickup = leg.distance?.text || null;
+            }
+            // Share links without a server ETA (no Routes key on limo-rt): same panel, from here.
+            if (leg && this.viewerMode && typeof leg.duration?.value === 'number') {
+              this.etaBase = {
+                eta: {
+                  leg: target.kind,
+                  target: { kind: target.kind, index: null, number: target.number ?? null, total: this.stops.length || null, lat: destination.lat, lng: destination.lng },
+                  duration_s: leg.duration.value,
+                  distance_m: leg.distance?.value ?? 0,
+                  polyline: null,
+                  final: null
+                },
+                receivedAt: Date.now(),
+                fromServer: false
+              };
+              this.refreshEta();
             }
             
             // On first calculation, zoom to the leg the driver is actually on (its full
@@ -685,8 +864,12 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       hasPoints = true;
     }
 
-    // Add Destination Context
-    if (this.rideData.status.includes('pu') && this.rideData.pickup.lat) {
+    // Add Destination Context: where the driver is heading (pickup, next stop or dropoff)
+    const target = this.routeTarget();
+    if (target) {
+      bounds.extend(target.point);
+      hasPoints = true;
+    } else if (this.rideData.status.includes('pu') && this.rideData.pickup.lat) {
       bounds.extend(this.rideData.pickup);
       hasPoints = true;
     } else if (this.rideData.dropoff.lat) {
@@ -734,6 +917,42 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
     google.maps.event.addListenerOnce(this.googleMap, 'idle', () => {
       if (this.googleMap.getZoom() > MAX_ZOOM) this.googleMap.setZoom(MAX_ZOOM);
     });
+  }
+
+  /** Numbered markers for the extra stops (share links); rebuilt only when the stops change. */
+  private updateStopMarkers(): void {
+    const key = JSON.stringify(this.stops.map((s) => [s.number, s.lat, s.lng]));
+    if (key === this.stopMarkersKey) return;
+    this.stopMarkersKey = key;
+    this.stopMarkers.forEach((m) => m.setMap(null));
+    this.stopMarkers = this.stops
+      .filter((s) => typeof s.lat === 'number' && typeof s.lng === 'number')
+      .map((s) => new google.maps.Marker({
+        position: { lat: s.lat, lng: s.lng },
+        map: this.googleMap,
+        title: `Stop ${s.number}${s.address ? `: ${s.address}` : ''}`,
+        zIndex: 60,
+        icon: {
+          url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="13" r="11" fill="#f97316" stroke="white" stroke-width="2.5"/><text x="13" y="17.5" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="white">${s.number}</text></svg>`)}`,
+          scaledSize: new google.maps.Size(26, 26),
+          anchor: new google.maps.Point(13, 13)
+        }
+      }));
+  }
+
+  /** Status title, with the stop on a multi-stop ride ("At stop 2 of 3"). */
+  statusTitle(): string {
+    const status: string = this.rideData?.status;
+    const total = this.stops.length;
+    if (this.viewerMode && total && this.currentStopIndex !== null) {
+      const number = this.currentStopIndex + 1;
+      if (status === 'passenger_drop') return `At stop ${number} of ${total}`;
+    }
+    if (this.viewerMode && total && (status === 'start_ride' || status === 'passenger_pick')) {
+      const target = this.routeTarget();
+      if (target?.kind === 'stop' && target.number) return `On the way to stop ${target.number} of ${total}`;
+    }
+    return this.getStatusText(status);
   }
 
   getStatusText(status: string): string {

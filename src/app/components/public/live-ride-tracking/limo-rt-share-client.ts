@@ -40,6 +40,9 @@ export interface SharedRide {
   ride_id: string;
   status: string;
   driver_first_name: string | null;
+  /** users.id of the passenger and driver, for chat on the Node socket. Null if unknown. */
+  customer_id: number | null;
+  driver_id: number | null;
   pickup: SharedRideEnd;
   dropoff: SharedRideEnd;
   stops: Array<{ number: number; address: string | null; lat: number | null; lng: number | null }>;
@@ -102,6 +105,8 @@ export class LimoRtShareClient {
   private rideId: string | null = null;
   /** Highest durable seq applied, so a reconnect replays only what was missed. */
   private lastSeq = 0;
+  /** Between `subscribe` and `subscribed`: history is replaying, so a terminal status in it may be stale. */
+  private replaying = false;
   private attempt = 0;
   private stopped = false;
   private lastReceivedAt = 0;
@@ -193,6 +198,7 @@ export class LimoRtShareClient {
       case 'welcome':
         this.attempt = 0;
         this.handlers.onConnection('connected');
+        this.replaying = true;
         this.send({ type: 'subscribe', ride_id: this.rideId, data: { last_seq: this.lastSeq } });
         break;
       case 'resync.required':
@@ -219,23 +225,28 @@ export class LimoRtShareClient {
         break;
       case 'subscribed':
         // Carries the current status but no stop: keep the stop the replay left in place.
+        // It is the authority on whether the ride is over, not anything replayed before it.
+        this.replaying = false;
         if (data.status) {
           this.handlers.onStatus(data.status, null, undefined);
           if (TERMINAL.includes(data.status)) this.expire('expired');
         }
         break;
       case 'ride.status':
-        if (data.status) {
+        // A replayed terminal status (e.g. an earlier driver's `rejected` before reassignment)
+        // is history, not the ride's state: `subscribed` will carry the current status.
+        if (data.status && !(this.replaying && TERMINAL.includes(data.status))) {
           const stop = data.stop && typeof data.stop.index === 'number'
             ? { index: data.stop.index, number: data.stop.number, total: data.stop.total }
             : null;
           this.handlers.onStatus(data.status, data.cancelled_by ?? null, stop);
-          if (TERMINAL.includes(data.status)) this.expire('expired');
+          // A replayed `rejected` (a driver declining before reassignment) must not end tracking.
+          if (TERMINAL.includes(data.status) && !this.replaying) this.expire('expired');
         }
         break;
       case 'ride.cancelled': // servers from before ride.status carried cancellations
         this.handlers.onStatus('cancelled', data.by ?? null, null);
-        this.expire('expired');
+        if (!this.replaying) this.expire('expired');
         break;
       case 'driver.presence':
         this.handlers.onPresence(data.online !== false);

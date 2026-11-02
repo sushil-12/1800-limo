@@ -1209,9 +1209,10 @@ export class BookingPreviewComponent implements OnInit {
     }
   }
 
-  /** Affiliates see the passenger email & cell blurred until they accept a pending booking. */
+  /** Affiliates see the passenger email & cell blurred until they accept a pending booking (farm-outs excepted). */
   get blurPassengerContact(): boolean {
-    return this.userRole === 'affiliate' && this.bookingPreview?.booking_status === 'pending';
+    return this.userRole === 'affiliate' && this.bookingPreview?.booking_status === 'pending'
+      && this.bookingPreview?.reservation_type !== 'farmout';
   }
 
   /** Driver/affiliate email & phone stay hidden from non-admins until the booking is accepted.

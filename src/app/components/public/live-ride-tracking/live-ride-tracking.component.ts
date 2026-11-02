@@ -40,11 +40,16 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   chatOpen = false;
   chatUnread = 0;
 
-  readonly socketUrl = environment.production ? 'https://limortservice.1800limo.com' : 'http://10.20.10.132:9100';
+  // Node notifications/chat service (dev = the one limoapi's NOTIFICATION_SERVICE_URL uses).
+  // Not limo-rt: that's environment.rtSocketUrl, and it doesn't speak socket.io.
+  // Node notifications/chat service (dev = the one limoapi's NOTIFICATION_SERVICE_URL uses).
+  // Not limo-rt (environment.rtSocketUrl, port 9100): it doesn't speak socket.io.
+  readonly socketUrl = environment.production ? 'https://limortservice.1800limo.com' : 'https://limortservice.infodevbox.com';
   readonly socketSecret = 'limoapi_notifications_secret_2024_xyz789';
 
   socket: Socket | null = null;
-  /** True for a signed share link (limo-rt): view only, no chat. */
+  /** True for a signed share link (limo-rt). Tracking comes from limo-rt; chat (when the ride
+   * has a passenger) still runs on the Node socket, opened by openShareChatSocket(). */
   viewerMode = false;
   private shareClient: LimoRtShareClient | null = null;
   /** Share mode: extra stops in booking order, and the last one served (0-based, or null). */
@@ -131,7 +136,31 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
     }
   }
 
-  private initializeMap(): void {
+  /**
+   * index.html loads Maps with `loading=async`: `google.maps` can exist before its classes do,
+   * and on a cold open (SMS link) the script may not have run yet at all. Wait for the loader,
+   * then pull in every library this page constructs from.
+   */
+  private async loadMapsLibraries(): Promise<boolean> {
+    for (let waited = 0; !(window as any).google?.maps?.importLibrary; waited += 100) {
+      if (waited >= 15_000) return false;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    await Promise.all(['maps', 'routes', 'marker'].map((lib) => google.maps.importLibrary(lib)));
+    return true;
+  }
+
+  private async initializeMap(): Promise<void> {
+    let ready = false;
+    try {
+      ready = await this.loadMapsLibraries();
+    } catch (error) {
+      console.error('Google Maps failed to load:', error);
+    }
+    if (!ready) {
+      this.error = 'Map could not be loaded. Please refresh the page.';
+      return;
+    }
     const defaultCenter = { lat: 40.7128, lng: -74.0060 };
 
     this.googleMap = new google.maps.Map(this.mapContainer.nativeElement, {
@@ -180,6 +209,9 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       strokeOpacity: 0.8,
       strokeWeight: 4
     });
+
+    // Ride data may have arrived while the libraries loaded: draw it now.
+    this.scheduleMapUpdate();
   }
 
   /**
@@ -374,6 +406,7 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   private initializeShareTracking(token: string): void {
     this.viewerMode = true;
     const socketUrl = (environment as any).rtSocketUrl as string | undefined;
+    console.log("Simran sOCKET CONNECTION",socketUrl);
     if (!socketUrl) {
       this.error = 'Live tracking is not available right now.';
       return;
@@ -387,7 +420,7 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
         this.rideData = {
           booking_id: ride.ride_id,
           status: ride.status,
-          driver_id: null,
+          driver_id: ride.driver_id ?? null,
           driver_name: ride.driver_first_name || 'Your chauffeur',
           driver_phone: null,
           vehicle_info: null,
@@ -399,6 +432,7 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
           driver_lng: this.rideData?.driver_lng ?? NaN,
           pickup_time: null
         };
+        if (ride.customer_id && !this.socket) this.openShareChatSocket(ride.customer_id, ride.ride_id);
         if (statusChanged) this.targetChanged();
         this.scheduleMapUpdate();
       },
@@ -469,6 +503,28 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       this.refreshEta();
       this.updateConnectionNote();
     }, 5000);
+  }
+
+  /**
+   * Share mode: a chat-only Node socket, authenticated as the passenger (the link holder chats
+   * as them). Location and status keep coming from limo-rt, so only the rooms <app-ride-chat>
+   * needs are joined, and a failure here never shows on the tracking page.
+   */
+  private openShareChatSocket(customerId: number, bookingId: string): void {
+    this.currentUserId = customerId;
+    this.socket = io(this.socketUrl, {
+      transports: ['polling', 'websocket'],
+      auth: { userId: String(customerId), userType: 'customer', secret: this.socketSecret },
+      reconnection: true,
+      reconnectionDelay: 1000,
+      timeout: 20000
+    });
+    // 'connect' fires again after every reconnect: rejoin both rooms each time.
+    this.socket.on('connect', () => {
+      this.joinRoom(String(customerId), 'customerId');
+      this.joinRoom(bookingId, 'bookingId');
+    });
+    this.socket.on('connect_error', (error: any) => console.warn('Chat socket error:', error?.message));
   }
 
   /** The leg changed (status or stop): the old ETA and route belong to the previous target. */
@@ -966,7 +1022,8 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
       'en_route_do': 'Heading to Destination',
       'ended': 'Trip Completed',
       'finalized': 'Trip Completed',
-      'cancelled': 'Ride Cancelled'
+      'cancelled': 'Ride Cancelled',
+      'rejected': 'Ride Cancelled'
     };
     return map[status] || status || 'In Progress';
   }

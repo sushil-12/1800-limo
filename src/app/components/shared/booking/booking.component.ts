@@ -3012,9 +3012,10 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return this.userRole === 'admin' || (!!status && !['pending', 'rejected', 'rejection'].includes(status));
 	}
 
-	/** Affiliates see the passenger email & cell blurred until they accept a pending booking. */
+	/** Affiliates see the passenger email & cell blurred until they accept a pending booking (farm-outs excepted). */
 	get blurPassengerContact(): boolean {
-		return this.userRole === 'affiliate' && this.bookingResponse?.booking_status === 'pending';
+		return this.userRole === 'affiliate' && this.bookingResponse?.booking_status === 'pending'
+			&& this.bookingResponse?.reservation_type !== 'farmout';
 	}
 
 	/** Affiliate names carry the phone in "(...)"; drop it while contact info is hidden. */

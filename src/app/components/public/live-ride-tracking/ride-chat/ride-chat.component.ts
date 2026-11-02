@@ -242,10 +242,11 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
   private async loadHistory(): Promise<void> {
     if (!this.bookingId || !this.serverUrl) return;
     const bookingId = this.bookingId;
+    const serverUrl = "http://10.20.10.132:9100"
 
     this.isLoading = this.messages.length === 0;
     try {
-      const res = await fetch(`${this.serverUrl}/api/messages/${bookingId}?page=1&limit=100`, {
+      const res = await fetch(`${serverUrl}/api/messages/${bookingId}?page=1&limit=100`, {
         headers: { 'x-secret': this.secret, 'Content-Type': 'application/json' }
       });
       const body = await res.json();
@@ -269,8 +270,16 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
       .map(r => this.toBubble(r));
     if (!added.length) return;
 
+    // A pending send can land in history (reconnect) before its echo: the saved row replaces it.
+    let current = this.messages;
+    for (const row of added) {
+      if (!row.isFromUser) continue;
+      const idx = current.findIndex(m => m.pending && m.text === row.text);
+      if (idx >= 0) current = current.filter((_, i) => i !== idx);
+    }
+
     // Server ordering for this endpoint isn't documented, so always sort by createdAt.
-    this.messages = [...this.messages, ...added].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    this.messages = [...current, ...added].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     this.shouldScroll = true;
   }
 
@@ -281,9 +290,14 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
     const bubble = this.toBubble(row);
 
     // Our own send coming back (as the ack or the room broadcast): replace the optimistic copy.
-    const optimisticIdx = clientMessageId
+    // limoRTService doesn't echo clientMessageId, so fall back to the oldest pending bubble
+    // with the same text — otherwise each send shows twice, one stuck on "Sending".
+    let optimisticIdx = clientMessageId
       ? this.messages.findIndex(m => m.clientMessageId === clientMessageId)
       : -1;
+    if (optimisticIdx < 0 && bubble.isFromUser) {
+      optimisticIdx = this.messages.findIndex(m => m.pending && m.text === bubble.text);
+    }
     if (optimisticIdx >= 0) {
       const next = [...this.messages];
       next[optimisticIdx] = bubble;

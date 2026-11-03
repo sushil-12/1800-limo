@@ -164,8 +164,9 @@ export class AiAssistantService {
 	}
 
 	/**
-	 * Send a changed booking with the new customer's card straight to the 1800limo API, then tell
-	 * the assistant how it went ("card:ok" / "card:error <reason>"); it checks the booking itself.
+	 * Send a new or changed booking with the new customer's card straight to the 1800limo API, then
+	 * tell the assistant how it went ("card:ok [<reservation id> [<return id>]]" / "card:error <reason>");
+	 * it checks the booking itself.
 	 * Plain fetch for the same reason as requestReply: a 401 here must not log the user out.
 	 */
 	async submitCard(request: AiCardRequest, card: CardDetails): Promise<void> {
@@ -188,11 +189,12 @@ export class AiAssistantService {
 				// "Changing the affiliate sends a new accept email": the user already confirmed the changes.
 				body = await this.sendJson(url, request.method, headers, { ...payload, proceed: false });
 			}
-			outcome = body.ok ? 'card:ok' : `card:error ${this.apiErrorText(body.json, body.status)}`;
+			const ids = [body.json?.data?.reservation_id, body.json?.data?.return_reservation_id].filter(Boolean);
+			outcome = body.ok ? ['card:ok', ...ids].join(' ') : `card:error ${this.apiErrorText(body.json, body.status)}`;
 		} catch {
 			outcome = 'card:error The card could not be sent. Check your connection and try again.';
 		}
-		this.send(outcome, outcome === 'card:ok' ? 'Card details sent' : 'Card details not accepted');
+		this.send(outcome, outcome.startsWith('card:ok') ? 'Card details sent' : 'Card details not accepted');
 	}
 
 	private async sendJson(url: string, method: string, headers: Record<string, string>, payload: any)

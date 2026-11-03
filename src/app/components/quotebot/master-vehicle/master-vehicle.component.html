@@ -36,12 +36,6 @@
 
 <!-- FILTERS AND VEHICLE LISTING SECTION -->
 <section class="container-fluid pt-2 pb-5 mob-height" [ngClass]="openfilters ? 'position-fixed' : ''">
-	<div id="page-instruction-text" class="mx-2 mt-4 mb-2 hideMobile">
-		<h5>
-			Filter By
-		</h5>
-	</div>
-
 	<p class="clearfix"></p>
 	<div class="row">
 		<!-- FILTERS SECTION -->
@@ -54,22 +48,28 @@
 						</span>
 					</div>
 					<aside class="sidebar w-100">
-						<div id="page-instruction-text" class="mx-2 mt-4 mb-4 hideDesktop">
-							<h5>
-								Filter By
-							</h5>
-						</div>
-						<div class="d-flex ml-2 mb-4">
-							<button type="button" (click)="clearFilters(null)"
-								class="custom-filled-button orange-button mr-4">
-								Clear
-							</button>
-							<button type="button" (click)="getVehicleDetails(); openfilters=false"
-								class="custom-filled-button green-button">
-								Apply filter
-							</button>
+						<!-- FIXED HEADER: stays in place while the filter list scrolls -->
+						<div class="filter-fixed-header">
+							<div id="page-instruction-text" class="mx-2 mt-4 mb-4">
+								<h5>
+									Filter By
+								</h5>
+							</div>
+							<div class="d-flex ml-2 mb-4">
+								<button type="button" (click)="clearFilters(null)"
+									class="custom-filled-button orange-button mr-4">
+									Clear
+								</button>
+								<button type="button" (click)="getVehicleDetails(); openfilters=false"
+									class="custom-filled-button green-button">
+									Apply filter
+								</button>
 
+							</div>
 						</div>
+						<!-- FIXED HEADER ENDS -->
+
+						<div class="filter-scroll-body">
 						<div class="fil-itm" *ngIf="filters?.selections?.length > 0">
 							<div class="btn-custom-btn btn btn-outline-dark" *ngFor="let obj of filters?.selections"
 								(click)="clearFilters(obj)">
@@ -292,17 +292,8 @@
 							</div>
 						</div>
 						<!-- FILTER LIST ENDS - ACCORDION-->
-						<div class="d-flex ml-2 mb-4">
-							<button type="button" (click)="clearFilters(null)"
-								class="custom-filled-button orange-button mr-4">
-								Clear
-							</button>
-							<button type="button" (click)="getVehicleDetails(); openfilters=false"
-								class="custom-filled-button green-button">
-								Apply filter
-							</button>
-
 						</div>
+						<!-- FILTER SCROLL BODY ENDS -->
 					</aside>
 				</div>
 			</div>

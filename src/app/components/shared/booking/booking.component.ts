@@ -747,6 +747,9 @@ export class BookingComponent implements OnInit, OnDestroy {
 			dropoff_address_lat: this.Form.dropoff_latitude.value || null,
 			dropoff_address_long: this.Form.dropoff_longitude.value || null,
 
+			// setValueByBookNow() falls back to the reversed outbound leg without these
+			return_pickup_type: isRoundTrip ? (returnPickupTypeRaw || dropoffType) : '',
+			return_dropoff_type: isRoundTrip ? (returnDropoffTypeRaw || pickupType) : '',
 			return_pickup_date: this.Form.return_pickup_date.value || this.Form.pickup_date.value,
 			return_pickup_time: this.Form.return_pickup_time.value,
 
@@ -6422,7 +6425,6 @@ export class BookingComponent implements OnInit, OnDestroy {
 			color: vehicleColorName,
 			licensePlate: selectedVehicle?.licensePlate ?? selectedVehicle?.vehicle_license_plate ?? vehicleDetails?.licensePlate ?? vehicleDetails?.license_plate ?? '',
 			seats: selectedVehicle?.seats ?? vehicleDetails?.seats ?? selectedVehicle?.passenger ?? vehicleDetails?.passenger ?? '',
-			number_of_vehicles: selectedVehicle?.number_of_vehicles,
 			cancellation_policy: selectedVehicle?.cancellation_policy,
 			non_charter_cancellation_hours: selectedVehicle?.non_charter_cancellation_hours,
 			charter_cancellation_hours: selectedVehicle?.charter_cancellation_hours
@@ -8861,6 +8863,9 @@ export class BookingComponent implements OnInit, OnDestroy {
 		}).subscribe((response: any) => {
 			this.existingAccountBusy = false
 			this.storeLoginSession(response)
+			// the individual form rebuilds route/service from quotebot_form via
+			// setValueByBookNow(), so write the guest's edits there before leaving
+			this.buildQuotePayload()
 			const prefill = this.collectGuestBookingPrefill()
 			// navigate once the modal is gone so its backdrop doesn't outlive this component
 			$('#existingAccountModal').one('hidden.bs.modal', () => {
@@ -8906,7 +8911,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 	 */
 	private readonly guestCarryOverFields = [
 		'passenger_name', 'passenger_email', 'passenger_cell', 'passenger_cell_isd', 'passenger_cell_country',
-		'total_passengers', 'luggage_count', 'booking_instructions', 'return_booking_instructions',
+		'total_passengers', 'luggage_count', 'number_of_vehicles', 'booking_instructions', 'return_booking_instructions',
 		'pickup_date', 'pickup_time', 'return_pickup_date', 'return_pickup_time',
 		'pickup_airline', 'pickup_airline_option', 'pickup_airline_name', 'pickup_flight',
 		'origin_airport_city', 'departing_airport_city',
@@ -11368,8 +11373,10 @@ export class BookingComponent implements OnInit, OnDestroy {
 			}
 		}
 
-		//set no of vehicles
-		this.SetFormValue('number_of_vehicles', normalizedSelectedVehicle?.number_of_vehicles ?? selected_vehicle?.number_of_vehicles)
+		// set no of vehicles — selected_vehicle.number_of_vehicles is the affiliate's fleet size
+		// for that vehicle, not the count being booked, so keep what the user entered (default 1)
+		const enteredVehicles = Number(this.Form.number_of_vehicles?.value)
+		this.SetFormValue('number_of_vehicles', enteredVehicles > 0 ? enteredVehicles : 1)
 		this.prefillVehiclePreferencesFromMasterVehicle(normalizedSelectedVehicle);
 		if (this.service_type === 'round_trip') {
 			this.prefillVehiclePreferencesFromMasterVehicle(normalizedSelectedVehicle, true);

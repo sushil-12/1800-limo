@@ -471,6 +471,20 @@ aside.sidebar {
 	position: sticky;
 	top: 10px;
 	margin: 20px 0;
+	display: flex;
+	flex-direction: column;
+	max-height: calc(100vh - 20px);
+}
+
+// "Filter By" + Clear / Apply stay fixed; only the filter list below scrolls
+.filter-fixed-header {
+	flex-shrink: 0;
+}
+
+.filter-scroll-body {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
 }
 
 .filter-list .accordion .card-header h2 .btn:after {
@@ -680,6 +694,19 @@ img.img-cir {
 		left: 0;
 		padding: 10px 10px !important;
 
+	}
+
+	// in the mobile drawer the sidebar fills the remaining height below the close button
+	.pro-Fil .navbar-collapse {
+		display: flex !important;
+		flex-direction: column;
+	}
+
+	aside.sidebar {
+		flex: 1 1 auto;
+		min-height: 0;
+		max-height: none;
+		margin: 0;
 	}
 
 	.close-sidebar {

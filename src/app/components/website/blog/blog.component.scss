@@ -727,6 +727,44 @@ $transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 // Sort pills for Latest Articles
+.blog-pagination {
+    gap: 8px;
+
+    .page-btn {
+        min-width: 40px;
+        height: 40px;
+        padding: 0 12px;
+        background: #F3F4F6;
+        border: none;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 14px;
+        color: #495057;
+        cursor: pointer;
+        transition: $transition-smooth;
+
+        &:hover:not(:disabled) {
+            color: $primary-color;
+        }
+
+        &.active {
+            background: $primary-color;
+            color: white;
+            box-shadow: 0 4px 10px rgba($primary-color, 0.25);
+        }
+
+        &:disabled:not(.active) {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
+    .page-ellipsis {
+        color: #6c757d;
+        padding: 0 4px;
+    }
+}
+
 .sort-pills {
     display: flex;
     gap: 6px;

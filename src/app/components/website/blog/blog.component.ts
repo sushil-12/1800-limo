@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { Title, Meta } from '@angular/platform-browser';
 import { BlogPost } from './blog.data';
 import { BlogService, BlogCategory } from './blog.service';
+
+const PER_PAGE = 12;
 
 @Component({
   selector: 'app-blog',
@@ -11,6 +14,7 @@ import { BlogService, BlogCategory } from './blog.service';
 export class BlogComponent implements OnInit {
 
   allPosts: BlogPost[] = [];
+  recentPosts: BlogPost[] = [];
   featuredArticles: BlogPost[] = [];
   latestArticles: BlogPost[] = [];
   categories: BlogCategory[] = [{ name: 'All Posts', count: 0, id: 'all', active: true }];
@@ -22,7 +26,12 @@ export class BlogComponent implements OnInit {
   showSuggestions: boolean = false;
   sortOrder: string = 'newest';
 
+  currentPage = 1;
+  totalPages = 0;
+  totalPosts = 0;
+
   private activeCategoryId: string = 'all';
+  private postsSub?: Subscription;
 
   constructor(
     private titleService: Title,
@@ -46,14 +55,7 @@ export class BlogComponent implements OnInit {
     this.metaService.updateTag({ name: 'twitter:title', content: title });
     this.metaService.updateTag({ name: 'twitter:description', content: description });
 
-    this.blogService.getPosts().subscribe({
-      next: posts => {
-        this.allPosts = posts;
-        this.applyFilter();
-        this.loading = false;
-      },
-      error: () => { this.loading = false; }
-    });
+    this.loadPosts();
 
     this.blogService.getCategories().subscribe(cats => {
       const total = cats.reduce((sum, c) => sum + c.count, 0);
@@ -69,7 +71,23 @@ export class BlogComponent implements OnInit {
   }
 
   get suggestedPosts(): BlogPost[] {
-    return this.allPosts.slice(0, 3);
+    return this.recentPosts.slice(0, 3);
+  }
+
+  get pageNumbers(): (number | null)[] {
+    const total = this.totalPages;
+    const current = this.currentPage;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+    // First, last, and a window around the current page; null renders as an ellipsis
+    const pages: (number | null)[] = [1];
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    if (start > 2) pages.push(null);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < total - 1) pages.push(null);
+    pages.push(total);
+    return pages;
   }
 
   getExcerpt(htmlContent: string): string {
@@ -91,14 +109,13 @@ export class BlogComponent implements OnInit {
       ...cat,
       active: cat.id === category.id
     }));
-    this.applyFilter();
+    this.loadPosts(1);
   }
 
   onSearchInput() {
     if (!this.searchText.trim()) {
       this.suggestions = [];
       this.showSuggestions = false;
-      this.applyFilter();
       return;
     }
 
@@ -122,7 +139,6 @@ export class BlogComponent implements OnInit {
 
     this.suggestions = matched;
     this.showSuggestions = this.suggestions.length > 0;
-    this.applyFilter();
   }
 
   private getSnippet(html: string, query: string): string {
@@ -150,51 +166,63 @@ export class BlogComponent implements OnInit {
     }
     this.searchText = '';
     this.showSuggestions = false;
-    this.applyFilter();
+    this.loadPosts(1);
   }
 
   removeChip(chip: string) {
     this.searchChips = this.searchChips.filter(c => c !== chip);
-    this.applyFilter();
+    this.loadPosts(1);
   }
 
   setSortOrder(order: string) {
     this.sortOrder = order;
-    this.applyFilter();
+    this.loadPosts(1);
+  }
+
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages || page === this.currentPage) return;
+    this.loadPosts(page);
+    document.querySelector('.category-filters-container')?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  loadPosts(page: number = this.currentPage) {
+    this.currentPage = page;
+    this.loading = true;
+
+    const activeCategory = this.categories.find(c => c.id === this.activeCategoryId);
+    const search = this.searchChips.join(' ').trim();
+
+    this.postsSub?.unsubscribe();
+    this.postsSub = this.blogService.getPostsPage({
+      page,
+      perPage: PER_PAGE,
+      categoryId: activeCategory?.wpId,
+      search: search || undefined,
+      order: this.sortOrder === 'oldest' ? 'asc' : 'desc'
+    }).subscribe({
+      next: res => {
+        this.allPosts = res.posts;
+        this.totalPosts = res.total;
+        this.totalPages = res.totalPages;
+        if (!this.recentPosts.length && !search && this.activeCategoryId === 'all') {
+          this.recentPosts = res.posts;
+        }
+        this.applyFilter();
+        this.loading = false;
+      },
+      error: () => { this.loading = false; }
+    });
+
+    // Keep the "read these instead" fallback populated when the first query is filtered
+    if (!this.recentPosts.length && (search || this.activeCategoryId !== 'all')) {
+      this.blogService.getPostsPage({ page: 1, perPage: PER_PAGE }).subscribe(res => this.recentPosts = res.posts);
+    }
   }
 
   applyFilter() {
-    let filtered = [...this.allPosts];
-
-    if (this.activeCategoryId !== 'all') {
-      const activeCategory = this.categories.find(c => c.id === this.activeCategoryId);
-      if (activeCategory) {
-        filtered = filtered.filter(p => p.category === activeCategory.name);
-      }
-    }
-
-    const chips = this.searchChips.map(c => c.toLowerCase());
-    const currentSearch = this.searchText.trim().toLowerCase();
-    const searchTerms = [...chips];
-    if (currentSearch) searchTerms.push(currentSearch);
-
-    if (searchTerms.length > 0) {
-      filtered = filtered.filter(post =>
-        searchTerms.some(term =>
-          post.title.toLowerCase().includes(term) ||
-          (post.content && post.content.toLowerCase().includes(term)) ||
-          (post.tags && post.tags.some(t => t.toLowerCase().includes(term))) ||
-          (post.category && post.category.toLowerCase().includes(term))
-        )
-      );
-    }
-
-    this.featuredArticles = filtered.slice(0, 2);
-
-    let latest = filtered.slice(2);
-    if (this.sortOrder === 'oldest') {
-      latest = [...latest].reverse();
-    }
-    this.latestArticles = latest;
+    // Category, search and sort are applied server-side; featured only on the first page
+    const featuredCount = this.currentPage === 1 && this.sortOrder === 'newest' ? 2 : 0;
+    this.featuredArticles = this.allPosts.slice(0, featuredCount);
+    this.latestArticles = this.allPosts.slice(featuredCount);
   }
 }

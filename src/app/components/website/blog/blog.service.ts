@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, forkJoin, throwError } from 'rxjs';
 import { map, catchError, switchMap, shareReplay } from 'rxjs/operators';
 import { BlogPost, BlogComment } from './blog.data';
@@ -51,9 +51,24 @@ interface WpComment {
 
 export interface BlogCategory {
    id: string;
+   wpId?: number;
    name: string;
    count: number;
    active: boolean;
+}
+
+export interface BlogPageQuery {
+   page: number;
+   perPage: number;
+   categoryId?: number;
+   search?: string;
+   order?: 'asc' | 'desc';
+}
+
+export interface BlogPage {
+   posts: BlogPost[];
+   total: number;
+   totalPages: number;
 }
 
 export interface NewComment {
@@ -76,6 +91,7 @@ export class BlogService {
    private categoriesCache$?: Observable<BlogCategory[]>;
    private blockStylesCache$?: Observable<WpStyles>;
    private postBySlugCache = new Map<string, Observable<BlogPost | undefined>>();
+   private postsPageCache = new Map<string, Observable<BlogPage>>();
 
    getBlockStyles(): Observable<WpStyles> {
       if (!this.blockStylesCache$) {
@@ -106,6 +122,44 @@ export class BlogService {
             );
       }
       return this.allPostsCache$;
+   }
+
+   /**
+    * Fetches one page of posts from WP, reading the total counts from the
+    * `X-WP-Total` / `X-WP-TotalPages` response headers.
+    */
+   getPostsPage(query: BlogPageQuery): Observable<BlogPage> {
+      let params = new HttpParams()
+         .set('page', query.page)
+         .set('per_page', query.perPage)
+         .set('orderby', 'date')
+         .set('order', query.order || 'desc');
+      if (query.categoryId) params = params.set('categories', query.categoryId);
+      if (query.search) params = params.set('search', query.search);
+
+      const key = params.toString();
+      if (!this.postsPageCache.has(key)) {
+         const page$ = this.http
+            .get<WpPost[]>(`${WP_API}/posts`, { params, observe: 'response' })
+            .pipe(
+               switchMap(res => {
+                  const total = Number(res.headers.get('X-WP-Total')) || 0;
+                  const totalPages = Number(res.headers.get('X-WP-TotalPages')) || 0;
+                  return this.hydratePosts(res.body || []).pipe(
+                     map(posts => ({ posts, total, totalPages }))
+                  );
+               }),
+               shareReplay(1),
+               catchError(err => {
+                  this.postsPageCache.delete(key);
+                  // WP answers 400 `rest_post_invalid_page_number` past the last page
+                  if (err?.status === 400) return of({ posts: [], total: 0, totalPages: 0 });
+                  return throwError(() => err);
+               })
+            );
+         this.postsPageCache.set(key, page$);
+      }
+      return this.postsPageCache.get(key)!;
    }
 
    getHomePosts(): Observable<BlogPost[]> {
@@ -150,6 +204,7 @@ export class BlogService {
             .pipe(
                map(cats => cats.map(c => ({
                   id: c.slug,
+                  wpId: c.id,
                   name: c.name,
                   count: c.count,
                   active: false

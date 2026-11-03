@@ -865,15 +865,15 @@
 								<mat-select formControlName="service_type"
 									(selectionChange)="onSelectionChangeServiceType($event)"
 									[ngStyle]="{'cursor': Form.updateType.value == 'edit' ? 'not-allowed' : 'default'}">
-									<mat-option value="one_way" [disabled]="isTransferServiceTypeBlocked">One Way ?
+									<mat-option value="one_way" [disabled]="isTransferServiceTypeBlocked">One Way 
 										<span *ngIf="isTransferServiceTypeBlocked" class="text-muted">(Not
 											Applicable)</span>
 									</mat-option>
-									<mat-option value="round_trip" [disabled]="isTransferServiceTypeBlocked">Round Trip ?
+									<mat-option value="round_trip" [disabled]="isTransferServiceTypeBlocked">Round Trip 
 										<span *ngIf="isTransferServiceTypeBlocked" class="text-muted">(Not
 											Applicable)</span>
 									</mat-option>
-									<mat-option value="charter_tour">Charter/Tour ?</mat-option>
+									<mat-option value="charter_tour">Charter/Tour</mat-option>
 								</mat-select>
 							</mat-form-field>
 						</div>
@@ -2923,15 +2923,15 @@
 								<mat-select formControlName="service_type"
 									(selectionChange)="onSelectionChangeServiceType($event)"
 									[ngStyle]="{'cursor': Form.updateType.value == 'edit' ? 'not-allowed' : 'default'}">
-									<mat-option value="one_way" [disabled]="isTransferServiceTypeBlocked">One Way ?
+									<mat-option value="one_way" [disabled]="isTransferServiceTypeBlocked">One Way 
 										<span *ngIf="isTransferServiceTypeBlocked" class="text-muted">(Not
 											Applicable)</span>
 									</mat-option>
-									<mat-option value="round_trip" [disabled]="isTransferServiceTypeBlocked">Round Trip ?
+									<mat-option value="round_trip" [disabled]="isTransferServiceTypeBlocked">Round Trip 
 										<span *ngIf="isTransferServiceTypeBlocked" class="text-muted">(Not
 											Applicable)</span>
 									</mat-option>
-									<mat-option value="charter_tour">Charter/Tour ?</mat-option>
+									<mat-option value="charter_tour">Charter/Tour </mat-option>
 								</mat-select>
 							</mat-form-field>
 						</div>

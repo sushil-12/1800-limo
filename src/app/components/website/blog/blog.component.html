@@ -1,4 +1,4 @@
-<div class="blog-page-wrapper">
+<div class="blog-page-wrapper" style="background-color: white;">
    <!-- Hero Section -->
    <header class="blog-hero">
       <div class="container text-center py-3 py-md-4 py-lg-5">
@@ -185,10 +185,10 @@
 <!-- ===== LATEST ARTICLES SECTION ===== -->
 <section class="latest-section pb-5" *ngIf="loading || latestArticles.length > 0">
   <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap" style="gap: 12px;">
+    <div class="d-flex justify-content-between align-items-center mt-2 mb-4 flex-wrap" style="gap: 12px;">
       <h4 class="section-title font-weight-bold mb-0">Latest Articles</h4>
       <div class="d-flex align-items-center flex-wrap" style="gap: 10px;" *ngIf="!loading">
-        <span class="text-muted small font-weight-medium">{{latestArticles.length}} articles</span>
+        <span class="text-muted small font-weight-medium">{{totalPosts}} articles</span>
         <div class="sort-pills">
           <button class="sort-pill" [class.active]="sortOrder === 'newest'" (click)="setSortOrder('newest')">
             <i class="bi bi-sort-down mr-1"></i> Newest
@@ -305,6 +305,25 @@
       </ng-container>
 
     </div>
+
+    <!-- Pagination -->
+    <nav class="blog-pagination d-flex justify-content-center align-items-center flex-wrap mt-2"
+      *ngIf="totalPages > 1" aria-label="Blog pages">
+      <button class="page-btn" type="button" [disabled]="loading || currentPage === 1"
+        (click)="goToPage(currentPage - 1)" aria-label="Previous page">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <ng-container *ngFor="let p of pageNumbers">
+        <span class="page-ellipsis" *ngIf="p === null">&hellip;</span>
+        <button *ngIf="p !== null" class="page-btn" type="button" [class.active]="p === currentPage"
+          [disabled]="loading" [attr.aria-current]="p === currentPage ? 'page' : null"
+          (click)="goToPage(p)">{{p}}</button>
+      </ng-container>
+      <button class="page-btn" type="button" [disabled]="loading || currentPage === totalPages"
+        (click)="goToPage(currentPage + 1)" aria-label="Next page">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </nav>
   </div>
 </section>
 

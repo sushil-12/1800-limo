@@ -242,7 +242,7 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
   private async loadHistory(): Promise<void> {
     if (!this.bookingId || !this.serverUrl) return;
     const bookingId = this.bookingId;
-    const serverUrl = "http://10.20.10.132:9100"
+    const serverUrl = "https://1800limorealtime.infodevbox.com"
 
     this.isLoading = this.messages.length === 0;
     try {

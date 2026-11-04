@@ -6,7 +6,7 @@ export const environment = {
 	rtSocketUrl: 'wss://rt.1800limo.com/rt/v1/ws',
 	mistralSecretKey: "WvrrM5g1bmpJZjb3Go4d8tnUfZkNogmP",
 	// TODO: point at this environment's AI chat server
-	openAIUrl: "http://10.20.10.132:9000",
+	openAIUrl: "https://1800limochatbot.infodevbox.com",
 	recaptchaEnterpriseKey: "6Lev_gstAAAAACll6pekSq467NHhw3Di-CGuV5_I",
 	recaptchaKey: "6Lcf2MYqAAAAAMPwdv97BZ_LBwX-1e9y2NcFsoIn",
 	encryptionKey:"BTEo5hJauptWuoKUqeTfVgEn1a6BOSXzNlSoN6SPQBI=",

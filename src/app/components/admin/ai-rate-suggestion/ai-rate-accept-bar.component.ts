@@ -9,45 +9,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 @Component({
 	selector: 'app-ai-rate-accept-bar',
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	template: `
-		<div class="ai-accept-bar" *ngIf="loading || error || suggestions">
-			<!-- Loading -->
-			<div class="ai-accept-bar__inner" *ngIf="loading">
-				<span class="ai-accept-bar__spinner"><i class="bi bi-cpu-fill"></i></span>
-				<span class="ai-accept-bar__msg">Analyzing your rates against the market…</span>
-			</div>
-
-			<!-- Error / no suggestions -->
-			<div class="ai-accept-bar__inner" *ngIf="!loading && error">
-				<i class="bi bi-info-circle"></i>
-				<span class="ai-accept-bar__msg">{{ error }}</span>
-				<span class="ai-accept-bar__actions">
-					<button type="button" class="btn-ghost" (click)="retry.emit()">Try again</button>
-					<button type="button" class="btn-ghost" (click)="dismiss.emit()">Dismiss</button>
-				</span>
-			</div>
-
-			<!-- Results -->
-			<div class="ai-accept-bar__inner" *ngIf="!loading && !error && suggestions">
-				<span class="ai-accept-bar__score" [ngClass]="scoreClass">
-					{{ score }}<small>/100</small>
-				</span>
-				<span class="ai-accept-bar__summary" *ngIf="summary">{{ summary }}</span>
-				<span class="ai-accept-bar__actions">
-					<button
-						type="button"
-						class="btn-accept"
-						[disabled]="!count"
-						(click)="accept.emit()"
-					>
-						<i class="bi bi-check2-circle"></i>
-						{{ count ? 'Accept AI rates (' + count + ')' : 'No changes suggested' }}
-					</button>
-					<button type="button" class="btn-ghost" (click)="dismiss.emit()">Dismiss</button>
-				</span>
-			</div>
-		</div>
-	`,
+	template: ``,
 	styles: [
 		`
 			.ai-accept-bar {

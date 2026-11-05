@@ -455,11 +455,24 @@ div#rate-manager-slider {
 	}
 }
 
+// Stays visible while scrolling; top offset clears the 80px sticky top nav.
+.rates-sticky-head {
+	position: sticky;
+	top: 80px;
+	z-index: 20;
+	flex-wrap: nowrap;
+	align-items: center;
+	padding: 10px 0;
+	background: #fff;
+}
+
+.rates-sticky-head__text {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
 .ai-rate-score-fab {
-	position: fixed;
-	bottom: 24px;
-	right: 24px;
-	z-index: 1000;
+	flex-shrink: 0;
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
@@ -483,14 +496,24 @@ div#rate-manager-slider {
 		font-size: 1.1rem;
 	}
 
-	.fab-label {
-		@media (max-width: 575px) {
-			display: none;
-		}
-	}
-
 	&.active {
 		background: #4f46e5;
+	}
+}
+
+// The shared head stacks into a column here; keep the button top-right, level with the eyebrow.
+@media (max-width: 600px) {
+	.rates-sticky-head {
+		align-items: flex-start;
+	}
+
+	.ai-rate-score-fab {
+		position: absolute;
+		top: 6px;
+		right: 0;
+		gap: 0.3rem;
+		padding: 0.35rem 0.8rem;
+		font-size: 0.78rem;
 	}
 }
 

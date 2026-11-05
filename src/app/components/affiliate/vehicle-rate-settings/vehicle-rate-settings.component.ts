@@ -35,6 +35,8 @@ export class VehicleRateSettingsComponent implements OnInit {
 	duplicateVehicleId: any;
 	vehcileId: any;
 	public ratesArrayValues = [0, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
+	/** Options listed in the per mile / per km dropdowns. */
+	private readonly distanceRateOptions = [2.5, 2.75, 3, 3.25, 3.4, 3.5, 3.6, 3.75, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.5, 5.75, 6, 6.25, 6.75, 7, 7.5, 8, 9, 10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 15]
 
 
 	constructor(
@@ -149,6 +151,32 @@ export class VehicleRateSettingsComponent implements OnInit {
 			this.VehicleRateSettingsForm.updateValueAndValidity();
 		}
 		this.dismissAiRates();
+	}
+
+	/** Apply a single AI-suggested rate to its field and remove it from the suggestions. */
+	applyAiRate(field: string): void {
+		const control = this.VehicleRateSettingsForm.get(field);
+		const value = this.aiSuggestions?.[field];
+		if (!control || value === undefined) return;
+
+		control.setValue(value);
+		control.markAsDirty();
+		control.markAsTouched();
+		// setValue doesn't fire the inputs' (change) handler, which keeps the rate slider baseline in sync.
+		this.updateRateRangeObject();
+
+		// New object so the OnPush hints and accept bar pick up the change.
+		const remaining = { ...this.aiSuggestions };
+		delete remaining[field];
+		this.aiSuggestions = remaining;
+		if (!Object.keys(remaining).length) {
+			this.dismissAiRates();
+		}
+	}
+
+	/** True when a dropdown value (e.g. an AI-suggested rate) isn't one of the listed options. */
+	isUnlistedDistanceRate(value: any): boolean {
+		return !!value && !this.distanceRateOptions.includes(Number(value));
 	}
 
 	/** Clear the AI suggestions without applying them. */

@@ -1,10 +1,21 @@
 <form [formGroup]="VehicleRateSettingsForm" class="step_form_wrapper" appInvalidControlScroll>
 	<section class="step-section user_information">
-		<span class="step-section__eyebrow">Rates</span>
-		<h2 class="step-section__title">Edit vehicle rates</h2>
-		<p class="step-section__sub">
-			Enter an all-inclusive rate in each applicable bucket.
-		</p>
+		<div class="step-section__head rates-sticky-head">
+			<div class="rates-sticky-head__text">
+				<span class="step-section__eyebrow">Rates</span>
+				<h2 class="step-section__title">Edit vehicle rates</h2>
+				<p class="step-section__sub">
+					Enter an all-inclusive rate in each applicable bucket.
+				</p>
+			</div>
+			<!-- AI rate suggestions trigger (per-field hints render under each input) -->
+			<button type="button" class="ai-rate-score-fab" *ngIf="!aiLoading && !aiSuggestions && !aiError"
+				(click)="getAiRates()" title="Get AI-suggested rates based on the market"
+				aria-label="Get AI-suggested rates">
+				<i class="bi bi-stars"></i>
+				<span class="fab-label">AI Rates (BETA)</span>
+			</button>
+		</div>
 		<div class="container">
 			<!-- PAGE HEADER -->
 			<div class="row imageSection">
@@ -115,6 +126,7 @@
 					<mat-select formControlName="milage_rate" tabindex="1"
 						(onSelectionChange)="updateRateRangeObject()">
 						<mat-option value="">Choose Per Mile</mat-option>
+						<mat-option *ngIf="isUnlistedDistanceRate(form.milage_rate.value)" [value]="form.milage_rate.value">{{ form.milage_rate.value }}</mat-option>
 						<mat-option [value]="2.50">2.50</mat-option>
 						<mat-option [value]="2.75">2.75</mat-option>
 						<mat-option [value]="3">3</mat-option>
@@ -151,7 +163,7 @@
 					<!-- <input matInput placeholder="Milage Rate" type="number" formControlName="milage_rate" tabindex="1"
 						value="0" (focus)="$event.target.select()" (change)="updateRateRangeObject()" /> -->
 				</mat-form-field>
-				<app-ai-rate-hint field="milage_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol"></app-ai-rate-hint>
+				<app-ai-rate-hint field="milage_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol" (apply)="applyAiRate($event)"></app-ai-rate-hint>
 				<div *ngIf="form.milage_rate.errors && (form.milage_rate.touched || form.milage_rate.errors)"
 					class="text-danger margin-bottom-thin my-mat-hint">
 					<div *ngIf="form.milage_rate.errors.required">This field is required</div>
@@ -303,6 +315,7 @@
 						<mat-select formControlName="kilometer_rate" tabindex="1"
 							(onSelectionChange)="updateRateRangeObject()">
 							<mat-option value="">Choose Per Km</mat-option>
+							<mat-option *ngIf="isUnlistedDistanceRate(form.kilometer_rate.value)" [value]="form.kilometer_rate.value">{{ form.kilometer_rate.value }}</mat-option>
 							<mat-option [value]="2.50">2.50</mat-option>
 							<mat-option [value]="2.75">2.75</mat-option>
 							<mat-option [value]="3">3</mat-option>
@@ -339,7 +352,7 @@
 						<!-- <input matInput placeholder="Kilometer Rate" type="number" formControlName="kilometer_rate"
 							tabindex="1" (focus)="$event.target.select()" (change)="updateRateRangeObject()" /> -->
 					</mat-form-field>
-					<app-ai-rate-hint field="kilometer_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol"></app-ai-rate-hint>
+					<app-ai-rate-hint field="kilometer_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol" (apply)="applyAiRate($event)"></app-ai-rate-hint>
 					<div *ngIf="form.kilometer_rate.errors && (form.kilometer_rate.touched || form.kilometer_rate.errors)"
 						class="text-danger margin-bottom-thin my-mat-hint">
 						<div *ngIf="form.kilometer_rate.errors.required">This field is required</div>
@@ -505,7 +518,7 @@
 						(focus)="$event.target.select()" formControlName="minimum_airport_departure_rate" tabindex="1"
 						(change)="updateRateRangeObject()" />
 				</mat-form-field>
-				<app-ai-rate-hint field="minimum_airport_departure_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol"></app-ai-rate-hint>
+				<app-ai-rate-hint field="minimum_airport_departure_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol" (apply)="applyAiRate($event)"></app-ai-rate-hint>
 				<div *ngIf="
 						(is_form_submitted &&
 							form.minimum_airport_departure_rate.errors) ||
@@ -551,7 +564,7 @@
 						(change)="updateRateRangeObject(); cloneValue('minimum_airport_arrival_rate', 'minimum_airport_departure_rate')"
 						tabindex="1" (focus)="$event.target.select()">
 				</mat-form-field>
-				<app-ai-rate-hint field="minimum_airport_arrival_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol"></app-ai-rate-hint>
+				<app-ai-rate-hint field="minimum_airport_arrival_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol" (apply)="applyAiRate($event)"></app-ai-rate-hint>
 				<div *ngIf="
 						(is_form_submitted &&
 							form.minimum_airport_arrival_rate.errors) ||
@@ -593,7 +606,7 @@
 						formControlName="minimum_city_rate" tabindex="1" (change)="updateRateRangeObject()"
 						autocomplete="off" (focus)="$event.target.select()" />
 				</mat-form-field>
-				<app-ai-rate-hint field="minimum_city_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol"></app-ai-rate-hint>
+				<app-ai-rate-hint field="minimum_city_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol" (apply)="applyAiRate($event)"></app-ai-rate-hint>
 				<div *ngIf="
 						(is_form_submitted && form.minimum_city_rate.errors) ||
 						(form.minimum_city_rate.touched &&
@@ -715,7 +728,7 @@
 					<input type="number" matInput placeholder="Hourly Rate" formControlName="hourly_rate" tabindex="1"
 						(change)="updateRateRangeObject()" (focus)="$event.target.select()" />
 				</mat-form-field>
-				<app-ai-rate-hint field="hourly_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol"></app-ai-rate-hint>
+				<app-ai-rate-hint field="hourly_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol" (apply)="applyAiRate($event)"></app-ai-rate-hint>
 				<div *ngIf="
 							(is_form_submitted && form.hourly_rate.errors) ||
 							(form.hourly_rate.touched && form.hourly_rate.errors)
@@ -817,7 +830,7 @@
 					<input type="number" matInput placeholder="Day Rate Extension" formControlName="day_rate"
 						tabindex="1" (change)="updateRateRangeObject()" (focus)="$event.target.select()" />
 				</mat-form-field>
-				<app-ai-rate-hint field="day_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol"></app-ai-rate-hint>
+				<app-ai-rate-hint field="day_rate" [suggestions]="aiSuggestions" [notes]="aiNotes" [symbol]="currency_symbol" (apply)="applyAiRate($event)"></app-ai-rate-hint>
 				<div *ngIf="
 						(is_form_submitted && form.day_rate.errors) ||
 						(form.day_rate.touched && form.day_rate.errors)
@@ -1584,14 +1597,7 @@
 		</div>
 	</div>
 
-	<!-- AI rate suggestions: trigger + bottom accept bar (per-field hints render under each input) -->
-	<button type="button" class="ai-rate-score-fab" *ngIf="!aiLoading && !aiSuggestions && !aiError"
-		(click)="getAiRates()" title="Get AI-suggested rates based on the market"
-		aria-label="Get AI-suggested rates">
-		<i class="bi bi-stars"></i>
-		<span class="fab-label">AI Rates (BETA)</span>
-	</button>
-
+	<!-- AI rate suggestions: bottom accept bar (trigger lives in the sticky header) -->
 	<app-ai-rate-accept-bar
 		[loading]="aiLoading"
 		[error]="aiError"

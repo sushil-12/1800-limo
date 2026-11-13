@@ -147,6 +147,14 @@ export class AffiliateService {
 	 * --------------------------------------------------------------------------------------
 	 *  
 	 */
+	/**
+	 * What Stripe needs up front from an individual whose bank is in this country (from Stripe's
+	 * Country Specs API): {routing, dob, id_number, id_document, default_currency, currencies, source}.
+	 */
+	stripeCountryFields(country: string) {
+		return this.httpClient.get(this.serverUrl + 'stripe/country-fields/' + encodeURIComponent(country));
+	}
+
 	agreementAcceptance(data) {
 		return this.httpClient.post(this.serverUrl + 'agreement-acceptance', data);
 	}

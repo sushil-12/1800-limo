@@ -16,7 +16,7 @@ import * as moment from "moment";
 import { MomentDateAdapter, MAT_MOMENT_DATE_ADAPTER_OPTIONS } from '@angular/material-moment-adapter';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { FormControl } from '@angular/forms';
-import { BankRules, bankRules } from './bank-country-rules';
+import { BankRules, bankRules, StripeCountryFields, withStripeFields } from './bank-country-rules';
 
 declare var $: any;
 
@@ -96,8 +96,13 @@ export class Step2Component implements OnInit, AfterViewInit {
 	dobErrorMessage: string;
 	public AddressCheckStripe = ['address', 'street', 'city', 'country'];
 	isSsnSelected: boolean = false;
-	/** The bank fields for the selected country (no SSN / EIN / routing # where they don't exist). */
+	/**
+	 * The bank fields for the selected country: its labels, narrowed to what Stripe requires there up
+	 * front (from Stripe's Country Specs API), so e.g. a UK driver gets no SSN, EIN or ID photo.
+	 */
 	rules: BankRules = bankRules('US');
+	/** Stripe's answer per country, fetched once per country while the page is open. */
+	private stripeFieldsByCountry: Record<string, StripeCountryFields | null> = {};
 	isAddressSelected: boolean = false;
 	isRoutingSelected: boolean = false;
 
@@ -807,6 +812,10 @@ export class Step2Component implements OnInit, AfterViewInit {
 		this.applyBankRules(selectedCountryCode);
 	}
 
+	get isUsBank(): boolean {
+		return (this.addBankForm?.get('country')?.value || '').toUpperCase() === 'US';
+	}
+
 	/** The selected country's name, for "Showing the bank fields for ...". */
 	get bankCountryName(): string {
 		const code = this.addBankForm?.get('country')?.value;
@@ -814,24 +823,47 @@ export class Step2Component implements OnInit, AfterViewInit {
 	}
 
 	/**
-	 * Ask only for what the bank's country uses: a routing / sort code only where one exists, an SSN only
-	 * in the US (an optional local ID elsewhere), and an EIN only in the US.
+	 * Ask only for what the bank's country uses and Stripe requires there: a routing / sort code only
+	 * where banks have one, an ID number, date of birth and ID photo only where Stripe needs them up
+	 * front, and an EIN only in the US. Stripe's requirements come from limoapi (Country Specs API); until
+	 * they arrive, or if Stripe can't be reached, the country's built-in rules apply.
 	 */
 	applyBankRules(country: string): void {
-		this.rules = bankRules(country);
+		const code = (country || '').toUpperCase();
+		this.rules = withStripeFields(bankRules(code), this.stripeFieldsByCountry[code] ?? null);
+		this.applyRuleValidators();
+		if (!code || code in this.stripeFieldsByCountry) return;
+		this.stripeFieldsByCountry[code] = null;
+		this.affiliateService.stripeCountryFields(code)
+			.pipe(catchError(() => of(null)))
+			.subscribe((res: any) => {
+				const fields: StripeCountryFields | null = res?.data ?? null;
+				this.stripeFieldsByCountry[code] = fields;
+				if ((this.addBankForm?.get('country')?.value || '').toUpperCase() !== code) return;
+				this.rules = withStripeFields(bankRules(code), fields);
+				this.applyRuleValidators();
+				this.selectStripeCurrency(fields);
+			});
+	}
+
+	private applyRuleValidators(): void {
 		const controls = this.addBankForm?.controls;
 		if (!controls) return;
 		const { Routing, ssn, ein } = controls;
+		const required = (control: any, needed: boolean, validators: any[] = [Validators.required]) => {
+			control.setValidators(needed ? validators : []);
+			if (!needed && control !== controls['id_front_image']) control.setValue('');
+			control.updateValueAndValidity();
+		};
 
-		Routing.setValidators(this.rules.showRouting ? [Validators.required] : []);
-		if (!this.rules.showRouting) {
-			Routing.setValue('');
-			this.isRoutingSelected = true;
-		}
+		required(Routing, this.rules.showRouting);
+		if (!this.rules.showRouting) this.isRoutingSelected = true;
 
+		// The SSN is digits only; other countries' ID numbers can have letters (e.g. an NRIC or a PAN).
+		const idPattern = Validators.pattern(this.isUsBank ? "^[0-9*]*$" : "^[A-Za-z0-9*]*$");
 		ssn.setValidators(this.rules.idRequired
-			? [Validators.required, Validators.pattern("^[0-9*]*$"), this.customValidator.dashValidator(), this.customValidator.plusValidator()]
-			: [Validators.pattern("^[A-Za-z0-9*]*$")]);
+			? [Validators.required, idPattern, this.customValidator.dashValidator(), this.customValidator.plusValidator()]
+			: [idPattern]);
 		if (!this.rules.showId) {
 			ssn.setValue('');
 			this.ssn_copy = '';
@@ -840,15 +872,31 @@ export class Step2Component implements OnInit, AfterViewInit {
 			this.isSsnSelected = true; // no red border on an optional field
 			this.ssnErrorMessage = '';
 		}
+		ssn.updateValueAndValidity();
 
 		if (!this.rules.showEin) {
 			this.SetFormValue('haveEin', false);
 			ein.setValidators([]);
 			ein.setValue('');
+			ein.updateValueAndValidity();
 		}
-		Routing.updateValueAndValidity();
-		ssn.updateValueAndValidity();
-		ein.updateValueAndValidity();
+
+		for (const name of ['dobDay', 'dobMonth', 'dobYear']) required(controls[name], this.rules.showDob);
+		// A photo already uploaded stays attached; it just isn't required.
+		required(controls['id_front_image'], this.rules.showIdDocument);
+	}
+
+	/** Pre-select the currency banks in that country are paid in, when it's one Stripe supports there. */
+	private selectStripeCurrency(fields: StripeCountryFields | null): void {
+		const wanted = (fields?.default_currency || '').toUpperCase();
+		const country = (fields?.country || '').toUpperCase();
+		if (!wanted || !this.addBankForm) return;
+		const current = String(this.addBankForm.get('currency')?.value || '');
+		if (current.split('-')[0].toUpperCase() === wanted) return;
+		const options = this.currencyOptions_copy || [];
+		const option = options.find((o: any) => o?.currency?.toUpperCase() === wanted && o?.currencyCountry?.toUpperCase() === country)
+			|| options.find((o: any) => o?.currency?.toUpperCase() === wanted);
+		if (option) this.SetFormValue('currency', option.currency + '-' + option.currencyCountry);
 	}
 
 	changeRadio(form_control: string, value: any) {

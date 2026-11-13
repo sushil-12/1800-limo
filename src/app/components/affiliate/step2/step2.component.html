@@ -69,7 +69,7 @@
 		<div class="step-section__head">
 			<div>
 				<span class="step-section__eyebrow">Banking</span>
-				<h2 class="step-section__title">Company bank settings</h2>
+				<h2 class="step-section__title">Where you get paid</h2>
 				<p class="step-section__sub">
 					Used by
 					<a href="https://www.stripe.com/" target="_blank" rel="noopener" class="step-link">Stripe</a>
@@ -80,6 +80,28 @@
 				title="View Tutorial" class="watch-tutorial-btn">
 				<i class="bi bi-camera-video mr-1"></i> Watch Tutorial
 			</button>
+		</div>
+
+		<!-- The bank's country decides the fields below: only what Stripe requires there -->
+		<div class="field-group">
+			<span class="field-group__title">Where is your bank account?</span>
+			<p class="field-group__hint">
+				Pre-selected from your phone number. The form below asks only for what Stripe needs for a bank in
+				this country: no SSN or EIN outside the US.
+			</p>
+			<div class="row">
+				<div class="col-md-6">
+					<mat-form-field appearance="outline">
+						<mat-label>Bank country <span class="asterisk">*</span></mat-label>
+						<mat-select formControlName="country" (selectionChange)="changeCountry($event.value)" tabindex="1">
+							<mat-option value="">Choose Country</mat-option>
+							<mat-option *ngFor="let countryOption of countryOptions" [value]="countryOption?.countryShortCode">
+								{{ countryOption?.countryName }}
+							</mat-option>
+						</mat-select>
+					</mat-form-field>
+				</div>
+			</div>
 		</div>
 
 		<div class="field-group">
@@ -147,10 +169,10 @@
 		</div>
 
 		<div class="field-group">
-			<span class="field-group__title">{{ rules.showRouting ? 'Account, routing & date of birth' : 'Account & date of birth' }}</span>
+			<span class="field-group__title">{{ rules.showRouting ? 'Account & routing' : 'Account' }}{{ rules.showDob ? ' & date of birth' : '' }}</span>
 			<p class="field-group__hint">
-				Showing the bank details used in <strong>{{ bankCountryName }}</strong>. Bank in another country?
-				Change <strong>Country</strong> in the address section below. Date of birth is of the account holder.
+				Showing what banks in <strong>{{ bankCountryName }}</strong> use. Bank in another country? Change it
+				above.<ng-container *ngIf="rules.showDob"> Date of birth is of the account holder.</ng-container>
 			</p>
 			<div class="row">
 				<div class="col-md-5">
@@ -212,7 +234,7 @@
 						<div *ngIf="f?.AccountType?.errors?.required">This field is required</div>
 					</div>
 				</div>
-				<div class="col-md-7">
+				<div class="col-md-7" *ngIf="rules.showDob">
 					<div class="row">
 						<div class="col-md-4">
 							<mat-form-field appearance="outline">
@@ -272,15 +294,14 @@
 
 		<div class="field-group">
 			<span class="field-group__title">{{ rules.showEin ? 'Tax & identity' : 'Currency & identity' }}</span>
-			<p class="field-group__hint" *ngIf="rules.idRequired">Only Stripe sees the full SSN after you save.</p>
-			<div class="step-notice step-notice--info" *ngIf="rules.idRequired; else noSsnNotice">
-				When you enter your SSN, only Stripe sees all the digits. Your SSN will no longer be visible after it is
-				saved.
+			<div class="step-notice step-notice--info" *ngIf="isUsBank; else noSsnNotice">
+				The last 4 digits of your SSN are enough. Only Stripe sees them, and they won't be visible after you
+				save.
 			</div>
 			<ng-template #noSsnNotice>
 				<div class="step-notice step-notice--info">
-					Outside the US you don't need an SSN or an EIN. Stripe verifies you with the photo ID, date of
-					birth and address on this page.
+					A bank in {{ bankCountryName }} needs no SSN or EIN. Stripe asks for more later only if it can't
+					verify you with these details.
 				</div>
 			</ng-template>
 			<div class="row">
@@ -332,7 +353,7 @@
 								Do not enter + sign
 							</div>
 							<ng-template #allErrorsSsn>
-								<div *ngIf="f?.ssn?.errors?.pattern">{{ rules.idRequired ? 'Enter Numbers Only' : 'Letters and numbers only' }}</div>
+								<div *ngIf="f?.ssn?.errors?.pattern">{{ isUsBank ? 'Enter Numbers Only' : 'Letters and numbers only' }}</div>
 							</ng-template>
 						</ng-template>
 					</div>
@@ -393,8 +414,8 @@
 		</div>
 	</section>
 
-	<!-- ================= OWNER ID ================= -->
-	<section class="step-section user_information">
+	<!-- ================= OWNER ID (where Stripe needs an ID photo up front, or asked for one later) ================= -->
+	<section class="step-section user_information" *ngIf="rules.showIdDocument || id_front_image || stripeErrors?.length">
 		<div class="step-section__head">
 			<div>
 				<span class="step-section__eyebrow">Verification</span>
@@ -757,7 +778,8 @@
 					<button class="custom-filled-reset-button m-2" (click)="resetForm()" tabIndex="2">
 						RESET
 					</button>
-					<button type="submit" class="custom-filled-button m-2" (click)="submitForm()" tabIndex="1">
+					<button type="submit" class="custom-filled-button m-2" (click)="submitForm()" tabIndex="1"
+						[disabled]="disableSubmitButton">
 						SAVE
 					</button>
 				</div>

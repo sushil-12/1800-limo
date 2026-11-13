@@ -21,6 +21,27 @@ export interface BankRules {
 	idHint: string;
 	/** EIN / Business ID: a US thing. */
 	showEin: boolean;
+	/** Date of birth and an ID photo, where Stripe needs them up front. */
+	showDob: boolean;
+	showIdDocument: boolean;
+}
+
+/**
+ * What Stripe needs up front from an individual in a country, from its Country Specs API
+ * (limoapi GET affiliate/stripe/country-fields/{country}).
+ */
+export interface StripeCountryFields {
+	country: string;
+	supported: boolean;
+	routing: boolean;
+	dob: boolean;
+	/** null: no ID number; "ssn_last_4": the US SSN's last 4 digits; "id_number": the local ID number. */
+	id_number: null | 'ssn_last_4' | 'id_number';
+	id_document: boolean;
+	default_currency: string | null;
+	currencies: string[];
+	/** "fallback" when Stripe couldn't be asked: the defaults below are kept. */
+	source: 'stripe' | 'fallback';
 }
 
 /** Banks identified by the IBAN alone (SEPA, plus Stripe's other IBAN countries). */
@@ -42,6 +63,8 @@ const DEFAULT_RULES: BankRules = {
 	idLabel: 'National ID number',
 	idHint: OPTIONAL_ID,
 	showEin: false,
+	showDob: true,
+	showIdDocument: true,
 };
 
 const RULES: Record<string, Partial<BankRules>> = {
@@ -50,8 +73,8 @@ const RULES: Record<string, Partial<BankRules>> = {
 		routingLabel: 'Routing number',
 		routingHint: '9 digits, at the bottom left of a check.',
 		idRequired: true,
-		idLabel: 'Social Security Number (SSN)',
-		idHint: 'Only Stripe sees all the digits. It won\'t be visible after you save.',
+		idLabel: 'SSN (last 4 digits)',
+		idHint: 'The last 4 digits are enough. Stripe asks for the full number only if it can\'t verify you.',
 		showEin: true,
 	},
 	GB: {
@@ -111,4 +134,22 @@ export function bankRules(country: string | null | undefined): BankRules {
 	const code = (country || '').toUpperCase();
 	const specific = IBAN_COUNTRIES.includes(code) ? IBAN_RULES : RULES[code] || {};
 	return { ...DEFAULT_RULES, ...specific };
+}
+
+/**
+ * The country's labels, narrowed to what Stripe actually requires there: no ID number, date of birth
+ * or ID photo unless Stripe asks for it up front. Stripe asks again later only if it needs more.
+ */
+export function withStripeFields(rules: BankRules, fields: StripeCountryFields | null): BankRules {
+	if (!fields || fields.source !== 'stripe') return rules;
+	const idNeeded = !!fields.id_number;
+	return {
+		...rules,
+		showRouting: fields.routing,
+		showId: idNeeded,
+		idRequired: idNeeded,
+		idHint: idNeeded && fields.id_number !== 'ssn_last_4' ? 'Stripe needs this to verify you in this country.' : rules.idHint,
+		showDob: fields.dob,
+		showIdDocument: fields.id_document,
+	};
 }

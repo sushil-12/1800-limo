@@ -147,15 +147,19 @@
 		</div>
 
 		<div class="field-group">
-			<span class="field-group__title">Account, routing & date of birth</span>
-			<p class="field-group__hint">Enter account numbers without dashes. Date of birth is of the account holder.</p>
+			<span class="field-group__title">{{ rules.showRouting ? 'Account, routing & date of birth' : 'Account & date of birth' }}</span>
+			<p class="field-group__hint">
+				Showing the bank details used in <strong>{{ bankCountryName }}</strong>. Bank in another country?
+				Change <strong>Country</strong> in the address section below. Date of birth is of the account holder.
+			</p>
 			<div class="row">
 				<div class="col-md-5">
 					<mat-form-field appearance="outline">
-						<mat-label>Bank Account / IBAN <span class="asterisk">*</span></mat-label>
-						<input matInput placeholder="Account Number" (focus)="$event?.target?.select()"
+						<mat-label>{{ rules.accountLabel }} <span class="asterisk">*</span></mat-label>
+						<input matInput [placeholder]="rules.accountLabel" (focus)="$event?.target?.select()"
 							formControlName="AccountNumber" tabindex="1" />
 					</mat-form-field>
+					<div class="field-group__hint">{{ rules.accountHint }}</div>
 					<div *ngIf="
 							(submittedForm && f?.AccountNumber?.errors) ||
 							(f?.AccountNumber?.touched && f?.AccountNumber?.errors)
@@ -174,14 +178,15 @@
 						</ng-template>
 					</div>
 				</div>
-				<div class="col-md-7">
+				<div class="col-md-7" *ngIf="rules.showRouting">
 					<mat-form-field appearance="outline"
 						[ngClass]="{ 'border-red': routingErrorMessage || !isRoutingSelected }">
-						<mat-label>Check Routing # / Bank Branch # <span class="asterisk">*</span></mat-label>
-						<input matInput placeholder="Check Routing # / Bank Branch #" (focus)="$event?.target?.select()"
+						<mat-label>{{ rules.routingLabel }} <span class="asterisk">*</span></mat-label>
+						<input matInput [placeholder]="rules.routingLabel" (focus)="$event?.target?.select()"
 							(keyup)="removeErrorSsn($event.target.value,'Routing')" formControlName="Routing"
 							tabindex="1" />
 					</mat-form-field>
+					<div class="field-group__hint">{{ rules.routingHint }}</div>
 					<div *ngIf="routingErrorMessage" class="text-danger margin-bottom-thin my-mat-hint">
 						<div style="font-weight: 550;">{{ routingErrorMessage }}</div>
 					</div>
@@ -266,12 +271,18 @@
 		</div>
 
 		<div class="field-group">
-			<span class="field-group__title">Tax & identity</span>
-			<p class="field-group__hint">Only Stripe sees the full SSN after you save.</p>
-			<div class="step-notice step-notice--info">
+			<span class="field-group__title">{{ rules.showEin ? 'Tax & identity' : 'Currency & identity' }}</span>
+			<p class="field-group__hint" *ngIf="rules.idRequired">Only Stripe sees the full SSN after you save.</p>
+			<div class="step-notice step-notice--info" *ngIf="rules.idRequired; else noSsnNotice">
 				When you enter your SSN, only Stripe sees all the digits. Your SSN will no longer be visible after it is
 				saved.
 			</div>
+			<ng-template #noSsnNotice>
+				<div class="step-notice step-notice--info">
+					Outside the US you don't need an SSN or an EIN. Stripe verifies you with the photo ID, date of
+					birth and address on this page.
+				</div>
+			</ng-template>
 			<div class="row">
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">
@@ -292,15 +303,17 @@
 						<div *ngIf="f?.currency?.errors?.required">This field is required</div>
 					</div>
 				</div>
-				<div class="col-md-6">
+				<div class="col-md-6" *ngIf="rules.showId">
 					<mat-form-field appearance="outline"
 						[ngClass]="{ 'disableSsn': enableSsnField, 'border-red1': ssnErrorMessage || !isSsnSelected }">
-						<mat-label>SSN / Government ID <span class="asterisk">*</span></mat-label>
-						<input matInput placeholder="SSN (USA) / Government ID (other countries)"
+						<mat-label>{{ rules.idLabel }} <span *ngIf="rules.idRequired" class="asterisk">*</span><span
+								*ngIf="!rules.idRequired" class="optionalText">(Optional)</span></mat-label>
+						<input matInput [placeholder]="rules.idLabel"
 							(focus)="$event?.target?.select()" formControlName="ssn" tabindex="1"
 							(change)="handleSsnInput($event.target.value)"
 							(keyup)="removeErrorSsn($event.target.value,'ssn')" />
 					</mat-form-field>
+					<div class="field-group__hint">{{ rules.idHint }}</div>
 					<div *ngIf="ssnErrorMessage" class="text-danger margin-bottom-thin my-mat-hint">
 						<div style="font-weight: 550;">{{ ssnErrorMessage }}</div>
 					</div>
@@ -319,12 +332,12 @@
 								Do not enter + sign
 							</div>
 							<ng-template #allErrorsSsn>
-								<div *ngIf="f?.ssn?.errors?.pattern">Enter Numbers Only</div>
+								<div *ngIf="f?.ssn?.errors?.pattern">{{ rules.idRequired ? 'Enter Numbers Only' : 'Letters and numbers only' }}</div>
 							</ng-template>
 						</ng-template>
 					</div>
 				</div>
-				<div class="col-md-6" style="margin-top:29px;">
+				<div class="col-md-6" style="margin-top:29px;" *ngIf="rules.showEin">
 					<div id="ein-container" class="toggle-pair">
 						<div id="ein-no" class="toggle-pair__option" [ngClass]="!f?.haveEin?.value ? 'active' : ''"
 							(click)="changeRadio('haveEin', false)">
@@ -336,7 +349,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="col-md-6 mt-3" *ngIf="f?.haveEin?.value">
+				<div class="col-md-6 mt-3" *ngIf="rules.showEin && f?.haveEin?.value">
 					<mat-form-field appearance="outline">
 						<mat-label>EIN / Business ID # <span class="asterisk">*</span></mat-label>
 						<input matInput placeholder="EIN / Business ID #" (focus)="$event?.target?.select()"

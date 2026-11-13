@@ -16,6 +16,7 @@ import * as moment from "moment";
 import { MomentDateAdapter, MAT_MOMENT_DATE_ADAPTER_OPTIONS } from '@angular/material-moment-adapter';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { FormControl } from '@angular/forms';
+import { BankRules, bankRules } from './bank-country-rules';
 
 declare var $: any;
 
@@ -95,6 +96,8 @@ export class Step2Component implements OnInit, AfterViewInit {
 	dobErrorMessage: string;
 	public AddressCheckStripe = ['address', 'street', 'city', 'country'];
 	isSsnSelected: boolean = false;
+	/** The bank fields for the selected country (no SSN / EIN / routing # where they don't exist). */
+	rules: BankRules = bankRules('US');
 	isAddressSelected: boolean = false;
 	isRoutingSelected: boolean = false;
 
@@ -801,6 +804,51 @@ export class Step2Component implements OnInit, AfterViewInit {
 		if (selectedCountryData) {
 			this.stateOptions = selectedCountryData[0]?.regions;
 		}
+		this.applyBankRules(selectedCountryCode);
+	}
+
+	/** The selected country's name, for "Showing the bank fields for ...". */
+	get bankCountryName(): string {
+		const code = this.addBankForm?.get('country')?.value;
+		return this.countryOptions?.find?.((c: any) => c.countryShortCode == code)?.countryName || code || '';
+	}
+
+	/**
+	 * Ask only for what the bank's country uses: a routing / sort code only where one exists, an SSN only
+	 * in the US (an optional local ID elsewhere), and an EIN only in the US.
+	 */
+	applyBankRules(country: string): void {
+		this.rules = bankRules(country);
+		const controls = this.addBankForm?.controls;
+		if (!controls) return;
+		const { Routing, ssn, ein } = controls;
+
+		Routing.setValidators(this.rules.showRouting ? [Validators.required] : []);
+		if (!this.rules.showRouting) {
+			Routing.setValue('');
+			this.isRoutingSelected = true;
+		}
+
+		ssn.setValidators(this.rules.idRequired
+			? [Validators.required, Validators.pattern("^[0-9*]*$"), this.customValidator.dashValidator(), this.customValidator.plusValidator()]
+			: [Validators.pattern("^[A-Za-z0-9*]*$")]);
+		if (!this.rules.showId) {
+			ssn.setValue('');
+			this.ssn_copy = '';
+		}
+		if (!this.rules.idRequired) {
+			this.isSsnSelected = true; // no red border on an optional field
+			this.ssnErrorMessage = '';
+		}
+
+		if (!this.rules.showEin) {
+			this.SetFormValue('haveEin', false);
+			ein.setValidators([]);
+			ein.setValue('');
+		}
+		Routing.updateValueAndValidity();
+		ssn.updateValueAndValidity();
+		ein.updateValueAndValidity();
 	}
 
 	changeRadio(form_control: string, value: any) {

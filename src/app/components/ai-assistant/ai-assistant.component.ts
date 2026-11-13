@@ -11,6 +11,8 @@ import { CardDetails } from '../shared/new-card-form/new-card-form.component';
 const HIDDEN_ROUTE_PREFIXES = ['/live-ride-tracking'];
 const TEASER_DISMISSED_KEY = 'ai_assistant_teaser_dismissed';
 const TEASER_DELAY_MS = 3000;
+/** The booking's pickup button (limoagent booking/flow.py CURRENT_LOCATION_REPLY). */
+const CURRENT_LOCATION_REPLY = '📍 Use my current location';
 
 /**
  * Site-wide AI assistant: a floating launcher plus chat panel mounted once in AppComponent,
@@ -28,6 +30,8 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 	messages: AiChatMessage[] = [];
 	isOpen = false;
 	isStreaming = false;
+	locating = false; // waiting for the browser's location (the booking's pickup button)
+	locationError = '';
 	hidden = false;
 	newMessageText = '';
 	showTeaser = false;
@@ -115,6 +119,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 	sendMessage(text?: string): void {
 		const content = (text ?? this.newMessageText).trim();
 		if (!content || this.isStreaming) return;
+		this.locationError = '';
 		this.assistant.send(content);
 		if (text === undefined) {
 			this.newMessageText = '';
@@ -150,6 +155,43 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 	pickOption(option: AiBookingOption): void {
 		if (this.isStreaming) return;
 		this.assistant.send(String(option.number), option.label);
+	}
+
+	/** Suggested answers; the booking's location button sends the browser's coordinates instead. */
+	pickReply(reply: string): void {
+		if (reply === CURRENT_LOCATION_REPLY) {
+			this.sendCurrentLocation();
+			return;
+		}
+		this.sendMessage(reply);
+	}
+
+	/**
+	 * The assistant turns "(lat, lng)" into the street address there (limoagent flow.py). Only the
+	 * coordinates are sent, and only when the user taps the button and the browser allows it.
+	 */
+	private sendCurrentLocation(): void {
+		this.locationError = '';
+		if (!navigator.geolocation) {
+			this.locationError = 'Your browser can\'t share a location. Please type the pickup address.';
+			return;
+		}
+		this.locating = true;
+		navigator.geolocation.getCurrentPosition(
+			position => {
+				this.locating = false;
+				const lat = position.coords.latitude.toFixed(6);
+				const lng = position.coords.longitude.toFixed(6);
+				this.assistant.send(`📍 My current location (${lat}, ${lng})`, '📍 My current location');
+			},
+			error => {
+				this.locating = false;
+				this.locationError = error.code === error.PERMISSION_DENIED
+					? 'Location access is blocked. Please type the pickup address.'
+					: 'Couldn\'t get your location. Please type the pickup address.';
+			},
+			{ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+		);
 	}
 
 	/** The new customer's card goes straight to the 1800limo API, never to the assistant. */
@@ -224,6 +266,8 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 		const inline = (s: string) => s
 			.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
 			.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+			// In-app pages (e.g. an account the admin looked up) open in this tab, see onMessageClick.
+			.replace(/\[([^\]]+)\]\((\/(?!\/)[^\s)]*)\)/g, '<a href="$2" class="in-app-link">$1</a>')
 			.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
 
 		// Numbered items keep their numbers: booking menus are answered by typing the number.
@@ -246,6 +290,16 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 		}
 		if (list) out.push(`</${list}>`);
 		return out.join('').replace(/(<br>)+$/, '');
+	}
+
+	/** In-app links go through the router, so the page changes without reloading the app or the chat. */
+	onMessageClick(event: MouseEvent): void {
+		const link = (event.target as HTMLElement | null)?.closest('a');
+		const href = link?.getAttribute('href');
+		if (!href || !href.startsWith('/') || href.startsWith('//')) return;
+		if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return; // new tab/window
+		event.preventDefault();
+		this.router.navigateByUrl(href);
 	}
 
 	private updateVisibility(url: string): void {

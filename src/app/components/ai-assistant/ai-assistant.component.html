@@ -80,7 +80,8 @@
             <span *ngIf="m.streaming && !m.content" class="typing" aria-label="Assistant is typing">
               <span></span><span></span><span></span>
             </span>
-            <span *ngIf="m.content" class="md" [innerHTML]="renderMarkdown(m.content)"></span><span
+            <span *ngIf="m.content" class="md" [innerHTML]="renderMarkdown(m.content)"
+                  (click)="onMessageClick($event)"></span><span
                   *ngIf="m.streaming && m.content" class="caret"></span>
           </div>
 
@@ -243,10 +244,12 @@
           <!-- Booking: suggested answers for the current step -->
           <div *ngIf="isLive(m) && !isStreaming && m.booking?.replies?.length" class="booking-replies">
             <button *ngFor="let reply of m.booking?.replies" type="button" class="quick-reply"
-                    [class.subtle]="reply === 'Cancel' || reply === 'Back'" (click)="sendMessage(reply)">
-              {{ reply }}
+                    [class.subtle]="reply === 'Cancel' || reply === 'Back'" [disabled]="locating"
+                    (click)="pickReply(reply)">
+              {{ locating && reply.startsWith('📍') ? 'Finding your location…' : reply }}
             </button>
           </div>
+          <div *ngIf="isLive(m) && locationError" class="booking-location-error" role="alert">{{ locationError }}</div>
 
           <!-- Booking: a new customer's card, sent straight to the 1800limo API -->
           <div *ngIf="isLive(m) && m.booking?.card_request as request" class="booking-card-form">

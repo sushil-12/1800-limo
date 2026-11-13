@@ -421,6 +421,23 @@ $soft: #f3f4f6;
         color: $accent-dark;
         text-decoration: underline;
       }
+
+      // "Open account →" under a looked-up record
+      a.in-app-link {
+        display: inline-block;
+        margin-top: 4px;
+        font-weight: 600;
+        text-decoration: none;
+
+        &:hover,
+        &:focus-visible {
+          text-decoration: underline;
+        }
+      }
+
+      strong {
+        font-weight: 700;
+      }
     }
   }
 }
@@ -1022,6 +1039,12 @@ $success: #16a34a;
     border-color: #e5e7eb;
     color: $muted;
   }
+}
+
+.booking-location-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #b42318;
 }
 
 /* Booking menu options: one full-width button per choice (labels can be long addresses) */

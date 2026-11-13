@@ -1041,6 +1041,35 @@ $success: #16a34a;
   }
 }
 
+/* Registration: photo question */
+.booking-upload {
+  margin-top: 8px;
+}
+
+.upload-btn {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0;
+  padding: 8px 14px;
+  border: 1px dashed $accent;
+  border-radius: 12px;
+  background: #fff7ed;
+  color: $accent-dark;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+
+  &:hover {
+    background: #ffedd5;
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
 .booking-location-error {
   margin-top: 6px;
   font-size: 12px;

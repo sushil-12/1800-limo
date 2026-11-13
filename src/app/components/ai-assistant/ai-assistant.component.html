@@ -251,6 +251,16 @@
           </div>
           <div *ngIf="isLive(m) && locationError" class="booking-location-error" role="alert">{{ locationError }}</div>
 
+          <!-- Registration: a photo question; the photo goes straight to the 1800limo API -->
+          <div *ngIf="isLive(m) && m.booking?.upload as upload" class="booking-upload">
+            <label class="upload-btn" [class.disabled]="isStreaming || uploading">
+              <input type="file" accept="image/*" hidden [disabled]="isStreaming || uploading"
+                     (change)="pickPhoto($event)">
+              {{ uploading ? 'Uploading…' : '📎 Add photo: ' + upload.label }}
+            </label>
+          </div>
+          <div *ngIf="isLive(m) && uploadError" class="booking-location-error" role="alert">{{ uploadError }}</div>
+
           <!-- Booking: a new customer's card, sent straight to the 1800limo API -->
           <div *ngIf="isLive(m) && m.booking?.card_request as request" class="booking-card-form">
             <app-new-card-form [collectOnly]="true" [busy]="isStreaming" [defaultName]="request.card_holder"

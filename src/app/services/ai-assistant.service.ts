@@ -88,7 +88,21 @@ export interface AiBooking {
 	card_request?: AiCardRequest | null;
 	preview?: AiBookingPreview | null;
 	booked?: AiBooked | null;
+	/** Registration: the question wants a photo (see uploadPhoto). */
+	upload?: AiUploadRequest | null;
 }
+
+/** A registration question answered with a photo (limoagent registration_flow.py). */
+export interface AiUploadRequest {
+	/** What to photograph, e.g. "Driver license". */
+	label: string;
+	optional: boolean;
+}
+
+/** The answer limoagent expects once a photo is uploaded: the encrypted image id. */
+const PHOTO_PREFIX = '📎 photo:';
+/** Laravel's base64 upload accepts jpeg/png/gif data URIs; big phone photos are scaled down first. */
+const PHOTO_MAX_SIDE = 1600;
 
 export interface AiChatMessage {
 	id: string;
@@ -195,6 +209,55 @@ export class AiAssistantService {
 			outcome = 'card:error The card could not be sent. Check your connection and try again.';
 		}
 		this.send(outcome, outcome.startsWith('card:ok') ? 'Card details sent' : 'Card details not accepted');
+	}
+
+	/**
+	 * Upload a registration photo straight to the 1800limo API (as the portal's own forms do), then
+	 * answer the question with its encrypted id. The image never goes to the assistant.
+	 * Resolves to an error message to show, or null once the answer is sent.
+	 */
+	async uploadPhoto(file: File): Promise<string | null> {
+		if (this.isStreaming$.value || this.syncOwner()) return null;
+		if (!file.type.startsWith('image/')) return 'Please choose a photo (JPG or PNG).';
+		let image: string;
+		try {
+			image = await this.photoDataUrl(file);
+		} catch {
+			return 'That photo couldn\'t be read. Please try another one.';
+		}
+		const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+		const token = this.authService.getAccessToken();
+		if (token) headers['Authorization'] = `Bearer ${token}`;
+		try {
+			const body = await this.sendJson(`${environment.serverUrl}affiliate/add-single-image`, 'POST', headers, { image });
+			const id = body.json?.data?.id;
+			if (!body.ok || typeof id !== 'string' || !id) return this.apiErrorText(body.json, body.status);
+			this.send(`${PHOTO_PREFIX}${id}`, '📎 Photo added');
+			return null;
+		} catch {
+			return 'The photo could not be uploaded. Check your connection and try again.';
+		}
+	}
+
+	/** The photo as a JPEG data URI, at most PHOTO_MAX_SIDE pixels on its longer side. */
+	private photoDataUrl(file: File): Promise<string> {
+		return new Promise((resolve, reject) => {
+			const url = URL.createObjectURL(file);
+			const img = new Image();
+			img.onload = () => {
+				URL.revokeObjectURL(url);
+				const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(img.width, img.height));
+				const canvas = document.createElement('canvas');
+				canvas.width = Math.round(img.width * scale);
+				canvas.height = Math.round(img.height * scale);
+				const ctx = canvas.getContext('2d');
+				if (!ctx) { reject(new Error('no canvas')); return; }
+				ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+				resolve(canvas.toDataURL('image/jpeg', 0.85));
+			};
+			img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('unreadable image')); };
+			img.src = url;
+		});
 	}
 
 	private async sendJson(url: string, method: string, headers: Record<string, string>, payload: any)

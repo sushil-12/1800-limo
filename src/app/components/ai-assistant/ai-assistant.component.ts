@@ -5,6 +5,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { AiAssistantService, AiBookingCard, AiBookingOption, AiCardRequest, AiChatMessage } from 'src/app/services/ai-assistant.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { CardDetails } from '../shared/new-card-form/new-card-form.component';
 
 /** Routes that already have their own chat panel in the same corner. */
@@ -32,17 +33,26 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 	isStreaming = false;
 	locating = false; // waiting for the browser's location (the booking's pickup button)
 	locationError = '';
+	uploading = false; // a registration photo on its way to the 1800limo API
+	uploadError = '';
 	hidden = false;
 	newMessageText = '';
 	showTeaser = false;
 
-	readonly quickReplies = [
+	private readonly defaultQuickReplies = [
 		'Get a quote',
 		'Book a ride',
 		'Track my ride',
 		'Airport transfers',
 		'Talk to support'
 	];
+	/** limoagent registration.py answers this with the affiliate's progress and offers to continue. */
+	private readonly registrationQuickReplies = ['Need help with registration'];
+
+	/** An affiliate who hasn't been approved yet only gets registration help in the menu. */
+	get quickReplies(): string[] {
+		return this.isRegisteringAffiliate() ? this.registrationQuickReplies : this.defaultQuickReplies;
+	}
 
 	private shouldScroll = false;
 	private subs = new Subscription();
@@ -51,7 +61,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 	private brokenPhotos = new Set<string>();
 	private teaserTimer?: ReturnType<typeof setTimeout>;
 
-	constructor(public assistant: AiAssistantService, private router: Router) { }
+	constructor(public assistant: AiAssistantService, private authService: AuthService, private router: Router) { }
 
 	ngOnInit(): void {
 		this.updateVisibility(this.router.url);
@@ -120,6 +130,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 		const content = (text ?? this.newMessageText).trim();
 		if (!content || this.isStreaming) return;
 		this.locationError = '';
+		this.uploadError = '';
 		this.assistant.send(content);
 		if (text === undefined) {
 			this.newMessageText = '';
@@ -192,6 +203,21 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 			},
 			{ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
 		);
+	}
+
+	/** A registration photo goes straight to the 1800limo API; the chat only gets its id. */
+	async pickPhoto(event: Event): Promise<void> {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+		input.value = ''; // picking the same file again still fires (change)
+		if (!file || this.isStreaming || this.uploading) return;
+		this.uploading = true;
+		this.uploadError = '';
+		try {
+			this.uploadError = (await this.assistant.uploadPhoto(file)) ?? '';
+		} finally {
+			this.uploading = false;
+		}
 	}
 
 	/** The new customer's card goes straight to the 1800limo API, never to the assistant. */
@@ -300,6 +326,17 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 		if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return; // new tab/window
 		event.preventDefault();
 		this.router.navigateByUrl(href);
+	}
+
+	/** Signed-in affiliate (role "driver", as otp.component sets it) whose account isn't accepted yet. */
+	private isRegisteringAffiliate(): boolean {
+		if (!this.authService.getAccessToken()) return false;
+		try {
+			const user = this.authService.currentUserValue;
+			return user?.roleName === 'driver' && localStorage.getItem('account_approval') !== 'accepted';
+		} catch {
+			return false;
+		}
 	}
 
 	private updateVisibility(url: string): void {

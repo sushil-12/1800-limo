@@ -543,6 +543,30 @@ body, body.mat-typography{
 	margin-bottom: 0;
 }
 
+/* ---- Heading + notice on one row ----
+   Puts a section/group title and its notice side by side to save vertical
+   space. Wraps under the title on narrow screens. */
+.heading-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 16px;
+	margin: 0 0 4px;
+}
+
+.heading-row > .step-section__title,
+.heading-row > .field-group__title {
+	margin: 0 !important;
+}
+
+.heading-row > .step-notice {
+	flex: 0 1 auto;
+	margin: 0;
+	padding: 8px 10px;
+	font-size: 13.5px;
+	line-height: 1.4;
+}
+
 /* ---- Toggle pair ----
    Two mutually exclusive tappable options (EIN yes/no, personal/business card).
    The legacy `#ein-container .ein` / `#card-type-container .card-type` selectors

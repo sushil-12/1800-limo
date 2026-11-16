@@ -9,6 +9,33 @@
    ../affiliate-registration-style.css — steps 2, 3 and 6 all use them. */
 
 /* --------------------------------------------------------------------------
+   Compact vertical rhythm for step 2 — keeps the long form short.
+   -------------------------------------------------------------------------- */
+
+.field-group {
+	padding: 6px 0;
+}
+
+.field-group__title {
+	margin-bottom: 2px;
+}
+
+.field-group__hint {
+	margin: 0 0 10px;
+}
+
+/* Material reserves ~22px under every field for hints/errors even when empty.
+   Drop that reserved space; real <mat-error> messages still show and push
+   content down when present. */
+:host ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+	min-height: 0;
+}
+
+:host ::ng-deep .mat-mdc-form-field-bottom-align::before {
+	height: 0;
+}
+
+/* --------------------------------------------------------------------------
    Stripe status chips
    -------------------------------------------------------------------------- */
 

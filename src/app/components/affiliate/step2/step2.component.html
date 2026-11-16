@@ -69,12 +69,14 @@
 		<div class="step-section__head">
 			<div>
 				<span class="step-section__eyebrow">Banking</span>
-				<h2 class="step-section__title">Where you get paid</h2>
-				<p class="step-section__sub">
-					Used by
-					<a href="https://www.stripe.com/" target="_blank" rel="noopener" class="step-link">Stripe</a>
-					for identification, verification, and direct deposits.
-				</p>
+				<div class="heading-row">
+					<span class="field-group__title">Where is your bank account?</span>
+					<p class="step-notice step-notice--warn">
+						Used by
+						<a href="https://www.stripe.com/" target="_blank" rel="noopener" class="step-link">Stripe</a>
+						for identification, verification, and direct deposits.
+					</p>
+				</div>
 			</div>
 			<button *ngIf="!(affiliateId && isStep2Completed)" type="button" (click)="openTutorial()"
 				title="View Tutorial" class="watch-tutorial-btn">
@@ -84,7 +86,6 @@
 
 		<!-- The bank's country decides the fields below: only what Stripe requires there -->
 		<div class="field-group">
-			<span class="field-group__title">Where is your bank account?</span>
 			<p class="field-group__hint">
 				Pre-selected from your phone number. The form below asks only for what Stripe needs for a bank in
 				this country: no SSN or EIN outside the US.
@@ -126,10 +127,11 @@
 		</div>
 
 		<div class="field-group">
-			<span class="field-group__title">Account holder</span>
-			<p class="field-group__hint">Must match the name on the driver's license.</p>
-			<div class="step-notice step-notice--warn">
-				The driver's license name should match the bank account holder first and last name.
+			<div class="heading-row">
+				<span class="field-group__title">Account holder</span>
+				<div class="step-notice step-notice--warn">
+					The driver's license name should match the bank account holder first and last name.
+				</div>
 			</div>
 			<div class="row">
 				<div class="col-md-4">
@@ -293,17 +295,19 @@
 		</div>
 
 		<div class="field-group">
-			<span class="field-group__title">{{ rules.showEin ? 'Tax & identity' : 'Currency & identity' }}</span>
-			<div class="step-notice step-notice--info" *ngIf="isUsBank; else noSsnNotice">
-				The last 4 digits of your SSN are enough. Only Stripe sees them, and they won't be visible after you
-				save.
-			</div>
-			<ng-template #noSsnNotice>
-				<div class="step-notice step-notice--info">
-					A bank in {{ bankCountryName }} needs no SSN or EIN. Stripe asks for more later only if it can't
-					verify you with these details.
+			<div class="heading-row">
+				<span class="field-group__title">{{ rules.showEin ? 'Tax & identity' : 'Currency & identity' }}</span>
+				<div class="step-notice step-notice--info" *ngIf="isUsBank; else noSsnNotice">
+					The last 4 digits of your SSN are enough. Only Stripe sees them, and they won't be visible after you
+					save.
 				</div>
-			</ng-template>
+				<ng-template #noSsnNotice>
+					<div class="step-notice step-notice--info">
+						A bank in {{ bankCountryName }} needs no SSN or EIN. Stripe asks for more later only if it can't
+						verify you with these details.
+					</div>
+				</ng-template>
+			</div>
 			<div class="row">
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">
@@ -629,11 +633,11 @@
 	<!-- ================= COMPANY ADDRESS ================= -->
 	<section class="step-section user_information">
 		<span class="step-section__eyebrow">Location</span>
-		<h2 class="step-section__title">Company address</h2>
-		<p class="field-group__hint">Search and pick from the dropdown so Stripe gets a verified business address.</p>
-
-		<div class="step-notice step-notice--warn">
-			Enter the business address and choose from the drop-down suggestions.
+		<div class="heading-row">
+			<h2 class="step-section__title">Company address</h2>
+			<div class="step-notice step-notice--warn">
+				Enter the business address and choose from the drop-down suggestions.
+			</div>
 		</div>
 
 		<div class="field-group">

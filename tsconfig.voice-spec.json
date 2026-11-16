@@ -1,0 +1,23 @@
+/* Compiles only the voice specs (npm run test:voice), so the other specs cannot break them. */
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/voice-spec",
+    "types": [
+      "jasmine",
+      "google.maps",
+      "jquery",
+      "node"
+    ],
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "files": [
+    "src/test.voice.ts",
+    "src/polyfills.ts"
+  ],
+  "include": [
+    "src/app/services/voice/**/*.spec.ts",
+    "src/**/*.d.ts"
+  ]
+}

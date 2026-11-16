@@ -115,6 +115,37 @@ export interface AiChatMessage {
 	streaming?: boolean;
 	failed?: boolean;
 	booking?: AiBooking;
+	/**
+	 * What the user typed or said, when the assistant was given a tidied version (`content`).
+	 * Shown on request; never sent back to the server.
+	 */
+	original?: string;
+	/** Spoken in a voice session (see VoiceSessionService). */
+	voice?: boolean;
+}
+
+/** One spoken exchange of a voice session (limoagent docs/VOICE.md, `VoiceTurnOut`). */
+export interface AiVoiceTurn {
+	id: string;
+	seq: number;
+	status: 'running' | 'completed' | 'interrupted' | 'failed';
+	/** What the assistant was given. */
+	user_text: string;
+	/** The transcript as heard. */
+	user_original: string;
+	assistant_text: string;
+	reply_type: string | null;
+	booking: AiBooking | null;
+	error_code: string | null;
+	/** Unix seconds. */
+	created_at: number;
+}
+
+/** The live voice session, as far as the chat needs it: typing or tapping ends it first. */
+export interface AiVoiceControl {
+	active(): boolean;
+	/** Ends the session and merges its turns into the chat; never rejects. */
+	end(): Promise<void>;
 }
 
 const AI_CHAT_URL = `${environment['openAIUrl']}/v1/chat`;
@@ -126,6 +157,7 @@ const OWNER_KEY = 'ai_assistant_owner';
 const MAX_HISTORY = 30;
 const MAX_CHARS = 4000;
 const FAILED_TEXT = 'Sorry, I couldn\'t reach the assistant right now.';
+const VOICE_FAILED_TEXT = 'Sorry, something went wrong with that one. Please ask again.';
 
 /**
  * Site-wide AI assistant chat. Talks to the OpenAI-style `/v1/chat` endpoint and streams
@@ -141,6 +173,9 @@ export class AiAssistantService {
 	private emitScheduled = false;
 	/** Keys a booking in progress on the server; a new chat starts a new one. */
 	private conversationId = this.restoreConversationId();
+	private voice: AiVoiceControl | null = null;
+	/** A voice session is being ended so that a typed or tapped message can go out. */
+	private switching = false;
 
 	constructor(private authService: AuthService, private zone: NgZone) { }
 
@@ -152,9 +187,81 @@ export class AiAssistantService {
 	close(): void { this.isOpen$.next(false); }
 	toggle(): void { this.syncOwner(); this.isOpen$.next(!this.isOpen$.value); }
 
+	/** The application's conversation id: typed and spoken messages share it. */
+	get conversation(): string {
+		return this.conversationId;
+	}
+
+	/** Called once by VoiceSessionService. */
+	registerVoice(voice: AiVoiceControl | null): void {
+		this.voice = voice;
+	}
+
+	/**
+	 * What the server is given as the conversation so far: POST /v1/chat and a new voice session
+	 * get the same list. It rejects (422) more than MAX_HISTORY messages or any over MAX_CHARS.
+	 */
+	history(): { role: 'user' | 'assistant'; content: string }[] {
+		return this.messages
+			.filter(m => !m.failed && !m.streaming && m.content.trim())
+			.slice(-MAX_HISTORY)
+			.map(m => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
+	}
+
+	/**
+	 * Merge a voice session's turns into the chat. Each turn has a stable id, so applying the
+	 * same turn again (a poll, then the session's end) updates its two messages and never adds
+	 * them twice. Turns of another conversation (a "New chat" in between) are dropped.
+	 * `final`: the session is over, so a turn still marked running will not change any more.
+	 */
+	applyVoiceTurns(conversationId: string, turns: AiVoiceTurn[], final = false): void {
+		if (conversationId !== this.conversationId) return;
+		const msgs = [...this.messages];
+		const put = (message: AiChatMessage, after?: string): void => {
+			const at = msgs.findIndex(m => m.id === message.id);
+			if (at >= 0) { msgs[at] = message; return; }
+			const anchor = after ? msgs.findIndex(m => m.id === after) : -1;
+			if (anchor >= 0) msgs.splice(anchor + 1, 0, message); else msgs.push(message);
+		};
+		for (const turn of [...turns].sort((a, b) => a.seq - b.seq)) {
+			const running = turn.status === 'running' && !final;
+			const timestamp = new Date(turn.created_at * 1000);
+			const heard = (turn.user_original || '').trim();
+			const user: AiChatMessage = { id: `${turn.id}:u`, role: 'user', content: turn.user_text, timestamp, voice: true };
+			if (heard && heard !== turn.user_text) {
+				// "The second one" answered a numbered menu: the number is what was sent, the words are shown.
+				if (/^\d+$/.test(turn.user_text)) user.display = heard; else user.original = heard;
+			}
+			put(user);
+
+			const text = turn.assistant_text || '';
+			const failed = turn.status === 'failed' && !text.trim();
+			const replyId = `${turn.id}:a`;
+			if (!text.trim() && !running && !failed) {
+				// Interrupted before a word was written: only the question stays.
+				const at = msgs.findIndex(m => m.id === replyId);
+				if (at >= 0) msgs.splice(at, 1);
+				continue;
+			}
+			const reply: AiChatMessage = {
+				id: replyId, role: 'assistant', content: failed ? VOICE_FAILED_TEXT : text, timestamp, voice: true, streaming: running
+			};
+			if (failed) reply.failed = true;
+			if (turn.booking) reply.booking = turn.booking;
+			put(reply, user.id);
+		}
+		if (final) msgs.forEach(m => { if (m.voice && m.streaming) m.streaming = false; });
+		this.zone.run(() => {
+			this.messages$.next(msgs.filter(m => !(final && m.voice && m.role === 'assistant' && !m.content.trim())));
+			this.persist();
+		});
+	}
+
 	/** Start a new conversation, cancelling any reply in flight. */
 	clear(): void {
 		this.stop();
+		// Its turns belong to the conversation that ends here; applyVoiceTurns drops them.
+		if (this.voice?.active()) void this.voice.end();
 		this.messages$.next([]);
 		this.conversationId = this.newConversationId();
 		this.persist();
@@ -169,12 +276,27 @@ export class AiAssistantService {
 	/** `display` is shown in the bubble instead of `text` (e.g. the picked vehicle's name). */
 	send(text: string, display?: string): void {
 		const content = text.trim();
-		if (!content || this.isStreaming$.value) return;
+		if (!content || this.isStreaming$.value || this.switching) return;
 		this.syncOwner();
+		this.afterVoice(() => {
+			const user: AiChatMessage = { id: this.newId(), role: 'user', content, display, timestamp: new Date() };
+			this.messages$.next([...this.messages, user]);
+			this.requestReply();
+		});
+	}
 
-		const user: AiChatMessage = { id: this.newId(), role: 'user', content, display, timestamp: new Date() };
-		this.messages$.next([...this.messages, user]);
-		this.requestReply();
+	/**
+	 * Run `action` once no voice session is live. Switching back to text ends the session first, so
+	 * its turns are in the chat (and in the history sent along) before the typed message.
+	 */
+	private afterVoice(action: () => void): void {
+		if (!this.voice?.active()) { action(); return; }
+		this.switching = true;
+		const conversation = this.conversationId;
+		this.voice.end().catch(() => { }).then(() => this.zone.run(() => {
+			this.switching = false;
+			if (conversation === this.conversationId) action(); // not after a "New chat" in between
+		}));
 	}
 
 	/**
@@ -278,12 +400,14 @@ export class AiAssistantService {
 
 	/** Re-ask the last user message after a failed reply. */
 	retry(): void {
-		if (this.isStreaming$.value || this.syncOwner()) return;
-		const msgs = [...this.messages];
-		while (msgs.length && msgs[msgs.length - 1].role === 'assistant') msgs.pop();
-		if (!msgs.length) return;
-		this.messages$.next(msgs);
-		this.requestReply();
+		if (this.isStreaming$.value || this.switching || this.syncOwner()) return;
+		this.afterVoice(() => {
+			const msgs = [...this.messages];
+			while (msgs.length && msgs[msgs.length - 1].role === 'assistant') msgs.pop();
+			if (!msgs.length) return;
+			this.messages$.next(msgs);
+			this.requestReply();
+		});
 	}
 
 	/**
@@ -291,12 +415,8 @@ export class AiAssistantService {
 	 * and pops the global error dialog on a 401, and a chatbot hiccup must never log a user out.
 	 */
 	private async requestReply(): Promise<void> {
-		// The server rejects (422) more than MAX_HISTORY messages or any over MAX_CHARS characters.
 		// A booking keeps its own state on the server, so trimming old turns loses nothing.
-		const history = this.messages
-			.filter(m => !m.failed && m.content.trim())
-			.slice(-MAX_HISTORY)
-			.map(m => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
+		const history = this.history();
 
 		const reply: AiChatMessage = { id: this.newId(), role: 'assistant', content: '', timestamp: new Date(), streaming: true };
 		this.messages$.next([...this.messages, reply]);
@@ -328,6 +448,7 @@ export class AiAssistantService {
 				const body = await res.json();
 				reply.content = body?.content ?? body?.choices?.[0]?.message?.content ?? body?.choices?.[0]?.delta?.content ?? '';
 				if (body?.booking) reply.booking = body.booking;
+				if (body?.correction) this.applyCorrection(reply, body.correction);
 			}
 			if (!reply.content.trim()) throw new Error('Empty reply from assistant');
 		} catch (error: any) {
@@ -353,6 +474,7 @@ export class AiAssistantService {
 
 	/**
 	 * Parse the SSE stream. The server sends named events:
+	 *   event: correction → data: {"original":"...","corrected":"..."}  (the message was tidied)
 	 *   event: booking → data: {"active":true,"cards":[...],"replies":[...]}  (booking steps only)
 	 *   event: delta  →  data: {"content":"Hello"}
 	 *   event: done   →  data: {"usage":{...}}
@@ -409,6 +531,10 @@ export class AiAssistantService {
 			this.scheduleEmit();
 			return false;
 		}
+		if (eventName === 'correction') {
+			this.applyCorrection(reply, json);
+			return false;
+		}
 		if (eventName === 'start' || eventName === 'data') return false;
 
 		const delta = json?.content
@@ -420,6 +546,23 @@ export class AiAssistantService {
 			this.scheduleEmit();
 		}
 		return false;
+	}
+
+	/**
+	 * The server fixed the spelling and grammar of the message `reply` answers. The fixed text
+	 * becomes its content (what later requests send, so it is never corrected twice); the user's
+	 * own words stay in `original`, to look at.
+	 */
+	private applyCorrection(reply: AiChatMessage, correction: any): void {
+		const original = typeof correction?.original === 'string' ? correction.original : '';
+		const corrected = typeof correction?.corrected === 'string' ? correction.corrected.trim() : '';
+		if (!original || !corrected) return;
+		const at = this.messages.indexOf(reply);
+		const user = at > 0 ? this.messages[at - 1] : undefined;
+		if (!user || user.role !== 'user' || user.content.trim() !== original.trim() || corrected === user.content) return;
+		user.original = user.content;
+		user.content = corrected;
+		this.scheduleEmit();
 	}
 
 	/** Coalesce token updates to one change-detection pass per frame. */

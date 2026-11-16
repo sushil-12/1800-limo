@@ -1,11 +1,13 @@
 import {
-	AfterViewChecked, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild
+	AfterViewChecked, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild
 } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { AiAssistantService, AiBookingCard, AiBookingOption, AiCardRequest, AiChatMessage } from 'src/app/services/ai-assistant.service';
 import { AuthService } from 'src/app/services/auth.service';
+import { processingSummary } from 'src/app/services/voice/voice-mic';
+import { VoicePhase, VoiceSessionService, VoiceState } from 'src/app/services/voice/voice-session.service';
 import { CardDetails } from '../shared/new-card-form/new-card-form.component';
 
 /** Routes that already have their own chat panel in the same corner. */
@@ -14,6 +16,17 @@ const TEASER_DISMISSED_KEY = 'ai_assistant_teaser_dismissed';
 const TEASER_DELAY_MS = 3000;
 /** The booking's pickup button (limoagent booking/flow.py CURRENT_LOCATION_REPLY). */
 const CURRENT_LOCATION_REPLY = '📍 Use my current location';
+const VOICE_LABELS: Record<VoicePhase, string> = {
+	'idle': '',
+	'requesting-mic': 'Allow the microphone to start…',
+	'connecting': 'Connecting…',
+	'listening': 'Listening',
+	'thinking': 'Thinking…',
+	'speaking': 'Speaking · talk to interrupt',
+	'reconnecting': 'Reconnecting…',
+	'ending': 'Saving the conversation…'
+};
+const WAVE_BARS = 32;
 
 /**
  * Site-wide AI assistant: a floating launcher plus chat panel mounted once in AppComponent,
@@ -27,6 +40,14 @@ const CURRENT_LOCATION_REPLY = '📍 Use my current location';
 export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy {
 	@ViewChild('messagesList') messagesList?: ElementRef<HTMLElement>;
 	@ViewChild('inputBox') inputBox?: ElementRef<HTMLTextAreaElement>;
+	@ViewChild('waveform') waveform?: ElementRef<HTMLCanvasElement>;
+
+	/** Voice conversation: phase, captions and what the browser does to the microphone. */
+	voiceState: VoiceState = this.voice.state;
+	voiceAvailable = false;
+	micNote = { ok: true, text: '' };
+	/** User messages whose own words (before they were tidied) are shown. */
+	originalShown = new Set<string>();
 
 	messages: AiChatMessage[] = [];
 	isOpen = false;
@@ -60,10 +81,25 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 	private photoIndexes = new Map<string, number>();
 	private brokenPhotos = new Set<string>();
 	private teaserTimer?: ReturnType<typeof setTimeout>;
+	private waveFrame = 0;
 
-	constructor(public assistant: AiAssistantService, private authService: AuthService, private router: Router) { }
+	constructor(
+		public assistant: AiAssistantService,
+		private authService: AuthService,
+		private router: Router,
+		public voice: VoiceSessionService,
+		private zone: NgZone
+	) { }
 
 	ngOnInit(): void {
+		this.subs.add(this.voice.available$.subscribe(available => this.voiceAvailable = available));
+		this.subs.add(this.voice.state$.subscribe(state => {
+			this.voiceState = state;
+			this.micNote = processingSummary(state.processing);
+			this.shouldScroll = true;
+			if (state.phase !== 'idle') this.startWave();
+		}));
+
 		this.updateVisibility(this.router.url);
 		this.subs.add(this.router.events
 			.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
@@ -98,6 +134,81 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 	ngOnDestroy(): void {
 		this.subs.unsubscribe();
 		clearTimeout(this.teaserTimer);
+		cancelAnimationFrame(this.waveFrame);
+		this.waveFrame = 0;
+		void this.voice.stop();
+	}
+
+	// --- Voice ------------------------------------------------------------------------
+
+	get voiceLabel(): string {
+		if (this.voiceState.phase === 'listening' && this.voiceState.muted) return 'Muted';
+		return VOICE_LABELS[this.voiceState.phase];
+	}
+
+	/** "4:05" of this voice session left. */
+	get voiceTimeLeft(): string {
+		const seconds = this.voiceState.secondsLeft;
+		if (seconds === null) return '';
+		return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+	}
+
+	get voiceButtonTitle(): string {
+		if (!this.voice.hasTime) return 'You have used your voice time for now';
+		return this.isStreaming ? 'Wait for the reply to finish' : 'Talk to the assistant';
+	}
+
+	startVoice(): void {
+		this.locationError = '';
+		this.uploadError = '';
+		void this.voice.start();
+	}
+
+	toggleOriginal(m: AiChatMessage): void {
+		if (!this.originalShown.delete(m.id)) this.originalShown.add(m.id);
+	}
+
+	/** The waveform is drawn outside Angular: sixty frames a second must not run change detection. */
+	private startWave(): void {
+		if (this.waveFrame) return;
+		this.zone.runOutsideAngular(() => {
+			const frame = () => {
+				if (this.voice.state.phase === 'idle') {
+					this.waveFrame = 0;
+					return;
+				}
+				this.drawWave();
+				this.waveFrame = requestAnimationFrame(frame);
+			};
+			this.waveFrame = requestAnimationFrame(frame);
+		});
+	}
+
+	private drawWave(): void {
+		const canvas = this.waveform?.nativeElement;
+		const context = canvas?.getContext('2d');
+		if (!canvas || !context) return;
+		const ratio = window.devicePixelRatio || 1;
+		const width = Math.round(canvas.clientWidth * ratio);
+		const height = Math.round(canvas.clientHeight * ratio);
+		if (!width || !height) return;
+		if (canvas.width !== width || canvas.height !== height) {
+			canvas.width = width;
+			canvas.height = height;
+		}
+		context.clearRect(0, 0, width, height);
+		const levels = this.voice.levels();
+		const speaking = this.voice.state.phase === 'speaking';
+		context.fillStyle = speaking ? '#111827' : '#f97316';
+		const slot = width / WAVE_BARS;
+		const bar = Math.max(2 * ratio, slot * 0.55);
+		for (let i = 0; i < WAVE_BARS; i++) {
+			// Mirror the spectrum around the middle so the loudest (low) bands are in the centre.
+			const distance = Math.abs(i - (WAVE_BARS - 1) / 2) / (WAVE_BARS / 2);
+			const level = levels?.length ? levels[Math.min(levels.length - 1, Math.floor(distance * levels.length))] / 255 : 0;
+			const barHeight = Math.max(2 * ratio, level * height);
+			context.fillRect(i * slot + (slot - bar) / 2, (height - barHeight) / 2, bar, barHeight);
+		}
 	}
 
 	toggle(): void {
@@ -265,6 +376,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 
 	newChat(): void {
 		this.photoIndexes.clear();
+		this.originalShown.clear();
 		this.assistant.clear();
 		this.newMessageText = '';
 		this.resizeInput();

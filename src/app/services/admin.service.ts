@@ -849,6 +849,10 @@ export class AdminService {
 			return this.httpClient.post(this.serverUrl + 'add-a-bank', data);
 		}
 	}
+	/** What Stripe needs up front for a bank in this country (Stripe Country Specs, via limoapi). */
+	stripeCountryFields(country: string) {
+		return this.httpClient.get(this.serverUrl + 'stripe-country-fields/' + encodeURIComponent(country));
+	}
 	getBankOfAffiliate(id) {
 		return this.httpClient.get(this.serverUrl + 'get-a-bank/' + id);
 	}

@@ -12,7 +12,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { CommonService } from '../../../services/common.service';
 import { ThemePalette } from '@angular/material/core';
 import { ErrorDialogService } from 'src/app/services/error-dialog/errordialog.service';
-import { BankRules, bankRules } from '../../affiliate/step2/bank-country-rules';
+import { BankRules, bankRules, StripeCountryFields, withStripeFields } from '../../affiliate/step2/bank-country-rules';
 declare var $: any;
 
 @Component({
@@ -734,13 +734,29 @@ export class AffiliateStep2Component implements OnInit {
 	/**
 	 * Ask only for what banks in the selected country use: a routing / sort code / IFSC only where banks
 	 * have one, the right ID label (SSN in the US, PAN in India, SIN in Canada...), and an EIN only in the US.
-	 * Uses the built-in rules shared with the affiliate's step 2.
+	 * Narrowed, like the affiliate's step 2, to what Stripe requires there up front (Country Specs, via
+	 * limoapi), so this form and the add-a-bank / edit-a-bank checks agree. Until Stripe answers, or if it
+	 * can't be reached, the built-in rules apply.
 	 */
 	applyBankRules(country: string): void {
 		const code = (country || '').toUpperCase();
-		this.rules = bankRules(code);
+		this.rules = withStripeFields(bankRules(code), this.stripeFieldsByCountry[code] ?? null);
 		this.applyRuleValidators(code === 'US');
+		if (code.length !== 2 || code in this.stripeFieldsByCountry) return;
+		this.stripeFieldsByCountry[code] = null;
+		this.adminService.stripeCountryFields(code)
+			.pipe(catchError(() => of(null)))
+			.subscribe((res: any) => {
+				const fields: StripeCountryFields | null = res?.data ?? null;
+				this.stripeFieldsByCountry[code] = fields;
+				if ((this.addBankForm?.get('country')?.value || '').toUpperCase() !== code) return;
+				this.rules = withStripeFields(bankRules(code), fields);
+				this.applyRuleValidators(code === 'US');
+			});
 	}
+
+	/** Stripe's answer per country, fetched once per country while the page is open. */
+	private stripeFieldsByCountry: Record<string, StripeCountryFields | null> = {};
 
 	private applyRuleValidators(isUs: boolean): void {
 		const controls = this.addBankForm?.controls;

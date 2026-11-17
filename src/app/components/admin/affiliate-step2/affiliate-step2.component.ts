@@ -515,6 +515,7 @@ export class AffiliateStep2Component implements OnInit {
 		this.addBankForm.patchValue(valuesToPatch);
 		if (countryCode) {
 			this.changeCountry(countryCode);
+			this.selectCountryCurrency(countryCode);
 			if (valuesToPatch.state) {
 				this.addBankForm.get('state')?.setValue(valuesToPatch.state);
 			}
@@ -693,12 +694,31 @@ export class AffiliateStep2Component implements OnInit {
 		if (!['ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'Tab'].includes(event.key)) event.stopPropagation();
 	}
 
+	/** Bank Country picked from the dropdown: apply its rules and pick its currency. */
+	onBankCountryChange(code: string): void {
+		this.changeCountry(code);
+		this.selectCountryCurrency(code);
+	}
+
+	/** Pre-select the currency banks in that country are paid in (e.g. IN -> INR, DE -> EUR). */
+	private selectCountryCurrency(country: string): void {
+		const code = (country || '').toUpperCase();
+		if (!code || !this.addBankForm) return;
+		const option = (this.currencyOptions_copy || []).find((o: any) => (o?.currencyCountry || '').toUpperCase() === code);
+		if (!option) return;
+		const value = option.currency + '-' + option.currencyCountry;
+		if (this.addBankForm.get('currency')?.value !== value) this.SetFormValue('currency', value);
+	}
+
 	/** Address Country box: keep it a 2-letter code (it's also the bank country) and apply that country's rules. */
 	onAddressCountryInput(value: string): void {
 		const code = (value || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
 		const control = this.addBankForm.get('country');
 		if (control.value !== code) control.setValue(code);
-		if (code.length === 2) this.changeCountry(code);
+		if (code.length === 2) {
+			this.changeCountry(code);
+			this.selectCountryCurrency(code);
+		}
 	}
 
 	/** Full name of the typed state code, e.g. "California" for CA, when the country's list has it. */

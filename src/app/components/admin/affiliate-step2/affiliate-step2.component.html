@@ -63,7 +63,7 @@
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">
 						<mat-label>Bank Country <span class="asterisk">*</span></mat-label>
-						<mat-select formControlName="country" (selectionChange)="changeCountry($event.value)"
+						<mat-select formControlName="country" (selectionChange)="onBankCountryChange($event.value)"
 							(openedChange)="onBankCountryOpened($event, bankCountrySearchInput)">
 							<mat-option value="">Choose Country</mat-option>
 							<div class="bank-country-search" (click)="$event.stopPropagation()">
@@ -83,11 +83,11 @@
 						<div *ngIf="f.country.errors.required">This field is required</div>
 					</div>
 				</div>
-				<div class="col-md-6 d-flex align-items-center">
+				<!-- <div class="col-md-6 d-flex align-items-center">
 					<small class="text-muted" *ngIf="bankCountryName">
 						Showing the bank fields used in <strong>{{ bankCountryName }}</strong>.
 					</small>
-				</div>
+				</div> -->
 				<div class="col-md-6">
 					<!-- <mat-label>Bank Name <span class="asterisk">*</span></mat-label> -->
 					<mat-form-field appearance="outline">
@@ -670,7 +670,7 @@
 						<div *ngIf="f.city.errors.required">This field is required</div>
 					</div>
 				</div> -->
-				<div class="col-md-6">
+				<!-- <div class="col-md-6">
 					<mat-form-field appearance="outline">
 						<mat-label>Unit#</mat-label>
 						<input matInput placeholder="Unit" formControlName="unit" tabindex="1"
@@ -680,7 +680,7 @@
 						class="text-danger margin-bottom-thin my-mat-hint">
 						<div *ngIf="f.unit.errors.required">This field is required</div>
 					</div>
-				</div>
+				</div> -->
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">
 						<mat-label>Zip Code / Country Address Code <span class="asterisk">*</span></mat-label>

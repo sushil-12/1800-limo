@@ -149,6 +149,9 @@ export interface AiVoiceControl {
 }
 
 const AI_CHAT_URL = `${environment['openAIUrl']}/v1/chat`;
+/** ngrok's free plan answers browser requests with a warning page unless this header is sent. */
+export const NGROK_HEADERS: Record<string, string> =
+	String(environment['openAIUrl']).includes('.ngrok') ? { 'ngrok-skip-browser-warning': '1' } : {};
 const STORAGE_KEY = 'ai_assistant_chat';
 const CONVERSATION_KEY = 'ai_assistant_conversation';
 /** Whose chat is stored: a sign-in, sign-out or "login as user" in this tab starts a new one. */
@@ -427,7 +430,8 @@ export class AiAssistantService {
 
 		const headers: Record<string, string> = {
 			'Content-Type': 'application/json',
-			'Accept': 'text/event-stream'
+			'Accept': 'text/event-stream',
+			...NGROK_HEADERS
 		};
 		const token = this.authService.getAccessToken();
 		if (token) headers['Authorization'] = `Bearer ${token}`;

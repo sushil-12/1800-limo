@@ -3,6 +3,19 @@ import {
   ViewChild, ElementRef, AfterViewChecked
 } from '@angular/core';
 import { Socket } from 'socket.io-client';
+import { environment } from '../../../../../environments/environment';
+
+/** A chat row as limo-rt returns it (GET /rt/v1/rides/{id}/messages). */
+interface RtChatMessage {
+  id: string;
+  from: 'rider' | 'driver' | 'admin' | string;
+  sender_id: string;
+  receiver_id: string | null;
+  body: string;
+  client_msg_id: string | null;
+  at: number; // epoch ms
+  read_at: number | null;
+}
 
 /** A persisted chat row as limoRTService stores and broadcasts it. */
 interface ServerChatMessage {
@@ -41,6 +54,8 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
   @Input() socket: Socket | null = null;
   @Input() serverUrl = '';
   @Input() secret = '';
+  /** Bearer for limo-rt's chat REST: the passenger's Passport token (or the share token). */
+  @Input() rtToken = '';
   @Input() bookingId: string | number | null = null;
   /** Null until a driver is assigned — the thread then opens read-only. */
   @Input() driverId: string | number | null = null;
@@ -78,6 +93,9 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
   private boundSocket: Socket | null = null;
   private audioCtx: AudioContext | null = null;
   private static readonly VOICE_PREF_KEY = 'rideChatVoiceEnabled';
+  /** Share links have no socket: limo-rt history is re-read on this interval instead. */
+  private static readonly SHARE_POLL_MS = 10_000;
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   /**
    * Browsers refuse to play audio until the page has had a user gesture. The
@@ -121,6 +139,12 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
     return !!this.socket?.connected;
   }
 
+  /** Opened from a share link: limo-rt only, no socket. History is polled and sends go
+   * over REST with the share token (limo-rt posts them as the ride's passenger). */
+  get shareMode(): boolean {
+    return !this.socket && !!this.rtToken;
+  }
+
   get canSendMessages(): boolean {
     return this.driverId !== null && this.driverId !== undefined && String(this.driverId) !== '';
   }
@@ -137,6 +161,9 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
       this.unread = 0;
       this.loadHistory();
     }
+    if (changes['socket'] || changes['rtToken'] || changes['bookingId']) {
+      this.syncPolling();
+    }
     if (changes['open'] && this.open) {
       this.unread = 0;
       this.shouldScroll = true;
@@ -152,6 +179,7 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
   }
 
   ngOnDestroy(): void {
+    this.stopPolling();
     this.unbindSocket();
     document.removeEventListener('pointerdown', this.unlockAudio);
     document.removeEventListener('keydown', this.unlockAudio);
@@ -172,6 +200,11 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
   sendMessage(text: string = this.newMessageText): void {
     const message = text.trim();
     if (!message || !this.canSendMessages || !this.bookingId) return;
+
+    if (this.shareMode) {
+      this.sendViaRt(message, text === this.newMessageText);
+      return;
+    }
 
     if (!this.socket?.connected) {
       this.errorMessage = 'Not connected to chat server';
@@ -213,6 +246,69 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
     return m.id;
   }
 
+  /** Share link: POST /rt/v1/rides/{id}/messages with the share token; the saved row
+   * replaces the optimistic bubble. A retry with the same client_msg_id is not stored twice. */
+  private async sendViaRt(message: string, fromInput: boolean): Promise<void> {
+    const base = RideChatComponent.rtRestBase();
+    const bookingId = this.bookingId;
+    if (!base || !bookingId) return;
+
+    const clientMessageId = `web-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    this.messages = [...this.messages, {
+      id: clientMessageId,
+      clientMessageId,
+      text: message,
+      timestamp: new Date(),
+      isFromUser: true,
+      pending: true
+    }];
+    this.shouldScroll = true;
+    this.errorMessage = null;
+    if (fromInput) this.newMessageText = '';
+
+    try {
+      const res = await fetch(`${base}/rides/${bookingId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.rtToken}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({ body: message, client_msg_id: clientMessageId })
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body?.message) {
+        throw new Error(body?.error?.message || `Message could not be sent (HTTP ${res.status})`);
+      }
+      const saved = this.toBubble(this.fromRt(body.message as RtChatMessage, bookingId));
+      this.messages = this.messages.some(m => m.id === saved.id)
+        ? this.messages.filter(m => m.clientMessageId !== clientMessageId) // a poll got it first
+        : this.messages.map(m => (m.clientMessageId === clientMessageId ? saved : m));
+    } catch (error: any) {
+      console.error('RideChat: send failed', error);
+      const bubble = this.messages.find(m => m.clientMessageId === clientMessageId);
+      if (bubble) {
+        bubble.pending = false;
+        bubble.failed = true;
+      }
+      this.errorMessage = error?.message || 'Message could not be sent';
+    }
+  }
+
+  private syncPolling(): void {
+    const wanted = this.shareMode && !!this.bookingId;
+    if (wanted && !this.pollTimer) {
+      this.pollTimer = setInterval(() => this.loadHistory(true), RideChatComponent.SHARE_POLL_MS);
+    } else if (!wanted) {
+      this.stopPolling();
+    }
+  }
+
+  private stopPolling(): void {
+    if (this.pollTimer) clearInterval(this.pollTimer);
+    this.pollTimer = null;
+  }
+
   private bindSocket(): void {
     if (this.boundSocket === this.socket) return;
     this.unbindSocket();
@@ -239,31 +335,36 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
    * API bearer token to this third-party origin, and on a 401 they clear localStorage and
    * pop the global error dialog — neither belongs on a public tracking page.
    */
-  private async loadHistory(): Promise<void> {
-    if (!this.bookingId || !this.serverUrl) return;
+  /** @param refresh a share-link poll: quiet on errors, and new driver messages count as live. */
+  private async loadHistory(refresh = false): Promise<void> {
+    const base = RideChatComponent.rtRestBase();
+    if (!this.bookingId || !base || !this.rtToken) return;
     const bookingId = this.bookingId;
-    const serverUrl = "https://1800limorealtime.infodevbox.com"
 
-    this.isLoading = this.messages.length === 0;
+    this.isLoading = !refresh && this.messages.length === 0;
     try {
-      const res = await fetch(`${serverUrl}/api/messages/${bookingId}?page=1&limit=100`, {
-        headers: { 'x-secret': this.secret, 'Content-Type': 'application/json' }
+      // limo-rt: GET /rt/v1/rides/{id}/messages -> {messages: [...]}, oldest first.
+      const res = await fetch(`${base}/rides/${bookingId}/messages?limit=200`, {
+        headers: { Authorization: `Bearer ${this.rtToken}`, Accept: 'application/json' }
       });
-      const body = await res.json();
+      const body = await res.json().catch(() => null);
       if (String(bookingId) !== String(this.bookingId)) return; // booking changed mid-flight
-      if (!res.ok || !body?.success || !Array.isArray(body.data)) {
-        throw new Error(body?.error || 'Failed to load chat history');
+      if (res.status === 401 || res.status === 403) {
+        this.stopPolling(); // link expired (ride over) or not allowed: asking again won't help
       }
-      this.mergeHistory(body.data as ServerChatMessage[]);
+      if (!res.ok || !Array.isArray(body?.messages)) {
+        throw new Error(body?.error?.message || `Failed to load chat history (HTTP ${res.status})`);
+      }
+      this.mergeHistory((body.messages as RtChatMessage[]).map(m => this.fromRt(m, bookingId)), refresh);
     } catch (error: any) {
       console.error('RideChat: failed to load history', error);
-      this.errorMessage = 'Couldn\'t load earlier messages';
+      if (!refresh) this.errorMessage = 'Couldn\'t load earlier messages';
     } finally {
       this.isLoading = false;
     }
   }
 
-  private mergeHistory(rows: ServerChatMessage[]): void {
+  private mergeHistory(rows: ServerChatMessage[], live = false): void {
     const known = new Set(this.messages.map(m => m.id));
     const added = rows
       .filter(r => String(r.bookingId) === String(this.bookingId) && !known.has(r._id))
@@ -281,6 +382,14 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
     // Server ordering for this endpoint isn't documented, so always sort by createdAt.
     this.messages = [...current, ...added].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     this.shouldScroll = true;
+
+    // Share-link poll: driver messages that just appeared behave like socket arrivals.
+    const fromDriver = live ? added.filter(b => !b.isFromUser).length : 0;
+    if (fromDriver) {
+      if (!this.open) this.setUnread(this.unread + fromDriver);
+      this.announce();
+      this.incoming.emit();
+    }
   }
 
   private handleIncoming(row: ServerChatMessage | null, clientMessageId?: string): void {
@@ -336,6 +445,26 @@ export class RideChatComponent implements OnChanges, OnDestroy, AfterViewChecked
         });
       }
     } catch { /* chime is best-effort */ }
+  }
+
+  /** limo-rt's REST base from the socket URL: `wss://host/rt/v1/ws` -> `https://host/rt/v1`. */
+  private static rtRestBase(): string {
+    const ws = String((environment as any).rtSocketUrl || '');
+    if (!ws) return '';
+    return ws.replace(/^ws(s?):/, 'http$1:').replace(/\/ws\/?$/, '').replace(/\/+$/, '');
+  }
+
+  /** A limo-rt message in the shape the rest of this component already handles. */
+  private fromRt(m: RtChatMessage, bookingId: string | number): ServerChatMessage {
+    return {
+      _id: m.id,
+      bookingId,
+      senderId: m.sender_id,
+      receiverId: m.receiver_id ?? '',
+      senderRole: m.from === 'rider' ? 'customer' : m.from,
+      message: m.body,
+      createdAt: new Date(m.at).toISOString()
+    };
   }
 
   private toBubble(row: ServerChatMessage): ChatBubble {

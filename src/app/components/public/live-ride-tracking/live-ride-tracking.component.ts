@@ -44,13 +44,15 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   // Not limo-rt: that's environment.rtSocketUrl, and it doesn't speak socket.io.
   // Node notifications/chat service (dev = the one limoapi's NOTIFICATION_SERVICE_URL uses).
   // Not limo-rt (environment.rtSocketUrl, port 9100): it doesn't speak socket.io.
-  readonly socketUrl = environment.production ? 'https://limortservice.1800limo.com' : 'https://limortservice.infodevbox.com';
+  readonly socketUrl = environment.rtSocketUrl;
   readonly socketSecret = 'limoapi_notifications_secret_2024_xyz789';
 
   socket: Socket | null = null;
-  /** True for a signed share link (limo-rt). Tracking comes from limo-rt; chat (when the ride
-   * has a passenger) still runs on the Node socket, opened by openShareChatSocket(). */
+  /** True for a signed share link (limo-rt). Tracking and chat both come from limo-rt; no
+   * Socket.IO connection is opened (chat is read-only there: see <app-ride-chat>). */
   viewerMode = false;
+  /** The signed share token from the URL (/live-ride-tracking/<token>); '' on legacy links. */
+  shareToken = '';
   private shareClient: LimoRtShareClient | null = null;
   /** Share mode: extra stops in booking order, and the last one served (0-based, or null). */
   stops: SharedRide['stops'] = [];
@@ -405,6 +407,7 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
    */
   private initializeShareTracking(token: string): void {
     this.viewerMode = true;
+    this.shareToken = token;
     const socketUrl = (environment as any).rtSocketUrl as string | undefined;
     console.log("Simran sOCKET CONNECTION",socketUrl);
     if (!socketUrl) {
@@ -432,7 +435,8 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
           driver_lng: this.rideData?.driver_lng ?? NaN,
           pickup_time: null
         };
-        if (ride.customer_id && !this.socket) this.openShareChatSocket(ride.customer_id, ride.ride_id);
+        // Chat comes from limo-rt (<app-ride-chat> with the share token); this marks whose bubbles are "ours".
+        if (ride.customer_id) this.currentUserId = ride.customer_id;
         if (statusChanged) this.targetChanged();
         this.scheduleMapUpdate();
       },
@@ -505,27 +509,6 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
     }, 5000);
   }
 
-  /**
-   * Share mode: a chat-only Node socket, authenticated as the passenger (the link holder chats
-   * as them). Location and status keep coming from limo-rt, so only the rooms <app-ride-chat>
-   * needs are joined, and a failure here never shows on the tracking page.
-   */
-  private openShareChatSocket(customerId: number, bookingId: string): void {
-    this.currentUserId = customerId;
-    this.socket = io(this.socketUrl, {
-      transports: ['polling', 'websocket'],
-      auth: { userId: String(customerId), userType: 'customer', secret: this.socketSecret },
-      reconnection: true,
-      reconnectionDelay: 1000,
-      timeout: 20000
-    });
-    // 'connect' fires again after every reconnect: rejoin both rooms each time.
-    this.socket.on('connect', () => {
-      this.joinRoom(String(customerId), 'customerId');
-      this.joinRoom(bookingId, 'bookingId');
-    });
-    this.socket.on('connect_error', (error: any) => console.warn('Chat socket error:', error?.message));
-  }
 
   /** The leg changed (status or stop): the old ETA and route belong to the previous target. */
   private targetChanged(): void {

@@ -23,7 +23,7 @@
   </div>
 
   <!-- Connection Status -->
-  <div *ngIf="!isConnected" class="status-banner connecting">
+  <div *ngIf="!shareMode && !isConnected" class="status-banner connecting">
     <span>Connecting to chat...</span>
     <button type="button" (click)="socket?.connect()">Retry</button>
   </div>

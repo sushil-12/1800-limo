@@ -1,7 +1,7 @@
 import { Injectable, InjectionToken, Inject, NgZone, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { AiAssistantService, AiVoiceTurn } from '../ai-assistant.service';
+import { AiAssistantService, AiVoiceTurn, NGROK_HEADERS } from '../ai-assistant.service';
 import { AuthService } from '../auth.service';
 import { MicError, MicProcessing, requestMicPermission, verifyMic, voiceSupported } from './voice-mic';
 
@@ -223,9 +223,12 @@ export class VoiceSessionService implements OnDestroy {
 		return !usage || usage.remaining_seconds >= MIN_SECONDS;
 	}
 
-	/** Whether voice is on for this user; also refreshes the time left. Never throws. */
+	/**
+	 * Whether voice is on for this visitor, signed in or not (limoagent answers guests with their
+	 * own allowance); also refreshes the time left. Never throws.
+	 */
 	async refreshAvailability(): Promise<void> {
-		if (!voiceSupported() || !this.authService.getAccessToken()) {
+		if (!voiceSupported()) {
 			this.available$.next(false);
 			return;
 		}
@@ -233,7 +236,8 @@ export class VoiceSessionService implements OnDestroy {
 			const usage = await this.api<VoiceUsage>('GET', '/usage');
 			this.zone.run(() => { this.usage$.next(usage); this.available$.next(true); });
 		} catch {
-			// 404: voice is off in limoagent. 401: not signed in. Either way there is no mic button.
+			// 404: voice is off in limoagent. 401: guest voice is off, or the token was refused.
+			// Either way there is no mic button.
 			this.zone.run(() => this.available$.next(false));
 		}
 	}
@@ -241,10 +245,6 @@ export class VoiceSessionService implements OnDestroy {
 	/** Switch to voice, continuing the chat's conversation. */
 	async start(): Promise<void> {
 		if (this.active || this.assistant.isStreaming$.value) return;
-		if (!this.authService.getAccessToken()) {
-			this.patch({ ...IDLE, problem: PROBLEMS['signed-out'] });
-			return;
-		}
 		this.reconnects = 0;
 		await this.open('requesting-mic');
 	}
@@ -556,7 +556,7 @@ export class VoiceSessionService implements OnDestroy {
 	}
 
 	private headers(): Record<string, string> {
-		const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+		const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json', ...NGROK_HEADERS };
 		const token = this.authService.getAccessToken();
 		if (token) headers['Authorization'] = `Bearer ${token}`;
 		return headers;

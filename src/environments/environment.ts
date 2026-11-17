@@ -1,15 +1,12 @@
-// This file can be replaced during build by using the `fileReplacements` array.
-// `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
-// The list of file replacements can be found in `angular.json`.
-
 export const environment = {
 	production: false,
 	environmentName: 'Development',
 	// serverUrl: "http://10.20.10.132:8000/api/",
 	serverUrl: "https://1800limoapi.infodevbox.com/api/",
 	// limo-rt socket for signed share links (/live-ride-tracking/<token>). Empty = token links show "not available".
-	rtSocketUrl: 'ws://1800limorealtime.infodevbox.com/rt/v1/ws',
+	rtSocketUrl: 'wss://api.1800limo.com/rt/v1/ws',
 	mistralSecretKey: "WvrrM5g1bmpJZjb3Go4d8tnUfZkNogmP",
+	// TODO: point at this environment's AI chat server
 	recaptchaEnterpriseKey: "6Lev_gstAAAAACll6pekSq467NHhw3Di-CGuV5_I",
 	recaptchaKey: "6Lcf2MYqAAAAAMPwdv97BZ_LBwX-1e9y2NcFsoIn",
 	openAIUrl : "https://1800limochatbot.infodevbox.com",

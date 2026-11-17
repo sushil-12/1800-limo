@@ -160,8 +160,13 @@ export class LoginComponent implements OnInit, AfterViewInit {
 		// }
 
 		this.route.queryParams.subscribe((params: any) => {
-			this.referralCode = atob(params?.refferal_code)
-			localStorage.setItem('agency_name', params?.agency_name)
+			if (params?.agency_name) {
+				localStorage.setItem('agency_name', params.agency_name)
+			}
+			if (!params?.refferal_code) {
+				return;
+			}
+			this.referralCode = this.decodeReferralCode(params.refferal_code)
 			localStorage.setItem('invite_code', this.referralCode)
 			console.log('Referral code->:', this.referralCode);
 			this.loginForm.patchValue({
@@ -183,6 +188,20 @@ export class LoginComponent implements OnInit, AfterViewInit {
 		this.setRole(this.existRoles.includes(storedRole) ? storedRole : 'driver');
 
 		console.log('LOGIN fORM VALUE->:', this.loginForm.value);
+	}
+
+	// referral codes arrive base64-encoded; tolerate '+' turned into spaces by url parsing,
+	// url-safe base64, missing padding, and plain (non-encoded) codes
+	private decodeReferralCode(raw: string): string {
+		let value = String(raw).trim().replace(/ /g, '+').replace(/-/g, '+').replace(/_/g, '/');
+		while (value.length % 4 !== 0) {
+			value += '=';
+		}
+		try {
+			return atob(value);
+		} catch {
+			return String(raw).trim();
+		}
 	}
 
 	loginSubTravelAgent() {

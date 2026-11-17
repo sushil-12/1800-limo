@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { BankCountryForm } from '../../affiliate/step2/bank-country-form';
 import { AdminService } from 'src/app/services/admin.service';
 import { CustomvalidationService } from 'src/app/services/customvalidation.service';
 import { StateManagementService } from 'src/app/services/statemanagement.service';
@@ -68,6 +69,12 @@ export class StripeFormComponent implements OnInit {
 	travelAgentId: any;
 	acc_id1: any;
 	agentAccountStatus: any;
+
+	/** Which bank fields this country needs (only what Stripe requires there; no SSN outside the US). */
+	bank = new BankCountryForm(
+		(country) => this.travelService.stripeCountryFields(country),
+		() => [this.customValidator.dashValidator(), this.customValidator.plusValidator()],
+	);
 
 	constructor(
 		private adminService: AdminService,
@@ -164,6 +171,7 @@ export class StripeFormComponent implements OnInit {
 			primaryYY: [''],
 			primaryCardHolderName: ['']
 		});
+		this.bank.attach(this.addBankForm);
 		this.httpClient.get("assets/json/currencyOptions.json").subscribe(data => {
 			for (const key in data) {
 				this.currencyOptions.push(data[key])

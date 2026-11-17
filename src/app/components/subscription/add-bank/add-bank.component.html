@@ -106,8 +106,8 @@
                 </div>
                 <div class="col-md-6">
                     <mat-form-field appearance="outline">
-                        <mat-label>Account Number<span class="asterisk">*</span></mat-label>
-                        <input matInput placeholder="Account Number*" formControlName="AccountNumber"
+                        <mat-label>{{ bank.rules.accountLabel }}<span class="asterisk">*</span></mat-label>
+                        <input matInput [placeholder]="bank.rules.accountLabel" formControlName="AccountNumber"
                             (focus)="$event.target.select()" />
                     </mat-form-field>
                     <div *ngIf="
@@ -122,12 +122,13 @@
                         </div> -->
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" *ngIf="bank.rules.showRouting">
                     <mat-form-field appearance="outline">
-                        <mat-label>Checking Routing Number<span class="asterisk">*</span></mat-label>
-                        <input matInput placeholder="Checking Routing Number*" formControlName="Routing"
+                        <mat-label>{{ bank.rules.routingLabel }}<span class="asterisk">*</span></mat-label>
+                        <input matInput [placeholder]="bank.rules.routingLabel" formControlName="Routing"
                             (focus)="$event.target.select()" />
                     </mat-form-field>
+<small class="text-muted d-block">{{ bank.rules.routingHint }}</small>
                     <div *ngIf="
 							f.Routing.errors &&
 							(f.Routing.touched || f.Routing.dirty)
@@ -157,7 +158,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-2 col-4 birthMonth">
+                <div class="col-md-2 col-4 birthMonth" *ngIf="bank.rules.showDob">
                     <mat-form-field appearance="outline" [ngClass]="{ 'border-red': dobErrorMessage }">
                         <mat-label>Month of Birth
                             <span class="asterisk">*</span></mat-label>
@@ -186,7 +187,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-2 col-4 birthDay">
+                <div class="col-md-2 col-4 birthDay" *ngIf="bank.rules.showDob">
                     <mat-form-field appearance="outline" [ngClass]="{ 'border-red': dobErrorMessage }">
                         <mat-label>Day of Birth
                             <span class="asterisk">*</span></mat-label>
@@ -204,7 +205,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-2 col-4 birthYear">
+                <div class="col-md-2 col-4 birthYear" *ngIf="bank.rules.showDob">
                     <mat-form-field appearance="outline" [ngClass]="{ 'border-red': dobErrorMessage }">
                         <mat-label>Year of Birth
                             <span class="asterisk">*</span></mat-label>
@@ -254,16 +255,16 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" *ngIf="bank.rules.showId">
                     <mat-form-field appearance="outline"
                         [ngClass]="{ 'disableSsn': enableSsnField, 'border-red': ssnErrorMessage }">
-                        <mat-label>SSN (USA required by STRIPE / Government ID for other countries)
-                            <span class="asterisk">*</span></mat-label>
-                        <input matInput placeholder="SSN (USA required by STRIPE / Government ID for other countries)"
+                        <mat-label>{{ bank.rules.idLabel }} <span *ngIf="bank.rules.idRequired" class="asterisk">*</span><span *ngIf="!bank.rules.idRequired">(Optional)</span></mat-label>
+                        <input matInput [placeholder]="bank.rules.idLabel"
                             formControlName="ssn" tabindex="1" (focus)="$event.target.select()"
                             (change)="handleSsnInput($event.target.value)"
                             (keyup)="removeErrorSsn($event.target.value,'ssn')" />
                     </mat-form-field>
+<small class="text-muted d-block">{{ bank.rules.idHint }}</small>
                     <div *ngIf="ssnErrorMessage" class="text-danger margin-bottom-thin my-mat-hint">
                         <div *ngIf="ssnErrorMessage" style="font-weight: 550;">{{ssnErrorMessage}}</div>
                     </div>
@@ -291,13 +292,13 @@
                             </div>
                             <ng-template #allErrors>
                                 <div *ngIf="f.ssn.errors?.pattern">
-                                    Enter Numbers Only
+                                    {{ bank.isUs ? 'Enter Numbers Only' : 'Letters and numbers only' }}
                                 </div>
                             </ng-template>
                         </ng-template>
                     </div>
                 </div>
-                <div class="col-md-6 mt-3 radioLabel">
+                <div class="col-md-6 mt-3 radioLabel" *ngIf="bank.rules.showEin">
                     <div id="ein-container" class="w-100 d-flex flex-nowrap justify-content-center">
                         <div id="ein-no" class="ein" [ngClass]="!f.haveEin.value ? 'active' : ''"
                             (click)="changeRadio('haveEin', false)">
@@ -309,7 +310,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 mt-3" *ngIf="f.haveEin.value">
+                <div class="col-md-6 mt-3" *ngIf="bank.rules.showEin && f.haveEin.value">
                     <mat-form-field appearance="outline">
                         <mat-label>EIN / Business ID #
                             <span class="asterisk">*</span></mat-label>
@@ -329,7 +330,7 @@
         </div>
     </section>
 
-    <section class="user_information">
+    <section class="user_information" *ngIf="bank.rules.showIdDocument || id_front_image">
         <h2 class="headinginfo adminbox_shadow">
             Owner Company Identity Information
         </h2>

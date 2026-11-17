@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { NgxSpinnerService } from 'ngx-spinner';
 import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { BankCountryForm } from '../../affiliate/step2/bank-country-form';
 import { AdminService } from '../../../services/admin.service';
 import { CustomvalidationService } from '../../../services/customvalidation.service';
 import { StateManagementService } from '../../../services/statemanagement.service';
@@ -73,6 +74,12 @@ export class TravelAgentStripeFormComponent implements OnInit, AfterViewInit {
 	badgeOptions: any;
 	travelAgentId: any;
 	TaxIdMatch: string;
+
+	/** Which bank fields this country needs (only what Stripe requires there; no SSN outside the US). */
+	bank = new BankCountryForm(
+		(country) => this.adminService.stripeCountryFields(country),
+		() => [this.customValidator.dashValidator(), this.customValidator.plusValidator()],
+	);
 
 	constructor(
 		private adminService: AdminService,
@@ -214,6 +221,7 @@ export class TravelAgentStripeFormComponent implements OnInit, AfterViewInit {
 			primaryYY: [''],
 			primaryCardHolderName: ['']
 		});
+		this.bank.attach(this.addBankForm);
 	}
 	//google map autocomplete
 	latitude: number;

@@ -28,6 +28,11 @@ export class TravelAgentService {
 		this.current_date = moment(timestamp).format("YYYY-MM-DD");
 		this.current_time = `${hours}:${minutes}:${seconds}`;
 	}
+	/** What Stripe needs up front for a bank in this country (Stripe Country Specs, via limoapi). */
+	stripeCountryFields(country: string) {
+		return this.httpClient.get(this.serverUrl + 'stripe-country-fields/' + encodeURIComponent(country));
+	}
+
 
 	checkIsProfileCompleted() {
 		let loggedInUserData = JSON.parse(localStorage.getItem('currentUser'))

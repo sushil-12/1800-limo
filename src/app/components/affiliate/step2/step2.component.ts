@@ -199,14 +199,6 @@ export class Step2Component implements OnInit, AfterViewInit {
 		this.affiliateId = currentUser.account_id;
 		this.stepCompleted = this.affiliateService.getLocalStepCompleted();
 
-		this.adminService.getAllEnableBadgeCities().pipe(
-			catchError(err => {
-				return throwError(err)
-			})
-		).subscribe((res: any) => {
-			this.badgeOptions = res?.data
-			this.filteredOptions = res?.data
-		})
 
 		//add bank form validation
 		this.addBankForm = this.formBuilder.group({
@@ -237,7 +229,7 @@ export class Step2Component implements OnInit, AfterViewInit {
 			state: ['', Validators.required],
 			badge_city: [''],
 			badge_city_name: [''],
-			country: ['', Validators.required],
+			country: ['', [Validators.required, Validators.pattern('^[A-Za-z]{2}$')]],
 			zipCode: ['', Validators.required],
 			unit: [''],
 			primaryCardType: ['personal'],
@@ -445,8 +437,8 @@ export class Step2Component implements OnInit, AfterViewInit {
 									return throwError(err)
 								})
 							).subscribe((res: any) => {
-								this.badgeOptions = res?.data
-								this.filteredOptions = res?.data
+								// Resolve the saved badge city's name, then offer the ones near the address
+								this.allBadgeCities = res?.data || []
 								res?.data?.map((i: any) => {
 									if (i.id == this.response?.data?.bankinfo?.badge_city) {
 										this.addBankForm.patchValue({
@@ -456,6 +448,12 @@ export class Step2Component implements OnInit, AfterViewInit {
 										this.isBadgeCity = true
 									}
 								})
+								const savedBadgeCity = this.response?.data?.bankinfo?.badge_city
+								if (savedBadgeCity && isNaN(Number(savedBadgeCity)) && !this.addBankForm.get('badge_city_name')?.value) { // saved as a city name
+									this.addBankForm.patchValue({ badge_city: savedBadgeCity, badge_city_name: savedBadgeCity })
+									this.isBadgeCity = true
+								}
+								this.loadNearbyBadgeCities(true)
 							})
 							// if (this.postCountryName == this.getCountryName)
 							// {
@@ -659,6 +657,7 @@ export class Step2Component implements OnInit, AfterViewInit {
 		});
 		this.isAddressSelected = true;
 		this.addressErrorMessage = '';
+		this.loadNearbyBadgeCities();
 	}
 
 	clearAddressField() {
@@ -673,6 +672,7 @@ export class Step2Component implements OnInit, AfterViewInit {
 		this.addBankForm.updateValueAndValidity();
 		this.addressErrorMessage = '';
 		this.isAddressSelected = false;
+		this.clearNearbyBadgeCities();
 		this.addressOptions = [];
 		this.addressSearchLoading = false;
 		this.activeAddressDropdown = false;
@@ -798,6 +798,46 @@ export class Step2Component implements OnInit, AfterViewInit {
 			else
 				return -1;
 		}
+	}
+
+	/** Text typed in the Bank country dropdown's search box. */
+	bankCountrySearch = '';
+
+	/** Countries matching the search; the selected one is always kept so the dropdown still shows it. */
+	get filteredBankCountries(): any[] {
+		const query = (this.bankCountrySearch || '').trim().toLowerCase();
+		const options = this.countryOptions || [];
+		if (!query) return options;
+		const selected = this.addBankForm?.get('country')?.value;
+		return options.filter((c: any) => c?.countryShortCode == selected
+			|| c?.countryName?.toLowerCase().includes(query)
+			|| c?.countryShortCode?.toLowerCase() === query);
+	}
+
+	onBankCountryOpened(opened: boolean, input: HTMLInputElement): void {
+		if (opened) setTimeout(() => input?.focus());
+		else this.bankCountrySearch = '';
+	}
+
+	/** Let the search box take typing (mat-select would otherwise select on space / jump on letters). */
+	onBankCountrySearchKeydown(event: KeyboardEvent): void {
+		if (!['ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'Tab'].includes(event.key)) event.stopPropagation();
+	}
+
+	/** Address Country box: keep it a 2-letter code (it's also the bank country) and apply that country's rules. */
+	onAddressCountryInput(value: string): void {
+		const code = (value || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
+		const control = this.addBankForm.get('country');
+		if (control.value !== code) control.setValue(code);
+		if (code.length === 2) this.changeCountry(code);
+	}
+
+	/** Full name of the typed state code, e.g. "California" for CA, when the country's list has it. */
+	get addressStateName(): string {
+		const code = (this.addBankForm?.get('state')?.value || '').toString().trim().toUpperCase();
+		if (!code) return '';
+		const match = (this.stateOptions || []).find((s: any) => (s?.shortCode || '').toUpperCase() === code);
+		return match?.name && match.name.toUpperCase() !== code ? match.name : '';
 	}
 
 	changeCountry(selectedCountryCode) {
@@ -1241,18 +1281,170 @@ export class Step2Component implements OnInit, AfterViewInit {
 		};
 	}
 
+	/** True once a business address has been picked (it has coordinates): then the badge city is asked. */
+	get hasBusinessAddress(): boolean {
+		return !!this.addBankForm?.get('latitude')?.value && !!this.addBankForm?.get('longitude')?.value;
+	}
+
+	nearbyBadgeCitiesLoading = false;
+	private nearbyBadgeRequest = 0;
+	private allBadgeCities: any[] | null = null;
+	/** Google's nearby cities per address location, so each address costs one Places call. */
+	private googleNearbyCache = new Map<string, Array<{ name: string; lat: number; lng: number }>>();
+
+	/**
+	 * Badge city options: one Google Places call finds the cities near the business address (in its
+	 * state and country); the enabled badge cities with those names are offered, closest first.
+	 * keepSaved: on page load, keep the saved badge city even if it isn't near the address.
+	 */
+	async loadNearbyBadgeCities(keepSaved = false): Promise<void> {
+		const lat = Number(this.addBankForm?.get('latitude')?.value);
+		const lng = Number(this.addBankForm?.get('longitude')?.value);
+		if (!lat || !lng) {
+			this.badgeOptions = [];
+			this.filteredOptions = [];
+			return;
+		}
+		const request = ++this.nearbyBadgeRequest;
+		this.nearbyBadgeCitiesLoading = true;
+		const [badgeCities, googleCities] = await Promise.all([
+			this.getAllBadgeCities(),
+			this.findGoogleNearbyCities(lat, lng),
+		]);
+		if (request !== this.nearbyBadgeRequest) return; // a newer address was picked meanwhile
+
+		// The address's own city counts too, at distance 0.
+		const ownCity = this.addBankForm.get('city')?.value;
+		const candidates = ownCity ? [{ name: ownCity, lat, lng }, ...googleCities] : googleCities;
+
+		// Every city Google found; one that's in the Badge Cities list keeps its id (saved instead of the name).
+		const cities: any[] = [];
+		for (const city of candidates) {
+			if (cities.some((c) => this.sameCityName(c.name, city.name))) continue;
+			const badge = badgeCities.find((b: any) => this.sameCityName(b?.name, city.name));
+			cities.push({
+				id: badge?.id ?? null,
+				name: badge?.name ?? city.name,
+				distance_km: Math.round(this.distanceKm(lat, lng, city.lat, city.lng)),
+			});
+		}
+		cities.sort((a, b) => a.distance_km - b.distance_km);
+
+		const selectedId = this.addBankForm.get('badge_city')?.value;
+		const selectedName = this.addBankForm.get('badge_city_name')?.value;
+		if (selectedId && !cities.some((c: any) => c.id == selectedId || c.name == selectedId)) {
+			if (keepSaved && selectedName) {
+				cities.unshift({ id: selectedId, name: selectedName });
+			} else {
+				this.addBankForm.patchValue({ badge_city: '', badge_city_name: '' });
+				this.isBadgeCity = false;
+			}
+		}
+		this.nearbyBadgeCitiesLoading = false;
+		this.badgeOptions = cities;
+		this.filteredOptions = cities;
+	}
+
+	private clearNearbyBadgeCities(): void {
+		this.nearbyBadgeRequest++;
+		this.nearbyBadgeCitiesLoading = false;
+		this.badgeOptions = [];
+		this.filteredOptions = [];
+		this.addBankForm.patchValue({ badge_city: '', badge_city_name: '' });
+		this.isBadgeCity = false;
+	}
+
+	/** All enabled badge cities (id + name), fetched once. */
+	private getAllBadgeCities(): Promise<any[]> {
+		if (this.allBadgeCities) return Promise.resolve(this.allBadgeCities);
+		return new Promise((resolve) => {
+			this.adminService.getAllEnableBadgeCities()
+				.pipe(catchError(() => of({ data: [] })))
+				.subscribe((res: any) => {
+					this.allBadgeCities = res?.data || [];
+					resolve(this.allBadgeCities);
+				});
+		});
+	}
+
+	/**
+	 * Cities near the address from Google Places, once per address: the cities in its state (up to 60,
+	 * Google's maximum) plus the largest ones in its country. Cached per location.
+	 */
+	private async findGoogleNearbyCities(lat: number, lng: number): Promise<Array<{ name: string; lat: number; lng: number }>> {
+		const key = lat.toFixed(4) + ',' + lng.toFixed(4);
+		const cached = this.googleNearbyCache.get(key);
+		if (cached) return cached;
+		if (typeof google === 'undefined' || !google.maps?.places) return [];
+
+		const state = this.addressStateName || this.addBankForm.get('state')?.value || '';
+		const country = this.bankCountryName || this.addBankForm.get('country')?.value || '';
+		const location = new google.maps.LatLng(lat, lng);
+		const [inState, inCountry] = await Promise.all([
+			state ? this.searchCities(`cities in ${state}, ${country}`, location, 3) : Promise.resolve([]),
+			country ? this.searchCities(`cities in ${country}`, location, 1) : Promise.resolve([]),
+		]);
+		const cities = [...inState, ...inCountry];
+		this.googleNearbyCache.set(key, cities);
+		return cities;
+	}
+
+	/** A Places text search for localities, following up to maxPages result pages (20 per page). */
+	private searchCities(query: string, location: google.maps.LatLng, maxPages: number): Promise<Array<{ name: string; lat: number; lng: number }>> {
+		const service = new google.maps.places.PlacesService(document.createElement('div'));
+		const cities: Array<{ name: string; lat: number; lng: number }> = [];
+		let page = 0;
+		return new Promise((resolve) => {
+			service.textSearch({ query, location, radius: 50000, type: 'locality' }, (results, status, pagination) => {
+				if (status === google.maps.places.PlacesServiceStatus.OK) {
+					for (const r of results || []) {
+						if (r?.name && r.geometry?.location) {
+							cities.push({ name: r.name, lat: r.geometry.location.lat(), lng: r.geometry.location.lng() });
+						}
+					}
+				}
+				page++;
+				if (status === google.maps.places.PlacesServiceStatus.OK && pagination?.hasNextPage && page < maxPages) {
+					pagination.nextPage(); // calls this callback again with the next page
+				} else {
+					resolve(cities);
+				}
+			});
+		});
+	}
+
+	/** "Mumbai" matches "Mumbai", "Mumbai, MH" or "Greater Mumbai"; accents and case are ignored. */
+	private sameCityName(badgeName: string, googleName: string): boolean {
+		const norm = (value: string) => (value || '').split(',')[0]
+			.normalize('NFD').replace(/[̀-ͯ]/g, '')
+			.toLowerCase().replace(/\b(city|greater|metropolitan|municipality)\b/g, '')
+			.replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+		const a = norm(badgeName);
+		const b = norm(googleName);
+		return !!a && !!b && a === b;
+	}
+
+	private distanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+		const rad = (d: number) => d * Math.PI / 180;
+		const dLat = rad(lat2 - lat1);
+		const dLng = rad(lng2 - lng1);
+		const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLng / 2) ** 2;
+		return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+	}
+
 	handleBadgeCity(value: any) {
 		console.log(value, this.filteredOptions)
 		if (!value) {
 			this.isBadgeCity = false
 		}
-		this.filteredOptions = this.badgeOptions.filter((i: any) => i.name.toLowerCase().startsWith(value.toLowerCase()))
+		this.filteredOptions = (this.badgeOptions || []).filter((i: any) => (i?.name || '').toLowerCase().includes((value || '').toLowerCase()))
 	}
 	selectBadgeCity(option: any, isUserInput) {
 		console.log('in function selectBadgeCity-->>>', option, isUserInput)
 		if (isUserInput) {
 			this.addBankForm.patchValue({
-				badge_city: option.id
+				badge_city: option.id || option.name, // not in the Badge Cities list: the name
+				badge_city_name: option.name
 			})
 			this.isBadgeCity = true
 			// this.addAffiliateAccountForm.updateValueAndValidity()

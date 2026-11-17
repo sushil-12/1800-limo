@@ -94,9 +94,17 @@
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">
 						<mat-label>Bank country <span class="asterisk">*</span></mat-label>
-						<mat-select formControlName="country" (selectionChange)="changeCountry($event.value)" tabindex="1">
-							<mat-option value="">Choose Country</mat-option>
-							<mat-option *ngFor="let countryOption of countryOptions" [value]="countryOption?.countryShortCode">
+						<mat-select formControlName="country" (selectionChange)="changeCountry($event.value)"
+							(openedChange)="onBankCountryOpened($event, bankCountrySearchInput)" tabindex="1">
+							<!-- <mat-option value="">Choose Country</mat-option> -->
+							<div class="bank-country-search" (click)="$event.stopPropagation()">
+								<i class="bi bi-search bank-country-search__icon" aria-hidden="true"></i>
+								<input #bankCountrySearchInput type="text" placeholder="Search country" autocomplete="off"
+									[value]="bankCountrySearch" (input)="bankCountrySearch = $event.target.value"
+									(keydown)="onBankCountrySearchKeydown($event)" />
+							</div>
+							<mat-option class="bank-country-option" *ngIf="!filteredBankCountries.length" disabled>No country found</mat-option>
+							<mat-option class="bank-country-option" *ngFor="let countryOption of filteredBankCountries" [value]="countryOption?.countryShortCode">
 								{{ countryOption?.countryName }}
 							</mat-option>
 						</mat-select>
@@ -294,7 +302,7 @@
 			</div>
 		</div>
 
-		<div class="field-group">
+		<div class="field-group field-group--last">
 			<div class="heading-row">
 				<span class="field-group__title">{{ rules.showEin ? 'Tax & identity' : 'Currency & identity' }}</span>
 				<div class="step-notice step-notice--info" *ngIf="isUsBank; else noSsnNotice">
@@ -386,33 +394,6 @@
 						" class="text-danger margin-bottom-thin my-mat-hint">
 						<div *ngIf="f?.ein?.errors?.required">This field is required</div>
 					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="field-group field-group--last">
-			<span class="field-group__title">Service area</span>
-			<p class="field-group__hint">Largest major city you service — used for your badge.</p>
-			<div class="row">
-				<div class="col-md-6">
-					<mat-form-field appearance="outline" class="example-full-width" [ngClass]="{
-							'red-placeholder': !f?.badge_city_name?.value,
-							'border-red': !isBadgeCity
-						}" style="margin-top: 0 !important">
-						<mat-label [ngClass]="(f?.badge_city_name?.value) ? '' : 'red-placeholder'">
-							Badge city (largest major city you service)
-						</mat-label>
-						<input type="text" placeholder="Enter Largest Major City You Service"
-							[ngClass]="(f?.badge_city_name?.value) ? '' : 'red-placeholder'" aria-label="Number" matInput
-							formControlName="badge_city_name" [matAutocomplete]="auto"
-							(keyup)="handleBadgeCity($event.target.value)">
-						<mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
-							<mat-option *ngFor="let option of filteredOptions"
-								(onSelectionChange)="selectBadgeCity(option,$event.isUserInput)" [value]="option.name">
-								{{ option.name }}
-							</mat-option>
-						</mat-autocomplete>
-					</mat-form-field>
 				</div>
 			</div>
 		</div>
@@ -699,32 +680,26 @@
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">
 						<mat-label>Country <span class="asterisk">*</span></mat-label>
-						<mat-select formControlName="country" (selectionChange)="changeCountry($event.value)"
-							tabindex="1">
-							<mat-option value="">Choose Country</mat-option>
-							<mat-option *ngFor="let countryOption of countryOptions"
-								[value]="countryOption?.countryShortCode">
-								{{ countryOption?.countryName }}
-							</mat-option>
-						</mat-select>
+						<input matInput placeholder="2-letter code, e.g. US" formControlName="country" maxlength="2"
+							autocomplete="off" tabindex="1" style="text-transform: uppercase"
+							(input)="onAddressCountryInput($event.target.value)" (focus)="$event.target.select()" />
 					</mat-form-field>
+					<small class="text-muted d-block" *ngIf="bankCountryName && bankCountryName !== f?.country?.value">{{ bankCountryName }}</small>
 					<div *ngIf="
 							(submittedForm && f?.country?.errors) ||
 							(f?.country?.touched && f?.country?.errors)
 						" class="text-danger margin-bottom-thin my-mat-hint">
 						<div *ngIf="f?.country?.errors?.required">This field is required</div>
+						<div *ngIf="f?.country?.errors?.pattern">Enter the 2-letter country code, e.g. US</div>
 					</div>
 				</div>
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">
 						<mat-label>State/Province <span class="asterisk">*</span></mat-label>
-						<mat-select formControlName="state" tabindex="1">
-							<mat-option value="">Choose State/Province</mat-option>
-							<mat-option *ngFor="let stateOption of stateOptions" [value]="stateOption?.shortCode">
-								{{ stateOption?.name }}
-							</mat-option>
-						</mat-select>
+						<input matInput placeholder="State/Province, e.g. CA" formControlName="state"
+							autocomplete="off" tabindex="1" (focus)="$event.target.select()" />
 					</mat-form-field>
+					<small class="text-muted d-block" *ngIf="addressStateName">{{ addressStateName }}</small>
 					<div *ngIf="
 							(submittedForm && f?.state?.errors) ||
 							(f?.state?.touched && f?.state?.errors)
@@ -770,6 +745,37 @@
 							</ng-template>
 						</ng-template>
 					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Badge city: asked once the business address is picked; options are badge cities near it -->
+		<div class="field-group field-group--last" *ngIf="hasBusinessAddress">
+			<div class="row">
+				<div class="col-md-6">
+					<mat-form-field appearance="outline" class="example-full-width" [ngClass]="{
+							'red-placeholder': !f?.badge_city_name?.value,
+							'border-red': !isBadgeCity
+						}" style="margin-top: 0 !important">
+						<mat-label [ngClass]="(f?.badge_city_name?.value) ? '' : 'red-placeholder'">
+							Badge city (largest city you mainly service)
+						</mat-label>
+						<input type="text" placeholder="Choose the largest city near you" aria-label="Badge city"
+							[ngClass]="(f?.badge_city_name?.value) ? '' : 'red-placeholder'" matInput
+							formControlName="badge_city_name" [matAutocomplete]="auto"
+							(focus)="handleBadgeCity('')" (keyup)="handleBadgeCity($event.target.value)">
+						<mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
+							<mat-option *ngIf="nearbyBadgeCitiesLoading" disabled>Finding cities near you...</mat-option>
+							<mat-option *ngIf="!nearbyBadgeCitiesLoading && !filteredOptions?.length" disabled>
+								No badge city found near this address
+							</mat-option>
+							<mat-option *ngFor="let option of filteredOptions"
+								(onSelectionChange)="selectBadgeCity(option,$event.isUserInput)" [value]="option.name">
+								{{ option.name }}<span *ngIf="option?.distance_km != null" class="text-muted">
+									&nbsp;· {{ option.distance_km }} km</span>
+							</mat-option>
+						</mat-autocomplete>
+					</mat-form-field>
 				</div>
 			</div>
 		</div>

@@ -59,6 +59,35 @@
 
 		<div class="mt-1 container">
 			<div class="row">
+				<!-- The bank's country decides the fields below (same rules as the affiliate's step 2) -->
+				<div class="col-md-6">
+					<mat-form-field appearance="outline">
+						<mat-label>Bank Country <span class="asterisk">*</span></mat-label>
+						<mat-select formControlName="country" (selectionChange)="changeCountry($event.value)"
+							(openedChange)="onBankCountryOpened($event, bankCountrySearchInput)">
+							<mat-option value="">Choose Country</mat-option>
+							<div class="bank-country-search" (click)="$event.stopPropagation()">
+								<i class="bi bi-search bank-country-search__icon" aria-hidden="true"></i>
+								<input #bankCountrySearchInput type="text" placeholder="Search country" autocomplete="off"
+									[value]="bankCountrySearch" (input)="bankCountrySearch = $event.target.value"
+									(keydown)="onBankCountrySearchKeydown($event)" />
+							</div>
+							<mat-option class="bank-country-option" *ngIf="!filteredBankCountries.length" disabled>No country found</mat-option>
+							<mat-option class="bank-country-option" *ngFor="let countryOption of filteredBankCountries"
+								[value]="countryOption?.countryShortCode">
+								{{ countryOption?.countryName }}</mat-option>
+						</mat-select>
+					</mat-form-field>
+					<div *ngIf="submittedForm && f.country.errors || f.country.touched && f.country.errors"
+						class="text-danger margin-bottom-thin my-mat-hint">
+						<div *ngIf="f.country.errors.required">This field is required</div>
+					</div>
+				</div>
+				<div class="col-md-6 d-flex align-items-center">
+					<small class="text-muted" *ngIf="bankCountryName">
+						Showing the bank fields used in <strong>{{ bankCountryName }}</strong>.
+					</small>
+				</div>
 				<div class="col-md-6">
 					<!-- <mat-label>Bank Name <span class="asterisk">*</span></mat-label> -->
 					<mat-form-field appearance="outline">
@@ -109,23 +138,25 @@
 				</div>
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">
-						<mat-label>Bank Account / IBAN<span class="asterisk">*</span></mat-label>
-						<input matInput placeholder="Account Number*" formControlName="AccountNumber"
+						<mat-label>{{ rules.accountLabel }}<span class="asterisk">*</span></mat-label>
+						<input matInput [placeholder]="rules.accountLabel + '*'" formControlName="AccountNumber"
 							(focus)="$event.target.select()">
 					</mat-form-field>
+					<small class="text-muted d-block">{{ rules.accountHint }}</small>
 					<div *ngIf="f.AccountNumber.errors && (f.AccountNumber.touched || f.AccountNumber.dirty )"
 						class="text-danger margin-bottom-thin my-mat-hint">
 						<div *ngIf="f.AccountNumber.errors.required">This field is required</div>
 						<!-- <div *ngIf="f.AccountNumber.errors.pattern">This field should be a number</div> -->
 					</div>
 				</div>
-				<div class="col-md-6">
+				<div class="col-md-6" *ngIf="rules.showRouting">
 					<mat-form-field appearance="outline"
 						[ngClass]="{ 'border-red': routingErrorMessage || !isRoutingSelected }">
-						<mat-label>Checking Routing Number<span class="asterisk">*</span></mat-label>
-						<input matInput placeholder="Checking Routing Number*" formControlName="Routing"
+						<mat-label>{{ rules.routingLabel }}<span class="asterisk">*</span></mat-label>
+						<input matInput [placeholder]="rules.routingLabel + '*'" formControlName="Routing"
 							(focus)="$event.target.select()" (keyup)="removeErrorSsn($event.target.value,'Routing')">
 					</mat-form-field>
+					<small class="text-muted d-block">{{ rules.routingHint }}</small>
 					<div *ngIf="routingErrorMessage" class="text-danger margin-bottom-thin my-mat-hint">
 						<div *ngIf="routingErrorMessage" style="font-weight: 550;">{{routingErrorMessage}}</div>
 					</div>
@@ -149,7 +180,7 @@
 						<div *ngIf="f.AccountType.errors.required">This field is required</div>
 					</div>
 				</div>
-				<div class="col-md-2 col-4 birthMonth">
+				<div class="col-md-2 col-4 birthMonth" *ngIf="rules.showDob">
 					<mat-form-field appearance="outline" [ngClass]="{ 'border-red': dobErrorMessage }">
 						<mat-label>Month of Birth <span class="asterisk">*</span></mat-label>
 						<mat-select formControlName="dobMonth" (selectionChange)="removeDobError()">
@@ -175,7 +206,7 @@
 						<div *ngIf="f.dobMonth.errors.required">This field is required</div>
 					</div>
 				</div>
-				<div class="col-md-2 col-4 birthDay">
+				<div class="col-md-2 col-4 birthDay" *ngIf="rules.showDob">
 					<mat-form-field appearance="outline" [ngClass]="{ 'border-red': dobErrorMessage }">
 						<mat-label>Day of Birth <span class="asterisk">*</span></mat-label>
 						<mat-select formControlName="dobDay" (selectionChange)="removeDobError()">
@@ -190,7 +221,7 @@
 						<div *ngIf="f.dobDay.errors.required">This field is required</div>
 					</div>
 				</div>
-				<div class="col-md-2 col-4 birthYear">
+				<div class="col-md-2 col-4 birthYear" *ngIf="rules.showDob">
 					<mat-form-field appearance="outline" [ngClass]="{ 'border-red': dobErrorMessage }">
 						<mat-label>Year of Birth <span class="asterisk">*</span></mat-label>
 						<mat-select formControlName="dobYear" (selectionChange)="removeDobError()">
@@ -207,9 +238,14 @@
 				</div>
 				<div class="col-md-12">
 					<h3 class="addveh_top d-md-flex justify-content-between align-items-center mb-0 ml-1 mt-2">
-						<label class="alert alert-danger" style="padding :0.25rem 1.25rem; color: red !important;">When
-							you enter your SSN, only only Stripe sees all the digits. Your SSN will no longer be
-							visible after it is saved.</label>
+						<label class="alert alert-danger" style="padding :0.25rem 1.25rem; color: red !important;"
+							*ngIf="isUsBank; else noSsnNotice">When you enter your SSN, only Stripe sees all the
+							digits. Your SSN will no longer be visible after it is saved.</label>
+						<ng-template #noSsnNotice>
+							<label class="alert alert-info" style="padding :0.25rem 1.25rem;">A bank in
+								{{ bankCountryName }} needs no SSN or EIN. Stripe asks for more later only if it
+								can't verify the account with these details.</label>
+						</ng-template>
 					</h3>
 				</div>
 				<div class="col-md-6">
@@ -258,16 +294,17 @@
 						<div *ngIf="f.currency.errors.required">This field is required</div>
 					</div>
 				</div>
-				<div class="col-md-6">
+				<div class="col-md-6" *ngIf="rules.showId">
 					<mat-form-field appearance="outline"
 						[ngClass]="{ 'disableSsn': enableSsnField, 'border-red': ssnErrorMessage || !isSsnSelected }">
-						<mat-label>SSN (USA required by STRIPE / Government ID for other countries)<span
-								class="asterisk">*</span></mat-label>
-						<input matInput placeholder="SSN (USA required by STRIPE / Government ID for other countries)"
+						<mat-label>{{ rules.idLabel }} <span *ngIf="rules.idRequired" class="asterisk">*</span><span
+								*ngIf="!rules.idRequired">(Optional)</span></mat-label>
+						<input matInput [placeholder]="rules.idLabel"
 							formControlName="ssn" tabindex="1" (focus)="$event.target.select()"
 							(change)="handleSsnInput($event.target.value)"
 							(keyup)="removeErrorSsn($event.target.value,'ssn')">
 					</mat-form-field>
+					<small class="text-muted d-block">{{ rules.idHint }}</small>
 					<div *ngIf="ssnErrorMessage" class="text-danger margin-bottom-thin my-mat-hint">
 						<div *ngIf="ssnErrorMessage" style="font-weight: 550;">{{ssnErrorMessage}}</div>
 					</div>
@@ -282,13 +319,13 @@
 							<div *ngIf="f.ssn.errors?.invalidPattern;else allErrors">Do not enter +
 								sign</div>
 							<ng-template #allErrors>
-								<div *ngIf="f.ssn.errors?.pattern">Enter Numbers Only
+								<div *ngIf="f.ssn.errors?.pattern">{{ isUsBank ? 'Enter Numbers Only' : 'Letters and numbers only' }}
 								</div>
 							</ng-template>
 						</ng-template>
 					</div>
 				</div>
-				<div class="col-md-6 mt-3 radioLabel">
+				<div class="col-md-6 mt-3 radioLabel" *ngIf="rules.showEin">
 					<div id="ein-container" class="w-100 d-flex flex-nowrap justify-content-center">
 						<div id="ein-no" class="ein" [ngClass]="!f.haveEin.value ? 'active' : ''"
 							(click)="changeRadio('haveEin', false)">
@@ -300,7 +337,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="col-md-6 mt-3" *ngIf="f.haveEin.value">
+				<div class="col-md-6 mt-3" *ngIf="rules.showEin && f.haveEin.value">
 					<mat-form-field appearance="outline">
 						<mat-label>EIN / Business ID # <span class="asterisk">*</span></mat-label>
 						<input matInput placeholder="EIN / Business ID #" (focus)="$event.target.select()"
@@ -314,24 +351,6 @@
 							This field is required
 						</div>
 					</div>
-				</div>
-				<div class="col-md-6">
-					<mat-form-field appearance="outline" class="example-full-width"
-						[ngClass]="(f.badge_city_name.value) ? '' : 'red-placeholder' ">
-						<mat-label [ngClass]="(f.badge_city_name.value) ? '' : 'red-placeholder' ">Badge city (Enter
-							Largest Major City You Service)
-						</mat-label>
-						<input type="text" placeholder="Enter Largest Major City You Service" aria-label="Number"
-							matInput formControlName="badge_city_name" [matAutocomplete]="auto"
-							(keyup)="handleBadgeCity($event.target.value)"
-							[ngClass]="(f.badge_city_name.value) ? '' : 'red-placeholder' ">
-						<mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
-							<mat-option *ngFor="let option of filteredOptions"
-								(onSelectionChange)="selectBadgeCity(option,$event.isUserInput)" [value]="option.name">
-								{{option.name}}
-							</mat-option>
-						</mat-autocomplete>
-					</mat-form-field>
 				</div>
 			</div>
 		</div>
@@ -603,33 +622,31 @@
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">
 						<mat-label>Country <span class="asterisk">*</span></mat-label>
-						<mat-select formControlName="country" (selectionChange)="changeCountry($event.value)"
-							tabindex="1">
-							<mat-option value="">Choose Country</mat-option>
-							<mat-option *ngFor="let countryOption of countryOptions"
-								[value]="countryOption.countryShortCode">
-								{{countryOption.countryName}}</mat-option>
-						</mat-select>
+						<input matInput placeholder="2-letter code, e.g. US" formControlName="country" maxlength="2"
+							autocomplete="off" tabindex="1" style="text-transform: uppercase"
+							(input)="onAddressCountryInput($event.target.value)" (focus)="$event.target.select()" />
 					</mat-form-field>
-					<div *ngIf="submittedForm && f.country.errors || f.country.touched && f.country.errors"
-						class="text-danger margin-bottom-thin my-mat-hint">
-						<div *ngIf="f.country.errors.required">This field is required</div>
+					<small class="text-muted d-block" *ngIf="bankCountryName && bankCountryName !== f?.country?.value">{{ bankCountryName }}</small>
+					<div *ngIf="
+							(submittedForm && f?.country?.errors) ||
+							(f?.country?.touched && f?.country?.errors)
+						" class="text-danger margin-bottom-thin my-mat-hint">
+						<div *ngIf="f?.country?.errors?.required">This field is required</div>
+						<div *ngIf="f?.country?.errors?.pattern">Enter the 2-letter country code, e.g. US</div>
 					</div>
 				</div>
 				<div class="col-md-6">
 					<mat-form-field appearance="outline">
 						<mat-label>State/Province <span class="asterisk">*</span></mat-label>
-						<mat-select formControlName="state" tabindex="1">
-							<mat-option value="">Choose State/Province</mat-option>
-							<mat-option *ngFor="let stateOption of stateOptions" [value]="stateOption.shortCode">
-								{{stateOption.name}}</mat-option>
-						</mat-select>
-						<!-- <input matInput placeholder="State" formControlName="state" disabled tabindex="1"
-							(focus)="$event.target.select()"> -->
+						<input matInput placeholder="State/Province, e.g. CA" formControlName="state"
+							autocomplete="off" tabindex="1" (focus)="$event.target.select()" />
 					</mat-form-field>
-					<div *ngIf="submittedForm && f.state.errors || f.state.touched && f.state.errors"
-						class="text-danger margin-bottom-thin my-mat-hint">
-						<div *ngIf="f.state.errors.required">This field is required</div>
+					<small class="text-muted d-block" *ngIf="addressStateName">{{ addressStateName }}</small>
+					<div *ngIf="
+							(submittedForm && f?.state?.errors) ||
+							(f?.state?.touched && f?.state?.errors)
+						" class="text-danger margin-bottom-thin my-mat-hint">
+						<div *ngIf="f?.state?.errors?.required">This field is required</div>
 					</div>
 				</div>
 				<!-- <div class="col-md-6">
@@ -678,6 +695,30 @@
 						<div *ngIf="f.zipCode.errors?.pattern">Enter Numbers Only
 						</div>
 					</div>
+				</div>
+				<!-- Badge city: asked once the business address is picked; options are badge cities near it -->
+				<div class="col-md-6" *ngIf="hasBusinessAddress">
+					<mat-form-field appearance="outline" class="example-full-width"
+						[ngClass]="(f.badge_city_name.value) ? '' : 'red-placeholder' ">
+						<mat-label [ngClass]="(f.badge_city_name.value) ? '' : 'red-placeholder' ">Badge city (largest
+							city mainly serviced)
+						</mat-label>
+						<input type="text" placeholder="Choose the largest city near the address" aria-label="Badge city"
+							matInput formControlName="badge_city_name" [matAutocomplete]="auto"
+							(focus)="handleBadgeCity('')" (keyup)="handleBadgeCity($event.target.value)"
+							[ngClass]="(f.badge_city_name.value) ? '' : 'red-placeholder' ">
+						<mat-autocomplete autoActiveFirstOption #auto="matAutocomplete">
+							<mat-option *ngIf="nearbyBadgeCitiesLoading" disabled>Finding cities near the address...</mat-option>
+							<mat-option *ngIf="!nearbyBadgeCitiesLoading && !filteredOptions?.length" disabled>
+								No badge city found near this address
+							</mat-option>
+							<mat-option *ngFor="let option of filteredOptions"
+								(onSelectionChange)="selectBadgeCity(option,$event.isUserInput)" [value]="option.name">
+								{{option.name}}<span *ngIf="option?.distance_km != null" class="text-muted">
+									&nbsp;· {{ option.distance_km }} km</span>
+							</mat-option>
+						</mat-autocomplete>
+					</mat-form-field>
 				</div>
 			</div>
 		</div>

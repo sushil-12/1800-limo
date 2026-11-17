@@ -476,3 +476,59 @@
 	font-weight: 600 !important;
 	transition: 0.3s;
 }
+/* Search box inside the Bank country dropdown */
+.bank-country-search {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	padding: 8px 10px;
+	background: #fff;
+	border-bottom: 1px solid #ececec;
+
+	.bank-country-search__icon {
+		position: absolute;
+		left: 22px;
+		top: 50%;
+		transform: translateY(-50%);
+		font-size: 13px;
+		color: #9a9a9a;
+		pointer-events: none;
+	}
+
+	input {
+		width: 100% !important;
+		height: 34px !important;
+		margin: 0 !important;
+		padding: 0 10px 0 32px !important;
+		border: 1px solid #dcdcdc !important;
+		border-radius: 6px !important;
+		background: #f7f7f9 !important;
+		box-shadow: none !important;
+		outline: none;
+		font-size: 14px !important;
+		font-weight: 400 !important;
+		line-height: 34px !important;
+		color: #333 !important;
+		transition: border-color 0.15s, background 0.15s;
+
+		&::placeholder {
+			font-size: 14px !important;
+			font-weight: 400 !important;
+			color: #a0a0a0 !important;
+			opacity: 1;
+		}
+
+		&:focus {
+			background: #fff !important;
+			border-color: #f7931e !important;
+		}
+	}
+}
+
+/* Compact rows for the Bank country options */
+.mat-mdc-option.bank-country-option {
+	min-height: 38px;
+	font-size: 14px;
+	padding-left: 14px;
+	padding-right: 14px;
+}

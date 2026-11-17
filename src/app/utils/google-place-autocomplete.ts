@@ -13,7 +13,7 @@ export interface AttachPlaceAutocompleteOptions {
 	types?: string[];
 	primaryTypes?: string[];
 	airportField?: boolean;
-	/** Ignored for fetchFields; new API always loads id, displayName, formattedAddress, location, addressComponents, types */
+	/** Ignored for fetchFields; new API always loads id, displayName, formattedAddress, location, addressComponents, types, viewport */
 	fields?: string[];
 	/** When set, keeps the visible gmp widget in sync after patchValue/setValue (e.g. async API load). */
 	syncControl?: AbstractControl;
@@ -465,6 +465,14 @@ function setupPlaceAutocompleteHelper(
 	};
 }
 
+function toLatLngBounds(
+	viewport: google.maps.LatLngBounds | google.maps.LatLngBoundsLiteral
+): google.maps.LatLngBounds {
+	return typeof (viewport as google.maps.LatLngBounds).getNorthEast === 'function'
+		? (viewport as google.maps.LatLngBounds)
+		: new google.maps.LatLngBounds(viewport as google.maps.LatLngBoundsLiteral);
+}
+
 function newPlaceToLegacyPlaceResult(place: {
 	id?: string;
 	displayName?: string;
@@ -472,6 +480,7 @@ function newPlaceToLegacyPlaceResult(place: {
 	location?: google.maps.LatLng | google.maps.LatLngLiteral | null;
 	addressComponents?: Array<{ longText: string; shortText: string; types: string[] }>;
 	types?: string[];
+	viewport?: google.maps.LatLngBounds | google.maps.LatLngBoundsLiteral | null;
 }): google.maps.places.PlaceResult {
 	let latLng: google.maps.LatLng | undefined;
 	let latitude: number | undefined;
@@ -497,7 +506,9 @@ function newPlaceToLegacyPlaceResult(place: {
 	return {
 		formatted_address: place.formattedAddress,
 		name: place.displayName,
-		geometry: latLng ? { location: latLng } : undefined,
+		geometry: latLng
+			? (place.viewport ? { location: latLng, viewport: toLatLngBounds(place.viewport) } : { location: latLng })
+			: undefined,
 		address_components,
 		place_id: place.id,
 		types: place.types,
@@ -1232,9 +1243,10 @@ export async function attachPlaceAutocompleteElement(
 			location?: google.maps.LatLng | google.maps.LatLngLiteral | null;
 			addressComponents?: Array<{ longText: string; shortText: string; types: string[] }>;
 			types?: string[];
+			viewport?: google.maps.LatLngBounds | null;
 		};
 		await place.fetchFields({
-			fields: ['id', 'displayName', 'formattedAddress', 'location', 'addressComponents', 'types'],
+			fields: ['id', 'displayName', 'formattedAddress', 'location', 'addressComponents', 'types', 'viewport'],
 		});
 		onPlaceSelect(newPlaceToLegacyPlaceResult(place));
 		restoreMobileAutocompleteFocus(pac);

@@ -447,3 +447,93 @@ quill-editor {
     padding: 8px 15px !important;
     border-radius: 3rem !important;
 }
+// ---- Geo ("Near") search ----------------------------------------------
+.affiliate-geo-radius {
+    gap: 8px;
+}
+
+.geo-radius-label {
+    font-size: 14px;
+    color: #555;
+}
+
+.geo-radius-chip {
+    border: 1px solid #f3933d;
+    background: #fff;
+    color: #b85f12;
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: 14px;
+    line-height: 1.4;
+    cursor: pointer;
+
+    &.active {
+        background: #f3933d;
+        color: #fff;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #b85f12;
+        outline-offset: 2px;
+    }
+}
+
+.geo-clear-link {
+    border: none;
+    background: none;
+    color: #555;
+    text-decoration: underline;
+    font-size: 14px;
+    padding: 4px 6px;
+    cursor: pointer;
+}
+
+.geo-banner {
+    background: #fff7ef;
+    border-left: 4px solid #f3933d;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+
+    &.geo-banner-warn {
+        background: #fff4e5;
+        border-left-color: #e07b00;
+    }
+}
+
+.geo-missing-note {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #777;
+}
+
+.geo-row-tags {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.geo-tag {
+    display: inline-block;
+    background: #eef1f5;
+    color: #333;
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: medium;
+    font-weight: 600;
+    white-space: nowrap;
+
+    &.geo-tag-region {
+        background: #e6f6ea;
+        color: #136c2e;
+    }
+
+    &.geo-tag-source {
+        background: #fff1e3;
+        color: #8a4a0c;
+        font-weight: 500;
+    }
+}

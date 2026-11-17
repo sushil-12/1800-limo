@@ -66,6 +66,39 @@
 					</div>
 				</div>
 			</div>
+			<!-- Geo search: find affiliates in / near a state, city or address -->
+			<div class="row align-items-center px-3 pb-2 affiliate-geo-row">
+				<div class="col-md-5 py-2 affiliate-geo-col">
+					<mat-form-field appearance="outline" class="m-0 w-100">
+						<mat-label>Near (state, city or address)</mat-label>
+						<input #geoNearInput type="text" matInput placeholder="e.g. New Jersey" autocomplete="off"
+							id="affiliateGeoNear">
+					</mat-form-field>
+				</div>
+				<div class="col-md-7 py-2 d-flex flex-wrap align-items-center affiliate-geo-radius" *ngIf="geoPlace">
+					<span class="geo-radius-label">Within</span>
+					<button type="button" class="geo-radius-chip" *ngFor="let r of geoRadiusOptions"
+						[class.active]="geoRadius === r" [attr.aria-pressed]="geoRadius === r"
+						(click)="setGeoRadius(r)">{{ r }} mi</button>
+					<button type="button" class="geo-clear-link" (click)="clearGeoSearch()">Clear location</button>
+				</div>
+			</div>
+			<div class="px-3 pb-2" *ngIf="geoPlace && geoMeta">
+				<div class="geo-banner geo-banner-warn" *ngIf="geoMeta.fallback; else geoSummary">
+					No affiliates in or within {{ geoMeta.radius_mi }} mi of <strong>{{ geoPlace.label }}</strong>.
+					Showing the {{ affiliate_accounts?.length || 0 }} nearest instead.
+				</div>
+				<ng-template #geoSummary>
+					<div class="geo-banner">
+						<strong>{{ geoMeta.in_region_count }}</strong>
+						in {{ geoPlace.label }}<ng-container *ngIf="geoMeta.nearby_count">, <strong>{{ geoMeta.nearby_count }}</strong>
+							more within {{ geoMeta.radius_mi }} mi</ng-container>, nearest first.
+					</div>
+				</ng-template>
+				<div class="geo-missing-note" *ngIf="geoMeta.missing_coordinates_count">
+					{{ geoMeta.missing_coordinates_count }} affiliate(s) have no saved address location or badge city and can't be placed by distance.
+				</div>
+			</div>
 			<!-- <h3 class="headinginfoH3" style="margin-top: 10px !important;">{{heading}}</h3> -->
 			<div class="row align-items-center mb-1">
 				<div class="col-12 d-flex flex-wrap" style="gap: 15px;">
@@ -206,6 +239,15 @@
 											bookingStatusTextReplace : '_' : ' '
 											|titlecase}}</div>
 									</ng-template>
+									<div class="geo-row-tags" *ngIf="geoPlace && (blackCarLimoBus?.in_region || blackCarLimoBus?.distance_mi != null)">
+										<span class="geo-tag geo-tag-region" *ngIf="blackCarLimoBus?.in_region">In area</span>
+										<span class="geo-tag" *ngIf="blackCarLimoBus?.distance_mi != null">{{ blackCarLimoBus.distance_mi }} mi</span>
+										<span class="geo-tag geo-tag-source" *ngIf="blackCarLimoBus?.match_source === 'badge_city'"
+											[title]="'Business address: ' + (blackCarLimoBus?.address_distance_mi != null ? blackCarLimoBus.address_distance_mi + ' mi away' : 'not saved')">
+											By badge city</span>
+										<span class="geo-tag geo-tag-source" *ngIf="blackCarLimoBus?.match_source === 'address'">By address</span>
+										<span class="geo-tag geo-tag-source" *ngIf="blackCarLimoBus?.match_source === 'both'">Address &amp; badge city</span>
+									</div>
 								</td>
 								<td class="clickable" (dblclick)="sendMessage('sms', blackCarLimoBus)"
 									data-messagetype="sms">

@@ -1,4 +1,4 @@
-import { Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild, isDevMode } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild, isDevMode } from '@angular/core';
 import { AdminService } from '../../../services/admin.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NgxSpinnerService } from "ngx-spinner";
@@ -10,6 +10,7 @@ import { ErrorDialogService } from 'src/app/services/error-dialog/errordialog.se
 import { AffiliateService } from 'src/app/services/affiliate.service';
 import { UploadService } from 'src/app/services/upload.service';
 import Quill from 'quill';
+import { attachPlaceAutocompleteElement, clearPlaceAutocompleteDisplay } from 'src/app/utils/google-place-autocomplete';
 declare var $: any;
 
 @Component({
@@ -18,13 +19,28 @@ declare var $: any;
 	styleUrls: ['./affiliate-accounts.component.scss'],
 	
 })
-export class AffiliateAccountsComponent implements OnInit, OnDestroy {
+export class AffiliateAccountsComponent implements OnInit, AfterViewInit, OnDestroy {
 	private readonly affiliateSearchStorageKey = 'affiliateSearch';
 	private readonly affiliateFilterStorageKey = 'affiliateFilterType';
 	private readonly affiliateOperatorStorageKey = 'affiliateOperatorSelect';
 	@ViewChild('fileInput') fileInput!: ElementRef;
 	@ViewChild('fileInput1') fileInput1!: ElementRef;
 	@ViewChild('message') message!: ElementRef;
+	@ViewChild('geoNearInput') geoNearInput!: ElementRef<HTMLInputElement>;
+
+	/** Geo ("Near") search: place picked from Google Places + radius in miles. */
+	readonly geoRadiusOptions = [25, 50, 100, 250];
+	geoRadius = 50;
+	geoPlace: {
+		label: string;
+		lat: number;
+		lng: number;
+		type: 'state' | 'city' | 'address';
+		state: string | null;
+		bounds: { ne_lat: number; ne_lng: number; sw_lat: number; sw_lng: number } | null;
+	} | null = null;
+	/** geo_meta from the API: fallback flag, region / nearby / missing-coordinate counts. */
+	geoMeta: any = null;
 	emails = new FormControl();
 	phone_numbers = new FormControl();
 	color: ThemePalette = 'accent';
@@ -127,6 +143,95 @@ export class AffiliateAccountsComponent implements OnInit, OnDestroy {
 		// this.getEmailList()
 
 
+	}
+
+	ngAfterViewInit(): void {
+		if (typeof google === 'undefined' || !this.geoNearInput?.nativeElement) {
+			return;
+		}
+		void attachPlaceAutocompleteElement(
+			this.geoNearInput.nativeElement,
+			{},
+			(place) => this.zone.run(() => this.onGeoPlaceSelected(place))
+		);
+	}
+
+	onGeoPlaceSelected(place: google.maps.places.PlaceResult): void {
+		const location = place?.geometry?.location;
+		if (!location) {
+			// Cleared with the widget's own "x" button.
+			if (this.geoPlace) {
+				this.clearGeoSearch();
+			}
+			return;
+		}
+
+		const types = place.types || [];
+		const stateComponent = (place.address_components || []).find((c) =>
+			c.types?.includes('administrative_area_level_1')
+		);
+		const cityTypes = ['locality', 'sublocality', 'postal_town', 'postal_code', 'neighborhood',
+			'administrative_area_level_2', 'administrative_area_level_3', 'colloquial_area'];
+		let type: 'state' | 'city' | 'address' = 'address';
+		if (types.includes('administrative_area_level_1')) {
+			type = 'state';
+		} else if (types.some((t) => cityTypes.includes(t))) {
+			type = 'city';
+		}
+
+		const viewport = place.geometry.viewport;
+		this.geoPlace = {
+			label: place.formatted_address || place.name || '',
+			lat: location.lat(),
+			lng: location.lng(),
+			type,
+			state: stateComponent?.short_name || null,
+			bounds: viewport
+				? {
+					ne_lat: viewport.getNorthEast().lat(),
+					ne_lng: viewport.getNorthEast().lng(),
+					sw_lat: viewport.getSouthWest().lat(),
+					sw_lng: viewport.getSouthWest().lng(),
+				}
+				: null,
+		};
+		this.loadAffiliateOperators();
+	}
+
+	setGeoRadius(radius: number): void {
+		this.geoRadius = radius;
+		if (this.geoPlace) {
+			this.loadAffiliateOperators();
+		}
+	}
+
+	clearGeoSearch(reload = true): void {
+		this.geoPlace = null;
+		this.geoMeta = null;
+		if (this.geoNearInput?.nativeElement) {
+			clearPlaceAutocompleteDisplay(this.geoNearInput.nativeElement);
+		}
+		if (reload) {
+			this.loadAffiliateOperators();
+		}
+	}
+
+	private geoQueryParams(): Record<string, string | number | null> | undefined {
+		if (!this.geoPlace) {
+			return undefined;
+		}
+		const g = this.geoPlace;
+		return {
+			geo_lat: g.lat,
+			geo_lng: g.lng,
+			geo_radius: this.geoRadius,
+			geo_type: g.type,
+			geo_state: g.state,
+			geo_ne_lat: g.bounds?.ne_lat ?? null,
+			geo_ne_lng: g.bounds?.ne_lng ?? null,
+			geo_sw_lat: g.bounds?.sw_lat ?? null,
+			geo_sw_lng: g.bounds?.sw_lng ?? null,
+		};
 	}
 
 	ngOnDestroy(): void {
@@ -310,6 +415,7 @@ export class AffiliateAccountsComponent implements OnInit, OnDestroy {
 		localStorage.removeItem(this.affiliateSearchStorageKey);
 		localStorage.removeItem(this.affiliateFilterStorageKey);
 		localStorage.removeItem(this.affiliateOperatorStorageKey);
+		this.clearGeoSearch(false);
 		this.affiliateTypeSwitch('all');
 	}
 
@@ -347,7 +453,7 @@ export class AffiliateAccountsComponent implements OnInit, OnDestroy {
 		this.spinner.show();
 		// console.log(keyword);
 		// Load Our blackCarLimoBus using API
-		this.adminService.blackCarLimoBusAccounts(pageUrl, this.affiliateType, this.filter_type, keyword).then((result: any) => {
+		this.adminService.blackCarLimoBusAccounts(pageUrl, this.affiliateType, this.filter_type, keyword, this.geoQueryParams()).then((result: any) => {
 			const affiliateAccounts = result.data.data.map(i => {
 				if (i?.LanguagesSpoken) {
 					console.log("in language iffff")
@@ -363,6 +469,7 @@ export class AffiliateAccountsComponent implements OnInit, OnDestroy {
 			this.affiliate_accounts_emails = this.affiliate_accounts.filter(item => item.Email !== null)
 			this.affiliate_accounts_numbers = this.affiliate_accounts.filter(item => item.CellNumber !== null)
 			this.affiliate_count = result.data.account_counts;
+			this.geoMeta = this.geoPlace ? (result.data.geo_meta || null) : null;
 			this.firstPage = 1;
 			this.lastPage = result.data.last_page;
 			this.totalPage = result.data.last_page;
@@ -513,6 +620,9 @@ export class AffiliateAccountsComponent implements OnInit, OnDestroy {
 			account?.DBA,
 			languageValues,
 			account?.Address,
+			account?.City,
+			account?.State,
+			account?.state_name,
 			vehicleTypes,
 			account?.number_of_vehicles?.toString()
 		].filter(Boolean).map((value) => value.toString());

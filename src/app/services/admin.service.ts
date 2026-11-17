@@ -696,13 +696,26 @@ export class AdminService {
 	}
 
 	//affiliate
-	blackCarLimoBusAccounts(url: string, affiliateType: string, filter_type: string, keyword: string) {
+	/**
+	 * @param geo optional geo search params (geo_lat, geo_lng, geo_radius, geo_type,
+	 *            geo_state, geo_ne_lat/lng, geo_sw_lat/lng). Page URLs from the API
+	 *            already carry them, so they are only added to the first request.
+	 */
+	blackCarLimoBusAccounts(url: string, affiliateType: string, filter_type: string, keyword: string, geo?: Record<string, string | number | null | undefined>) {
 		let path;
 		if (url) {
 			path = url + '&search=' + keyword;
 		}
 		else {
 			path = `${this.serverUrl}affiliate-accounts/${affiliateType}/${filter_type}?search=${keyword}`;
+			if (geo) {
+				Object.keys(geo).forEach((key) => {
+					const value = geo[key];
+					if (value !== null && value !== undefined && value !== '') {
+						path += `&${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`;
+					}
+				});
+			}
 		}
 		return this.httpClient.get(path).toPromise()
 	}

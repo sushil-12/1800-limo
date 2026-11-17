@@ -1521,3 +1521,18 @@ $success: #16a34a;
 		max-width: 100%;
 	}
 }
+
+/* Hidden while the user types in a page field, so the launcher doesn't sit
+   on top of the on-screen keyboard. Phones and tablets only (iPad Pro is
+   1024px wide in portrait; touch-only devices of any width also count) —
+   desktops have no on-screen keyboard, so the button stays put there. */
+@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+  .ai-fab.typing-hidden,
+  .ai-teaser.typing-hidden {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: scale(.85) !important;
+    transition: opacity .15s ease, transform .15s ease, visibility 0s linear .15s !important;
+  }
+}

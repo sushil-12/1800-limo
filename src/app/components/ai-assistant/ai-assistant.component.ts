@@ -57,6 +57,8 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 	uploading = false; // a registration photo on its way to the 1800limo API
 	uploadError = '';
 	hidden = false;
+	/** A text field elsewhere on the page has focus (on phones: the keyboard is up). */
+	pageFieldFocused = false;
 	newMessageText = '';
 	showTeaser = false;
 
@@ -88,7 +90,8 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 		private authService: AuthService,
 		private router: Router,
 		public voice: VoiceSessionService,
-		private zone: NgZone
+		private zone: NgZone,
+		private host: ElementRef<HTMLElement>
 	) { }
 
 	ngOnInit(): void {
@@ -118,7 +121,7 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 			}
 		}));
 
-		if (!this.teaserDismissed() && !this.assistant.messages.length) {
+		if (!this.isAdmin && !this.teaserDismissed() && !this.assistant.messages.length) {
 			this.teaserTimer = setTimeout(() => this.showTeaser = true, TEASER_DELAY_MS);
 		}
 	}
@@ -230,6 +233,29 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 
 	private teaserDismissed(): boolean {
 		try { return sessionStorage.getItem(TEASER_DISMISSED_KEY) === '1'; } catch { return false; }
+	}
+
+	/* Hide the launcher while the user types in a page field, so it doesn't
+	   float on top of the on-screen keyboard. Fields inside the assistant
+	   itself don't count. */
+	@HostListener('document:focusin', ['$event'])
+	onDocFocusIn(e: FocusEvent): void {
+		this.pageFieldFocused = this.isPageTextField(e.target);
+	}
+
+	@HostListener('document:focusout', ['$event'])
+	onDocFocusOut(e: FocusEvent): void {
+		// relatedTarget is the element receiving focus (null when focus leaves to nothing)
+		this.pageFieldFocused = this.isPageTextField(e.relatedTarget);
+	}
+
+	private isPageTextField(target: EventTarget | null): boolean {
+		const el = target as HTMLElement | null;
+		if (!el || !el.tagName || this.host.nativeElement.contains(el)) return false;
+		if (el.isContentEditable || el.tagName === 'TEXTAREA') return true;
+		if (el.tagName !== 'INPUT') return false;
+		const type = ((el as HTMLInputElement).type || 'text').toLowerCase();
+		return !['button', 'submit', 'reset', 'checkbox', 'radio', 'file', 'range', 'color', 'image', 'hidden'].includes(type);
 	}
 
 	@HostListener('document:keydown.escape')
@@ -438,6 +464,15 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 		if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return; // new tab/window
 		event.preventDefault();
 		this.router.navigateByUrl(href);
+	}
+
+	/** Signed-in admin — they never get the teaser bubble. Checked live so a login after page load counts. */
+	get isAdmin(): boolean {
+		try {
+			return !!this.authService.getAccessToken() && this.authService.currentUserValue?.roleName === 'admin';
+		} catch {
+			return false;
+		}
 	}
 
 	/** Signed-in affiliate (role "driver", as otp.component sets it) whose account isn't accepted yet. */

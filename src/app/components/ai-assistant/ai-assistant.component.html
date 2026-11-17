@@ -1,6 +1,6 @@
 <ng-container *ngIf="!hidden">
   <!-- Teaser bubble: nudges first-time visitors towards the assistant -->
-  <div *ngIf="showTeaser && !isOpen" class="ai-teaser" role="status">
+  <div *ngIf="showTeaser && !isOpen && !isAdmin" class="ai-teaser" [class.typing-hidden]="pageFieldFocused" role="status">
     <button type="button" class="teaser-close" (click)="dismissTeaser()" aria-label="Dismiss">×</button>
     <button type="button" class="teaser-body" (click)="openFromTeaser()">
       <strong>Hi! I'm your AI assistant ✨</strong>
@@ -9,7 +9,7 @@
   </div>
 
   <!-- Launcher -->
-  <button type="button" class="ai-fab" [class.open]="isOpen" (click)="toggle()"
+  <button type="button" class="ai-fab" [class.open]="isOpen" [class.typing-hidden]="pageFieldFocused && !isOpen" (click)="toggle()"
           [attr.aria-label]="isOpen ? 'Close assistant' : 'Ask our AI assistant'"
           [attr.aria-expanded]="isOpen">
     <span class="fab-pulse" *ngIf="!isOpen" aria-hidden="true"></span>

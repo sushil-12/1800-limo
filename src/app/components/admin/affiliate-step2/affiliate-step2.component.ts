@@ -192,6 +192,9 @@ export class AffiliateStep2Component implements OnInit {
 			})
 
 			this.fillGlobalValue('', 'currency', true)
+			// The bank country decides the currency, not the logged-in admin's phone country
+			const bankCountry = this.addBankForm?.get('country')?.value;
+			if (bankCountry) this.selectCountryCurrency(bankCountry, this.stripeFieldsByCountry[bankCountry.toUpperCase()]?.default_currency);
 		})
 		this.spinner.show()
 		this.httpClient.get("assets/json/countryStateList.json").subscribe(data => {
@@ -412,7 +415,26 @@ export class AffiliateStep2Component implements OnInit {
 		return value?.text || value?.plainText || value?.stringValue || value?.text?.text || '';
 	}
 
-	private searchGooglePredictions(searchText: string): Promise<Array<any>> {
+	/**
+	 * Address suggestions with the bank country's addresses first, then other countries' (one search
+	 * limited to the bank country and one open search, run together; duplicates dropped).
+	 */
+	private async searchAddressesBankCountryFirst(searchText: string): Promise<Array<any>> {
+		const bankCountry = String(this.addBankForm?.get('country')?.value || '').toUpperCase();
+		if (!/^[A-Z]{2}$/.test(bankCountry)) {
+			return this.searchGooglePredictions(searchText);
+		}
+		const [inCountry, anywhere] = await Promise.all([
+			this.searchGooglePredictions(searchText, bankCountry),
+			this.searchGooglePredictions(searchText),
+		]);
+		const others = anywhere.filter((o: any) => !inCountry.some((c: any) => c.placeId === o.placeId));
+		// Up to 5 from the bank country, then other countries; fill the rest of the 8 from whichever has more.
+		const first = inCountry.slice(0, Math.max(5, 8 - others.length));
+		return [...first, ...others].slice(0, 8);
+	}
+
+	private searchGooglePredictions(searchText: string, regionCode?: string): Promise<Array<any>> {
 		const apiKey = this.getGoogleMapsApiKey();
 		if (!apiKey || !String(searchText || '').trim()) {
 			return Promise.resolve([]);
@@ -428,7 +450,8 @@ export class AffiliateStep2Component implements OnInit {
 			body: JSON.stringify({
 				input: searchText,
 				includeQueryPredictions: false,
-				languageCode: 'en-US'
+				languageCode: 'en-US',
+				...(regionCode ? { includedRegionCodes: [regionCode.toLowerCase()], regionCode: regionCode.toLowerCase() } : {})
 			})
 		})
 			.then((response) => response.ok ? response.json() : Promise.resolve({ suggestions: [] }))
@@ -515,7 +538,6 @@ export class AffiliateStep2Component implements OnInit {
 		this.addBankForm.patchValue(valuesToPatch);
 		if (countryCode) {
 			this.changeCountry(countryCode);
-			this.selectCountryCurrency(countryCode);
 			if (valuesToPatch.state) {
 				this.addBankForm.get('state')?.setValue(valuesToPatch.state);
 			}
@@ -620,7 +642,7 @@ export class AffiliateStep2Component implements OnInit {
 		}
 
 		this.addressSearchLoading = true;
-		const options = await this.searchGooglePredictions(searchText);
+		const options = await this.searchAddressesBankCountryFirst(searchText);
 		if (requestVersion === this.addressSearchVersion) {
 			this.addressOptions = options;
 			this.addressSearchLoading = false;
@@ -697,14 +719,21 @@ export class AffiliateStep2Component implements OnInit {
 	/** Bank Country picked from the dropdown: apply its rules and pick its currency. */
 	onBankCountryChange(code: string): void {
 		this.changeCountry(code);
-		this.selectCountryCurrency(code);
 	}
 
-	/** Pre-select the currency banks in that country are paid in (e.g. IN -> INR, DE -> EUR). */
-	private selectCountryCurrency(country: string): void {
+	/**
+	 * Pre-select the currency banks in the bank country are paid in, like the affiliate's step 2:
+	 * Stripe's default currency for the country when known, else the country's own (IN -> INR, GB -> GBP).
+	 */
+	private selectCountryCurrency(country: string, stripeCurrency?: string | null): void {
 		const code = (country || '').toUpperCase();
 		if (!code || !this.addBankForm) return;
-		const option = (this.currencyOptions_copy || []).find((o: any) => (o?.currencyCountry || '').toUpperCase() === code);
+		const options = this.currencyOptions_copy || [];
+		const wanted = (stripeCurrency || '').toUpperCase();
+		const option = (wanted && (
+				options.find((o: any) => o?.currency?.toUpperCase() === wanted && o?.currencyCountry?.toUpperCase() === code)
+				|| options.find((o: any) => o?.currency?.toUpperCase() === wanted)))
+			|| options.find((o: any) => (o?.currencyCountry || '').toUpperCase() === code);
 		if (!option) return;
 		const value = option.currency + '-' + option.currencyCountry;
 		if (this.addBankForm.get('currency')?.value !== value) this.SetFormValue('currency', value);
@@ -717,7 +746,6 @@ export class AffiliateStep2Component implements OnInit {
 		if (control.value !== code) control.setValue(code);
 		if (code.length === 2) {
 			this.changeCountry(code);
-			this.selectCountryCurrency(code);
 		}
 	}
 
@@ -762,6 +790,7 @@ export class AffiliateStep2Component implements OnInit {
 		const code = (country || '').toUpperCase();
 		this.rules = withStripeFields(bankRules(code), this.stripeFieldsByCountry[code] ?? null);
 		this.applyRuleValidators(code === 'US');
+		if (code.length === 2) this.selectCountryCurrency(code, this.stripeFieldsByCountry[code]?.default_currency);
 		if (code.length !== 2 || code in this.stripeFieldsByCountry) return;
 		this.stripeFieldsByCountry[code] = null;
 		this.adminService.stripeCountryFields(code)
@@ -772,6 +801,7 @@ export class AffiliateStep2Component implements OnInit {
 				if ((this.addBankForm?.get('country')?.value || '').toUpperCase() !== code) return;
 				this.rules = withStripeFields(bankRules(code), fields);
 				this.applyRuleValidators(code === 'US');
+				this.selectCountryCurrency(code, fields?.default_currency);
 			});
 	}
 

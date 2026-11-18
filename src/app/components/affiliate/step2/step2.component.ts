@@ -550,7 +550,26 @@ export class Step2Component implements OnInit, AfterViewInit {
 		return value?.text || value?.plainText || value?.stringValue || value?.text?.text || '';
 	}
 
-	private searchGooglePredictions(searchText: string): Promise<Array<any>> {
+	/**
+	 * Address suggestions with the bank country's addresses first, then other countries' (one search
+	 * limited to the bank country and one open search, run together; duplicates dropped).
+	 */
+	private async searchAddressesBankCountryFirst(searchText: string): Promise<Array<any>> {
+		const bankCountry = String(this.addBankForm?.get('country')?.value || '').toUpperCase();
+		if (!/^[A-Z]{2}$/.test(bankCountry)) {
+			return this.searchGooglePredictions(searchText);
+		}
+		const [inCountry, anywhere] = await Promise.all([
+			this.searchGooglePredictions(searchText, bankCountry),
+			this.searchGooglePredictions(searchText),
+		]);
+		const others = anywhere.filter((o: any) => !inCountry.some((c: any) => c.placeId === o.placeId));
+		// Up to 5 from the bank country, then other countries; fill the rest of the 8 from whichever has more.
+		const first = inCountry.slice(0, Math.max(5, 8 - others.length));
+		return [...first, ...others].slice(0, 8);
+	}
+
+	private searchGooglePredictions(searchText: string, regionCode?: string): Promise<Array<any>> {
 		const apiKey = this.getGoogleMapsApiKey();
 		if (!apiKey || !String(searchText || '').trim()) {
 			return Promise.resolve([]);
@@ -566,7 +585,8 @@ export class Step2Component implements OnInit, AfterViewInit {
 			body: JSON.stringify({
 				input: searchText,
 				includeQueryPredictions: false,
-				languageCode: 'en-US'
+				languageCode: 'en-US',
+				...(regionCode ? { includedRegionCodes: [regionCode.toLowerCase()], regionCode: regionCode.toLowerCase() } : {})
 			})
 		})
 			.then((response) => response.ok ? response.json() : Promise.resolve({ suggestions: [] }))
@@ -732,7 +752,7 @@ export class Step2Component implements OnInit, AfterViewInit {
 		}
 
 		this.addressSearchLoading = true;
-		const options = await this.searchGooglePredictions(searchText);
+		const options = await this.searchAddressesBankCountryFirst(searchText);
 		if (requestVersion === this.addressSearchVersion) {
 			this.addressOptions = options;
 			this.addressSearchLoading = false;

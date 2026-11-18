@@ -1036,7 +1036,7 @@ export class AdminService {
 		return this.httpClient.get(path).toPromise();
 	}
 	loadBookings(url, startDate, endDate, useDateFilter, keyword = '', orderBy, status = '', filter = '') {
-		// filter: 'upcoming' | 'past' tab; '' = date range (Custom tab).
+		// filter: 'upcoming' | 'past' | 'archive' tab; '' = date range (Custom tab).
 		const now = moment();
 		const clock = '&current_date=' + now.format('YYYY-MM-DD') + '&current_time=' + now.format('HH:mm:ss');
 		var path;
@@ -1049,7 +1049,7 @@ export class AdminService {
 		return this.httpClient.get(path).toPromise();
 	}
 	loadFarmInBookings(url, startDate, endDate, useDateFilter, keyword = '', orderBy, status = '', filter = '') {
-		// filter: 'upcoming' | 'past' tab; '' = date range (Custom tab).
+		// filter: 'upcoming' | 'past' | 'archive' tab; '' = date range (Custom tab).
 		const now = moment();
 		const clock = '&current_date=' + now.format('YYYY-MM-DD') + '&current_time=' + now.format('HH:mm:ss');
 		var path;

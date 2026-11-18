@@ -198,9 +198,9 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 			: false;
 		console.log("useDateFilter-->", this.useDateFilter);
 		this.listTab = this.useDateFilter ? 'custom' :
-			(localStorage.getItem('DBListTab') == 'past' ? 'past' : 'upcoming');
+			(['past', 'archive'].includes(localStorage.getItem('DBListTab')) ? localStorage.getItem('DBListTab') : 'upcoming');
 		this.orderBy = localStorage.getItem("orderByCreatedAt") ? localStorage.getItem("orderByCreatedAt") :
-			(this.listTab == 'past' ? "pickup_date_desc" : "pickup_date_asc")
+			(this.listTab == 'past' || this.listTab == 'archive' ? "pickup_date_desc" : "pickup_date_asc")
 		this.use_created_at = localStorage.getItem("orderByCreatedAt") ? true : false
 
 
@@ -1731,7 +1731,7 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 		} else {
 			// The table re-sorts client-side; keep Past newest-first like the API returns it.
 			this.orderBy = localStorage.getItem("orderByCreatedAt") ||
-				(this.listTab == 'past' ? "pickup_date_desc" : "pickup_date_asc");
+				(this.listTab == 'past' || this.listTab == 'archive' ? "pickup_date_desc" : "pickup_date_asc");
 		}
 	}
 

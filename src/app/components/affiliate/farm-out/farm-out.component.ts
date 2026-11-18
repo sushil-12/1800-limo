@@ -137,7 +137,7 @@ export class FarmOutComponent implements OnInit {
 			: false;
 		console.log('farmOutuseDateFilter-->', this.useDateFilter)
 		this.listTab = this.useDateFilter ? 'custom' :
-			(localStorage.getItem('farmOutBookingsTab') == 'past' ? 'past' : 'upcoming');
+			(['past', 'archive'].includes(localStorage.getItem('farmOutBookingsTab')) ? localStorage.getItem('farmOutBookingsTab') : 'upcoming');
 
 		this.changeStatusForm = this.formBuilder.group({
 			reservation_id: ['', Validators.required],

@@ -164,7 +164,7 @@ export class BookingComponent implements OnInit {
 		}
 		console.log('traveluseDateFilter-->', this.useDateFilter)
 		this.listTab = this.useDateFilter ? 'custom' :
-			(localStorage.getItem('travelBookingsTab') == 'past' ? 'past' : 'upcoming');
+			(['past', 'archive'].includes(localStorage.getItem('travelBookingsTab')) ? localStorage.getItem('travelBookingsTab') : 'upcoming');
 
 		//save currency symbol
 		this.currencySymbol = this.stateManagementService.getCurrencySymbol();

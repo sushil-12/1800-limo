@@ -8,11 +8,12 @@ export interface BookingFilterOption {
 export interface BookingTabCounts {
 	upcoming?: number | null;
 	past?: number | null;
+	archive?: number | null;
 }
 
 /**
  * Header card shared by the bookings dashboards (admin, affiliate, individual,
- * travel agent): title, search bar, Upcoming / Past / Custom tabs and, for the
+ * travel agent): title, search bar, Upcoming / Past / Custom / Archive tabs and, for the
  * driver side, the "needs your response" banner.
  *
  * Filters: pass `filterOptions` and the Filters button opens them as a
@@ -55,6 +56,7 @@ export class BookingsHeaderComponent {
 		{ key: 'upcoming', label: 'Upcoming' },
 		{ key: 'past', label: 'Past' },
 		{ key: 'custom', label: 'Custom' },
+		{ key: 'archive', label: 'Archive' },
 	];
 
 	/** Label of the chosen filter, shown on the button in place of "Filters". */

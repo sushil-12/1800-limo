@@ -140,7 +140,7 @@ export class MyBookingsComponent implements OnInit {
 			: false;
 		console.log('farmInuseDateFilter-->', this.useDateFilter)
 		this.listTab = this.useDateFilter ? 'custom' :
-			(localStorage.getItem('affiliateBookingsTab') == 'past' ? 'past' : 'upcoming');
+			(['past', 'archive'].includes(localStorage.getItem('affiliateBookingsTab')) ? localStorage.getItem('affiliateBookingsTab') : 'upcoming');
 
 		//save currency symbol
 		this.currencySymbol = this.stateManagementService.getCurrencySymbol();

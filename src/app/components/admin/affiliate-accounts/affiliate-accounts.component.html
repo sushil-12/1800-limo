@@ -67,20 +67,24 @@
 				</div>
 			</div>
 			<!-- Geo search: find affiliates in / near a state, city or address -->
-			<div class="row align-items-center px-3 pb-2 affiliate-geo-row">
-				<div class="col-md-5 py-2 affiliate-geo-col">
-					<mat-form-field appearance="outline" class="m-0 w-100">
-						<mat-label>Near (state, city or address)</mat-label>
-						<input #geoNearInput type="text" matInput placeholder="e.g. New Jersey" autocomplete="off"
-							id="affiliateGeoNear">
-					</mat-form-field>
-				</div>
-				<div class="col-md-7 py-2 d-flex flex-wrap align-items-center affiliate-geo-radius" *ngIf="geoPlace">
-					<span class="geo-radius-label">Within</span>
-					<button type="button" class="geo-radius-chip" *ngFor="let r of geoRadiusOptions"
-						[class.active]="geoRadius === r" [attr.aria-pressed]="geoRadius === r"
-						(click)="setGeoRadius(r)">{{ r }} mi</button>
-					<button type="button" class="geo-clear-link" (click)="clearGeoSearch()">Clear location</button>
+			<!-- Not a mat-form-field: the Places widget replaces the native input, which breaks the
+			     floating label and field height, so the outline look is drawn by .geo-search-field. -->
+			<div class="affiliate-geo-panel px-3 pt-2 pb-2">
+				<fieldset class="geo-search-field">
+					<legend class="geo-field-label">Near (state, city or address)</legend>
+					<input #geoNearInput type="text" placeholder="e.g. New Jersey" autocomplete="off"
+						id="affiliateGeoNear">
+				</fieldset>
+				<div class="geo-radius-group" *ngIf="geoPlace">
+					<span class="geo-radius-label" id="geoRadiusLabel">Within</span>
+					<div class="geo-radius-segment" role="group" aria-labelledby="geoRadiusLabel">
+						<button type="button" class="geo-radius-option" *ngFor="let r of geoRadiusOptions"
+							[class.active]="geoRadius === r" [attr.aria-pressed]="geoRadius === r"
+							(click)="setGeoRadius(r)">{{ r }} mi</button>
+					</div>
+					<button type="button" class="geo-clear-btn" (click)="clearGeoSearch()">
+						<span aria-hidden="true">&times;</span> Clear
+					</button>
 				</div>
 			</div>
 			<div class="px-3 pb-2" *ngIf="geoPlace && geoMeta">
@@ -95,9 +99,9 @@
 							more within {{ geoMeta.radius_mi }} mi</ng-container>, nearest first.
 					</div>
 				</ng-template>
-				<div class="geo-missing-note" *ngIf="geoMeta.missing_coordinates_count">
+				<!-- <div class="geo-missing-note" *ngIf="geoMeta.missing_coordinates_count">
 					{{ geoMeta.missing_coordinates_count }} affiliate(s) have no saved address location or badge city and can't be placed by distance.
-				</div>
+				</div> -->
 			</div>
 			<!-- <h3 class="headinginfoH3" style="margin-top: 10px !important;">{{heading}}</h3> -->
 			<div class="row align-items-center mb-1">

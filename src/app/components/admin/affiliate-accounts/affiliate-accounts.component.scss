@@ -448,24 +448,132 @@ quill-editor {
     border-radius: 3rem !important;
 }
 // ---- Geo ("Near") search ----------------------------------------------
-.affiliate-geo-radius {
-    gap: 8px;
+.affiliate-geo-panel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+}
+
+// Mimics the mat-form-field "outline" look used by the filter row above.
+// A <fieldset>/<legend> gives a real notch, so the label sits over the page background.
+.geo-search-field {
+    flex: 1 1 340px;
+    max-width: 560px;
+    min-width: 0;
+    // 64px total = 8px of legend above the top border + 56px visible box.
+    height: 64px;
+    margin: -8px 0 0;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.38);
+    border-radius: 4px;
+    cursor: text;
+    transition: border-color 0.15s ease;
+
+    &:hover {
+        border-color: rgba(0, 0, 0, 0.87);
+    }
+
+    // Same focus treatment as mat-form-field outline (theme primary: indigo 500).
+    &:focus-within {
+        border: 2px solid #3f51b5;
+        padding: 0 3px;
+
+        .geo-field-label {
+            color: #3f51b5;
+            margin-left: 5px;
+        }
+    }
+
+    input {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        font-size: 16px;
+        padding: 0 10px;
+    }
+
+    // The widget draws its own rounded border on the host element; strip it so only
+    // the .geo-search-field outline shows (page-level !important beats :host styles).
+    ::ng-deep gmp-place-autocomplete {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        color-scheme: light;
+        --gmp-mat-color-outline-decorative: transparent;
+        --gmp-mat-color-outline: transparent;
+        --gmp-color-stroke-input-focus: transparent;
+    }
+}
+
+// Overrides Bootstrap's legend defaults (float/width/font-size) so it sits in the border notch.
+.geo-field-label {
+    float: none;
+    width: auto;
+    max-width: calc(100% - 20px);
+    margin: 0 0 0 6px;
+    padding: 0 4px;
+    font-size: 12px;
+    line-height: 16px;
+    color: rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+}
+
+.geo-radius-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .geo-radius-label {
     font-size: 14px;
+    font-weight: 500;
     color: #555;
+    white-space: nowrap;
 }
 
-.geo-radius-chip {
+.geo-radius-segment {
+    display: inline-flex;
     border: 1px solid #f3933d;
-    background: #fff;
-    color: #b85f12;
     border-radius: 999px;
-    padding: 4px 14px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.geo-radius-option {
+    border: 0;
+    background: transparent;
+    color: #b85f12;
+    height: 38px;
+    min-width: 72px;
+    padding: 0 14px;
     font-size: 14px;
-    line-height: 1.4;
+    font-weight: 500;
+    white-space: nowrap;
     cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    & + & {
+        border-left: 1px solid #f3933d;
+    }
+
+    &:hover:not(.active) {
+        background: #fff3e8;
+    }
 
     &.active {
         background: #f3933d;
@@ -474,18 +582,71 @@ quill-editor {
 
     &:focus-visible {
         outline: 2px solid #b85f12;
+        outline-offset: -3px;
+    }
+}
+
+.geo-clear-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: #555;
+    font-size: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    span {
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: #000;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #b85f12;
         outline-offset: 2px;
     }
 }
 
-.geo-clear-link {
-    border: none;
-    background: none;
-    color: #555;
-    text-decoration: underline;
-    font-size: 14px;
-    padding: 4px 6px;
-    cursor: pointer;
+@media screen and (max-width: 767px) {
+    .geo-search-field {
+        flex-basis: 100%;
+        max-width: 100%;
+    }
+
+    // "Within" + Clear on one line, full-width segmented control below.
+    .geo-radius-group {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "label clear"
+            "segment segment";
+        gap: 8px;
+    }
+
+    .geo-radius-label { grid-area: label; }
+    .geo-clear-btn { grid-area: clear; }
+
+    .geo-radius-segment {
+        grid-area: segment;
+        display: flex;
+        width: 100%;
+    }
+
+    .geo-radius-option {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 0 6px;
+    }
 }
 
 .geo-banner {

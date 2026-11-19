@@ -692,6 +692,9 @@ export class NewBookingComponent implements OnInit, OnDestroy {
 			if (existing) existing.destroy();
 			const passengerCountry = getInitCountry('passenger_cell_country');
 			this.PaxTelObject = intlTelInput(this.passenger_cellInput.nativeElement, this.commonServices.getTelInputOptions(passengerCountry));
+			if (passengerCountry && passengerCountry !== 'auto') {
+				this.PaxTelObject.setCountry(passengerCountry);
+			}
 
 			this.addCustomCountrySearch(this.passenger_cellInput.nativeElement);
 			this.passenger_cellInput.nativeElement.addEventListener('countrychange', () => {
@@ -705,15 +708,17 @@ export class NewBookingComponent implements OnInit, OnDestroy {
 		if (this.cellInput) {
 			const existing = (window as any).intlTelInputGlobals?.getInstance(this.cellInput.nativeElement);
 			if (existing) existing.destroy();
-			const lcCountry = getInitCountry('cell_country');
+			const lcCountry = this.BookingForm.get('loose_customer.phone_country')?.value || countryCode;
 			this.LCTelObject = intlTelInput(this.cellInput.nativeElement, this.commonServices.getTelInputOptions(lcCountry));
+			if (lcCountry && lcCountry !== 'auto') {
+				this.LCTelObject.setCountry(lcCountry);
+			}
 
 			this.addCustomCountrySearch(this.cellInput.nativeElement);
 			this.cellInput.nativeElement.addEventListener('countrychange', () => {
 				const countryData = this.LCTelObject.getSelectedCountryData();
 				console.log("in country chnage", countryData)
 				this.onLCTeleCountryChange(countryData);
-				// Removed PaxTelObject cross-update to ensure isolation
 				this.validateLooseCustomerPhone();
 			});
 		}
@@ -3452,13 +3457,23 @@ export class NewBookingComponent implements OnInit, OnDestroy {
 
 	handleLooseCustomerPhone(event: any) {
 		console.log('handleLooseCustomerPhone->>', event, event.target.value)
-		const loose_customer = this.BookingForm.get('loose_customer') as FormGroup
+		const loose_customer = this.BookingForm.get('loose_customer') as FormGroup;
 		if (loose_customer) {
+			const phoneVal = event?.target?.value ?? loose_customer.get('phone')?.value ?? '';
+			const phoneIsd = loose_customer.get('phone_isd')?.value;
+			const phoneCountry = loose_customer.get('phone_country')?.value;
 			this.BookingForm.patchValue({
-				passenger_cell: event.target.value,
-				passenger_cell_isd: loose_customer.get('phone_isd')?.value,
-				passenger_cell_country: loose_customer.get('phone_country')?.value
-			})
+				passenger_cell: phoneVal,
+				passenger_cell_isd: phoneIsd,
+				passenger_cell_country: phoneCountry
+			});
+			if (phoneCountry && this.PaxTelObject) {
+				const currentPaxCountry = this.PaxTelObject.getSelectedCountryData()?.iso2;
+				if (currentPaxCountry !== phoneCountry) {
+					this.PaxTelObject.setCountry(phoneCountry);
+				}
+			}
+			this.validatePassengerPhone();
 		}
 	}
 
@@ -6933,11 +6948,24 @@ export class NewBookingComponent implements OnInit, OnDestroy {
 
 
 	onLCTeleCountryChange(event: any) {
-
-		(<FormGroup>this.BookingForm.get('loose_customer')).get('phone_country').setValue(event.iso2);
-		(<FormGroup>this.BookingForm.get('loose_customer')).get('phone_isd').setValue('+' + event.dialCode);
-		console.log("in mobile", event.dialCode, event.iso2)
-		this.BookingForm.updateValueAndValidity()
+		if (!event || !event.dialCode) return;
+		const dialCode = '+' + event.dialCode;
+		const lcGroup = this.BookingForm.get('loose_customer') as FormGroup;
+		if (lcGroup) {
+			lcGroup.patchValue({
+				phone_country: event.iso2,
+				phone_isd: dialCode
+			});
+		}
+		this.BookingForm.patchValue({
+			passenger_cell_isd: dialCode,
+			passenger_cell_country: event.iso2
+		});
+		if (this.PaxTelObject) {
+			this.PaxTelObject.setCountry(event.iso2);
+		}
+		this.validatePassengerPhone();
+		this.BookingForm.updateValueAndValidity();
 	}
 
 	// onCountryChange(event, type)

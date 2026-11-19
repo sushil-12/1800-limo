@@ -1328,6 +1328,9 @@ export class BookingComponent implements OnInit, OnDestroy {
 			if (existing) existing.destroy();
 			const passengerCountry = getInitCountry('passenger_cell_country');
 			this.PaxTelObject = intlTelInput(this.passenger_cellInput.nativeElement, this.commonServices.getTelInputOptions(passengerCountry));
+			if (passengerCountry && passengerCountry !== 'auto') {
+				this.PaxTelObject.setCountry(passengerCountry);
+			}
 
 			this.addCustomCountrySearch(this.passenger_cellInput.nativeElement);
 			this.bindCountryChange(this.passenger_cellInput.nativeElement, () => {
@@ -1340,14 +1343,16 @@ export class BookingComponent implements OnInit, OnDestroy {
 		if (this.cellInput) {
 			const existing = (window as any).intlTelInputGlobals?.getInstance(this.cellInput.nativeElement);
 			if (existing) existing.destroy();
-			const lcCountry = getInitCountry('cell_country');
+			const lcCountry = this.BookingForm.get('loose_customer.phone_country')?.value || countryCode;
 			this.LCTelObject = intlTelInput(this.cellInput.nativeElement, this.commonServices.getTelInputOptions(lcCountry));
+			if (lcCountry && lcCountry !== 'auto') {
+				this.LCTelObject.setCountry(lcCountry);
+			}
 
 			this.addCustomCountrySearch(this.cellInput.nativeElement);
 			this.bindCountryChange(this.cellInput.nativeElement, () => {
 				const countryData = this.LCTelObject.getSelectedCountryData();
 				this.onLCTeleCountryChange(countryData);
-				// Removed PaxTelObject cross-update to ensure isolation
 				this.validateLooseCustomerPhone();
 			});
 		}
@@ -5393,13 +5398,82 @@ export class BookingComponent implements OnInit, OnDestroy {
 	}
 
 	handleLooseCustomerPhone(event: any) {
-		const loose_customer = this.BookingForm.get('loose_customer') as FormGroup
+		console.log('========== handleLooseCustomerPhone START ==========');
+
+		const loose_customer = this.BookingForm.get('loose_customer') as FormGroup;
+
+		console.log('Loose Customer Form:', loose_customer?.value);
+		console.log('Event Phone Value:', event?.target?.value);
+
 		if (loose_customer) {
+			let phoneVal = event?.target?.value
+				?? loose_customer.get('phone')?.value
+				?? '';
+
+			const phoneIsd = loose_customer.get('phone_isd')?.value;
+			const phoneCountry = loose_customer.get('phone_country')?.value;
+
+			console.log('--- Original Values ---');
+			console.log('Phone:', phoneVal);
+			console.log('ISD:', phoneIsd);
+			console.log('Country:', phoneCountry);
+
+			// Check if phone already contains ISD code
+			if (phoneIsd && phoneVal.startsWith(phoneIsd)) {
+				console.log('ISD code detected inside phone number:', phoneIsd);
+
+				phoneVal = phoneVal.substring(phoneIsd.length);
+
+				console.log('Phone after removing ISD:', phoneVal);
+			} else {
+				console.log('ISD code not found at the beginning of phone number.');
+			}
+
+			console.log('--- Values Being Patched ---');
+			console.log('passenger_cell:', phoneVal);
+			console.log('passenger_cell_isd:', phoneIsd);
+			console.log('passenger_cell_country:', phoneCountry);
+
 			this.BookingForm.patchValue({
-				passenger_cell: event.target.value,
-				passenger_cell_isd: loose_customer.get('phone_isd')?.value,
-				passenger_cell_country: loose_customer.get('phone_country')?.value
-			})
+				passenger_cell: phoneVal,
+				passenger_cell_isd: phoneIsd,
+				passenger_cell_country: phoneCountry
+			});
+
+			console.log('--- Booking Form After Patch ---');
+			console.log('Passenger Cell:', this.BookingForm.get('passenger_cell')?.value);
+			console.log('Passenger Cell ISD:', this.BookingForm.get('passenger_cell_isd')?.value);
+			console.log('Passenger Cell Country:', this.BookingForm.get('passenger_cell_country')?.value);
+			console.log('Complete Booking Form:', this.BookingForm.value);
+
+			if (phoneCountry && this.PaxTelObject) {
+				const currentPaxCountry =
+					this.PaxTelObject.getSelectedCountryData()?.iso2;
+
+				console.log('--- Country Comparison ---');
+				console.log('Current Passenger Country:', currentPaxCountry);
+				console.log('New Passenger Country:', phoneCountry);
+
+				if (currentPaxCountry !== phoneCountry) {
+					console.log('Country mismatch. Updating country...');
+					this.PaxTelObject.setCountry(phoneCountry);
+					console.log('Country updated successfully.');
+				} else {
+					console.log('Country already matches. No update needed.');
+				}
+			} else {
+				console.log('Country update skipped:', {
+					phoneCountry,
+					PaxTelObjectExists: !!this.PaxTelObject
+				});
+			}
+
+			console.log('--- Phone Validation ---');
+			this.validatePassengerPhone();
+
+			console.log('========== handleLooseCustomerPhone END ==========');
+		} else {
+			console.warn('Loose customer FormGroup not found!');
 		}
 	}
 
@@ -11068,10 +11142,24 @@ export class BookingComponent implements OnInit, OnDestroy {
 
 
 	onLCTeleCountryChange(event: any) {
-
-		(<FormGroup>this.BookingForm.get('loose_customer')).get('phone_country').setValue(event.iso2);
-		(<FormGroup>this.BookingForm.get('loose_customer')).get('phone_isd').setValue('+' + event.dialCode);
-		this.BookingForm.updateValueAndValidity()
+		if (!event || !event.dialCode) return;
+		const dialCode = '+' + event.dialCode;
+		const lcGroup = this.BookingForm.get('loose_customer') as FormGroup;
+		if (lcGroup) {
+			lcGroup.patchValue({
+				phone_country: event.iso2,
+				phone_isd: dialCode
+			});
+		}
+		this.BookingForm.patchValue({
+			passenger_cell_isd: dialCode,
+			passenger_cell_country: event.iso2
+		});
+		if (this.PaxTelObject) {
+			this.PaxTelObject.setCountry(event.iso2);
+		}
+		this.validatePassengerPhone();
+		this.BookingForm.updateValueAndValidity();
 	}
 
 	// onCountryChange(event, type)

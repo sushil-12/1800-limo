@@ -462,7 +462,7 @@
 										<input pattern="[0-9+]*" maxlength="16" matInput #cellInput placeholder="1234567890"
 											formControlName="phone" class="phoneNumberClass" tabindex="1"
 											(focus)="$event.target.select()" (keypress)="numberOnly($event)"
-											(input)="validateLooseCustomerPhone()" (blur)="validateLooseCustomerPhone()"
+											(input)="validateLooseCustomerPhone(); handleLooseCustomerPhone($event)" (blur)="validateLooseCustomerPhone()"
 											(keyup)="handleLooseCustomerPhone($event)" />
 
 									</mat-form-field>

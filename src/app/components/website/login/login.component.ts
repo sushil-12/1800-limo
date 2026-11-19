@@ -1,6 +1,6 @@
 import { Component, OnInit, ElementRef, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
@@ -124,6 +124,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
 			const countryData = this.countryChangeObject.getSelectedCountryData();
 			console.log("in country change", countryData)
 			this.onCountryChange(countryData)
+			this.loginForm?.get('phone')?.updateValueAndValidity();
 			this.validatePhone();
 		});
 
@@ -144,7 +145,15 @@ export class LoginComponent implements OnInit, AfterViewInit {
     console.log('ngonInit');
 
 		this.loginForm = this.formBuilder.group({
-			phone: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(15), Validators.pattern("^[0-9+]*$"), this.customValidator.dashValidator(), this.customValidator.plusValidator()]],
+			phone: ['', [
+				Validators.required,
+				Validators.minLength(4),
+				Validators.maxLength(15),
+				Validators.pattern("^[0-9+]*$"),
+				this.customValidator.dashValidator(),
+				this.customValidator.plusValidator(),
+				this.leadingOneValidator()
+			]],
 			role: ['', Validators.required],
 			invite_code: [''],
 		});
@@ -272,6 +281,8 @@ export class LoginComponent implements OnInit, AfterViewInit {
 	}
 	loginCheck() {
 		this.submitted = true;
+		this.loginForm?.get('phone')?.updateValueAndValidity();
+		this.validatePhone();
 		// stop here if form is invalid
 
 		if (this.roleSelected == null || this.roleSelected == "") {
@@ -355,17 +366,74 @@ export class LoginComponent implements OnInit, AfterViewInit {
 		return true;
 	}
 
-	validatePhone() {
+	isFlagPlusOne(): boolean {
 		if (this.countryChangeObject) {
-			const value = this.loginForm.get('phone').value;
-			if (!value) {
-				// If empty, let required validator handle it. Remove our intl error if present.
-				if (this.f.phone.errors) {
-					const { invalidIntl, ...otherErrors } = this.f.phone.errors;
-					this.f.phone.setErrors(Object.keys(otherErrors).length > 0 ? otherErrors : null);
-				}
-				return;
+			const countryData = this.countryChangeObject.getSelectedCountryData();
+			if (countryData && countryData.dialCode) {
+				return String(countryData.dialCode) === '1';
 			}
+		}
+		return this.countryCode === '+1' || this.countryCode === '1';
+	}
+
+	hasLeadingOneError(phoneVal: any): boolean {
+		if (!this.isFlagPlusOne()) {
+			return false;
+		}
+		if (!phoneVal) {
+			return false;
+		}
+		let str = String(phoneVal).trim();
+		if (str.startsWith('+1')) {
+			str = str.substring(2).trim();
+		} else if (str.startsWith('+')) {
+			str = str.substring(1).trim();
+		}
+		const firstDigit = str.replace(/\D/g, '').charAt(0);
+		return firstDigit === '1';
+	}
+
+	leadingOneValidator(): ValidatorFn {
+		return (control: AbstractControl): ValidationErrors | null => {
+			if (!control.value) {
+				return null;
+			}
+			if (this.hasLeadingOneError(control.value)) {
+				return { invalidLeadingOne: '1st digit of phone number should not be 1' };
+			}
+			return null;
+		};
+	}
+
+	validatePhone() {
+		const value = this.loginForm?.get('phone')?.value;
+		if (!value) {
+			// If empty, let required validator handle it. Remove our intl / leading-one errors if present.
+			if (this.f.phone.errors) {
+				const { invalidIntl, invalidLeadingOne, ...otherErrors } = this.f.phone.errors;
+				this.f.phone.setErrors(Object.keys(otherErrors).length > 0 ? otherErrors : null);
+			}
+			return;
+		}
+
+		if (this.hasLeadingOneError(value)) {
+			const currentErrors = this.f.phone.errors || {};
+			const { invalidIntl, ...remainingErrors } = currentErrors;
+			this.f.phone.setErrors({
+				...remainingErrors,
+				invalidLeadingOne: '1st digit of phone number should not be 1',
+				invalidIntl: '1st digit of phone number should not be 1'
+			});
+			return;
+		}
+
+		// Remove invalidLeadingOne error if exists
+		if (this.f.phone.errors?.invalidLeadingOne) {
+			const { invalidLeadingOne, ...otherErrors } = this.f.phone.errors;
+			this.f.phone.setErrors(Object.keys(otherErrors).length > 0 ? otherErrors : null);
+		}
+
+		if (this.countryChangeObject) {
 			const isValid = this.countryChangeObject.isValidNumber();
 			// If valid, clears this specific error. Note: other validators might still run.
 			// But since we are manually setting errors, we need to be careful not to clear others if we use setErrors(null).

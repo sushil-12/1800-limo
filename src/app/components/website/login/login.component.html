@@ -79,7 +79,10 @@
 				<div *ngIf="f.phone.errors?.pattern || f.phone.errors?.invalid_Pattern; else intlError">Please enter digits
 					only. Hyphens, spaces and special characters are not allowed</div>
 				<ng-template #intlError>
-					<div *ngIf="f.phone.errors?.invalidIntl">{{f.phone.errors?.invalidIntl}}</div>
+					<div *ngIf="f.phone.errors?.invalidLeadingOne; else defaultIntlError">{{f.phone.errors?.invalidLeadingOne}}</div>
+					<ng-template #defaultIntlError>
+						<div *ngIf="f.phone.errors?.invalidIntl">{{f.phone.errors?.invalidIntl}}</div>
+					</ng-template>
 				</ng-template>
 				<div *ngIf="f.phone.errors?.required">The Phone Number is required</div>
 			</div>

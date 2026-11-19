@@ -470,9 +470,15 @@
 										<div class="error-message"
 											*ngIf="( submitBookingForm && (is_loose_customer_unique || LooseCustomer.phone.invalid)) || (LooseCustomer.phone.touched || LooseCustomer.phone.dirty)">
 											<p class="text-danger text-lg m-0"
-												*ngIf="LooseCustomer.phone.errors?.invalidIntl">
-												{{LooseCustomer.phone.errors?.invalidIntl}}
+												*ngIf="LooseCustomer.phone.errors?.invalidLeadingOne; else looseCustIntlError">
+												{{LooseCustomer.phone.errors?.invalidLeadingOne}}
 											</p>
+											<ng-template #looseCustIntlError>
+												<p class="text-danger text-lg m-0"
+													*ngIf="LooseCustomer.phone.errors?.invalidIntl">
+													{{LooseCustomer.phone.errors?.invalidIntl}}
+												</p>
+											</ng-template>
 											<p class="text-danger text-lg m-0" *ngIf="LooseCustomer.phone.errors?.required">
 												This field is required
 											</p>
@@ -772,9 +778,15 @@
 							<div class="error-box">
 								<div class="error-message"
 									*ngIf="Form.passenger_cell.invalid && (Form.passenger_cell.touched || Form.passenger_cell.dirty)">
-									<p class="text-danger text-lg m-0" *ngIf="Form.passenger_cell.errors?.invalidIntl">
-										{{Form.passenger_cell.errors?.invalidIntl}}
+									<p class="text-danger text-lg m-0"
+										*ngIf="Form.passenger_cell.errors?.invalidLeadingOne; else paxCellIntlError">
+										{{Form.passenger_cell.errors?.invalidLeadingOne}}
 									</p>
+									<ng-template #paxCellIntlError>
+										<p class="text-danger text-lg m-0" *ngIf="Form.passenger_cell.errors?.invalidIntl">
+											{{Form.passenger_cell.errors?.invalidIntl}}
+										</p>
+									</ng-template>
 									<p class="text-danger text-lg m-0" *ngIf="Form.passenger_cell.errors?.required">
 										This field is required
 									</p>
@@ -2041,9 +2053,15 @@
 						<div class="error-box">
 							<div class="error-message"
 								*ngIf="Form.lose_affiliate_phone.invalid && (Form.lose_affiliate_phone.touched || Form.lose_affiliate_phone.dirty)">
-								<p class="text-danger text-lg m-0" *ngIf="Form.lose_affiliate_phone.errors?.invalidIntl">
-									{{Form.lose_affiliate_phone.errors?.invalidIntl}}
+								<p class="text-danger text-lg m-0"
+									*ngIf="Form.lose_affiliate_phone.errors?.invalidLeadingOne; else laPhoneIntlError">
+									{{Form.lose_affiliate_phone.errors?.invalidLeadingOne}}
 								</p>
+								<ng-template #laPhoneIntlError>
+									<p class="text-danger text-lg m-0" *ngIf="Form.lose_affiliate_phone.errors?.invalidIntl">
+										{{Form.lose_affiliate_phone.errors?.invalidIntl}}
+									</p>
+								</ng-template>
 								<p class="text-danger text-lg m-0" *ngIf="Form.lose_affiliate_phone.errors?.required">
 									This field is required
 								</p>
@@ -2627,9 +2645,15 @@
 								*ngIf="Form.driver_cell.errors?.pattern && !Form.driver_cell.errors?.invalidIntl">
 								Only Numbers are Allowed
 							</p>
-							<p class="text-danger text-lg m-0" *ngIf="Form.driver_cell.errors?.invalidIntl">
-								{{Form.driver_cell.errors?.invalidIntl}}
+							<p class="text-danger text-lg m-0"
+								*ngIf="Form.driver_cell.errors?.invalidLeadingOne; else driverCellIntlError">
+								{{Form.driver_cell.errors?.invalidLeadingOne}}
 							</p>
+							<ng-template #driverCellIntlError>
+								<p class="text-danger text-lg m-0" *ngIf="Form.driver_cell.errors?.invalidIntl">
+									{{Form.driver_cell.errors?.invalidIntl}}
+								</p>
+							</ng-template>
 						</div>
 					</div>
 
@@ -3989,9 +4013,15 @@
 										Maximum length should be 15
 									</p> -->
 									<p class="text-danger text-lg m-0"
-										*ngIf="Form.return_lose_affiliate_phone.errors?.invalidIntl">
-										{{Form.return_lose_affiliate_phone.errors?.invalidIntl}}
+										*ngIf="Form.return_lose_affiliate_phone.errors?.invalidLeadingOne; else returnLaPhoneIntlError">
+										{{Form.return_lose_affiliate_phone.errors?.invalidLeadingOne}}
 									</p>
+									<ng-template #returnLaPhoneIntlError>
+										<p class="text-danger text-lg m-0"
+											*ngIf="Form.return_lose_affiliate_phone.errors?.invalidIntl">
+											{{Form.return_lose_affiliate_phone.errors?.invalidIntl}}
+										</p>
+									</ng-template>
 								</ng-template>
 							</div>
 						</div>
@@ -4567,7 +4597,11 @@
 								<div class="error-box">
 									<div class="error-message"
 										*ngIf="Form.return_driver_cell.invalid && (Form.return_driver_cell.touched || Form.return_driver_cell.dirty)">
-										<ng-template #looseAffError>
+										<p class="text-danger text-lg m-0"
+											*ngIf="Form.return_driver_cell.errors?.invalidLeadingOne; else returnDriverCellIntlError">
+											{{Form.return_driver_cell.errors?.invalidLeadingOne}}
+										</p>
+										<ng-template #returnDriverCellIntlError>
 											<p class="text-danger text-lg m-0" *ngIf="Form.return_driver_cell.errors?.invalidIntl">
 												{{Form.return_driver_cell.errors?.invalidIntl}}
 											</p>

@@ -1479,17 +1479,63 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return true;
 	}
 
-	validatePhoneGeneric(control: AbstractControl, telInputObject: any) {
+	hasLeadingOneError(phoneVal: any, telInputObject: any, isdCode?: string): boolean {
+		let isPlusOne = false;
 		if (telInputObject) {
-			const value = control.value;
-			if (!value) {
-				// If empty, let required validator handle it. Remove our intl error if present.
-				if (control.errors) {
-					const { invalidIntl, ...otherErrors } = control.errors;
-					control.setErrors(Object.keys(otherErrors).length > 0 ? otherErrors : null);
-				}
-				return;
+			const countryData = telInputObject.getSelectedCountryData();
+			if (countryData && countryData.dialCode) {
+				isPlusOne = String(countryData.dialCode) === '1';
 			}
+		}
+		if (!isPlusOne && isdCode) {
+			isPlusOne = isdCode === '+1' || isdCode === '1';
+		}
+		if (!isPlusOne) {
+			return false;
+		}
+		if (!phoneVal) {
+			return false;
+		}
+		let str = String(phoneVal).trim();
+		if (str.startsWith('+1')) {
+			str = str.substring(2).trim();
+		} else if (str.startsWith('+')) {
+			str = str.substring(1).trim();
+		}
+		const firstDigit = str.replace(/\D/g, '').charAt(0);
+		return firstDigit === '1';
+	}
+
+	validatePhoneGeneric(control: AbstractControl, telInputObject: any, isdCode?: string) {
+		if (!control) return;
+		const value = control.value;
+		if (!value) {
+			// If empty, let required validator handle it. Remove our intl / leading-one errors if present.
+			if (control.errors) {
+				const { invalidIntl, invalidLeadingOne, ...otherErrors } = control.errors;
+				control.setErrors(Object.keys(otherErrors).length > 0 ? otherErrors : null);
+			}
+			return;
+		}
+
+		if (this.hasLeadingOneError(value, telInputObject, isdCode)) {
+			const currentErrors = control.errors || {};
+			const { invalidIntl, ...remainingErrors } = currentErrors;
+			control.setErrors({
+				...remainingErrors,
+				invalidLeadingOne: '1st digit of phone number should not be 1',
+				invalidIntl: '1st digit of phone number should not be 1'
+			});
+			return;
+		}
+
+		// Remove invalidLeadingOne error if exists
+		if (control.errors?.invalidLeadingOne) {
+			const { invalidLeadingOne, ...otherErrors } = control.errors;
+			control.setErrors(Object.keys(otherErrors).length > 0 ? otherErrors : null);
+		}
+
+		if (telInputObject) {
 			const isValid = telInputObject.isValidNumber();
 
 			if (!isValid) {
@@ -1509,31 +1555,37 @@ export class BookingComponent implements OnInit, OnDestroy {
 	}
 
 	validateLooseCustomerPhone() {
-		this.validatePhoneGeneric(this.LooseCustomer.phone, this.LCTelObject);
+		const isd = this.BookingForm.get('loose_customer')?.get('phone_isd')?.value;
+		this.validatePhoneGeneric(this.LooseCustomer.phone, this.LCTelObject, isd);
 	}
 
 	validatePassengerPhone() {
-		this.validatePhoneGeneric(this.Form.passenger_cell, this.PaxTelObject);
+		const isd = this.BookingForm.get('passenger_cell_isd')?.value;
+		this.validatePhoneGeneric(this.Form.passenger_cell, this.PaxTelObject, isd);
 	}
 
 	validateLooseAffiliatePhone() {
-		this.validatePhoneGeneric(this.Form.lose_affiliate_phone, this.loseAffiliateTelInput);
+		const isd = this.BookingForm.get('lose_affiliate_phone_isd')?.value;
+		this.validatePhoneGeneric(this.Form.lose_affiliate_phone, this.loseAffiliateTelInput, isd);
 	}
 
 	validateDriverCell() {
 		if (this.Form.affiliate_type.value == 'loose_affiliate') {
-			this.validatePhoneGeneric(this.Form.driver_cell, this.driverCellTelInput);
+			const isd = this.BookingForm.get('driver_cell_isd')?.value;
+			this.validatePhoneGeneric(this.Form.driver_cell, this.driverCellTelInput, isd);
 		}
 	}
 
 	validateReturnDriverCell() {
 		if (this.Form.return_affiliate_type.value == 'loose_affiliate') {
-			this.validatePhoneGeneric(this.Form.return_driver_cell, this.returnDriverCellTelInput);
+			const isd = this.BookingForm.get('return_driver_cell_isd')?.value;
+			this.validatePhoneGeneric(this.Form.return_driver_cell, this.returnDriverCellTelInput, isd);
 		}
 	}
 
 	validateReturnLooseAffiliatePhone() {
-		this.validatePhoneGeneric(this.Form.return_lose_affiliate_phone, this.returnLoseAffiliateTelInput);
+		const isd = this.BookingForm.get('return_lose_affiliate_phone_isd')?.value;
+		this.validatePhoneGeneric(this.Form.return_lose_affiliate_phone, this.returnLoseAffiliateTelInput, isd);
 	}
 
 
@@ -8283,6 +8335,13 @@ export class BookingComponent implements OnInit, OnDestroy {
 		// reported together with any other form errors in the same pass.
 		this.validatePastDateTime();
 		this.validateAddressSuggestions();
+
+		this.validatePassengerPhone();
+		this.validateLooseCustomerPhone();
+		this.validateLooseAffiliatePhone();
+		this.validateDriverCell();
+		this.validateReturnDriverCell();
+		this.validateReturnLooseAffiliatePhone();
 
 		if (this.BookingForm.invalid) {
 			this.BookingForm.markAllAsTouched();

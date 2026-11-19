@@ -1,10 +1,12 @@
+<ngx-spinner type="ball-scale-multiple">
+</ngx-spinner>
 <main>
     <section class="user_information">
         <h2 class="headinginfo">See All Affiliates On Map</h2>
         <div class="containeredd">
             <div class="row align-items-center mt-1">
-                <div class="col-md-3 py-2">
-                    <mat-form-field appearance="outline" class="m-0">
+                <div class="col-xl-3 col-lg-3 col-md-4 py-2">
+                    <mat-form-field appearance="outline" class="m-0 w-100">
                         <mat-label>Vehicle Type</mat-label>
                         <mat-select (selectionChange)="onVehicleChange($event)" [(value)]="selectedVehicleId">
                             <!-- Extra option for 'All Vehicles' -->
@@ -16,6 +18,40 @@
                         </mat-select>
                     </mat-form-field>
                 </div>
+                <div class="col-xl-9 col-lg-9 col-md-8 py-2">
+                    <!-- Geo search: find affiliates in / near a state, city or address -->
+                    <div class="affiliate-geo-panel">
+                        <fieldset class="geo-search-field">
+                            <legend class="geo-field-label">Near (state, city or address)</legend>
+                            <input #geoNearInput type="text" placeholder="e.g. New Jersey" autocomplete="off"
+                                id="affiliateGeoNear">
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="geo-radius-group" *ngIf="geoPlace">
+                    <span class="geo-radius-label" id="geoRadiusLabel">Within</span>
+                    <div class="geo-radius-segment" role="group" aria-labelledby="geoRadiusLabel">
+                        <button type="button" class="geo-radius-option" *ngFor="let r of geoRadiusOptions"
+                            [class.active]="geoRadius === r" [attr.aria-pressed]="geoRadius === r"
+                            (click)="setGeoRadius(r)">{{ r }} mi</button>
+                    </div>
+                    <button type="button" class="geo-clear-btn" (click)="clearGeoSearch()">
+                        <span aria-hidden="true">&times;</span> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="pb-2" *ngIf="geoPlace && geoMeta">
+                <div class="geo-banner geo-banner-warn" *ngIf="geoMeta.fallback; else geoSummary">
+                    No affiliates in or within {{ geoMeta.radius_mi }} mi of <strong>{{ geoPlace.label }}</strong>.
+                    Showing the {{ displayedLocationsCount }} nearest instead.
+                </div>
+                <ng-template #geoSummary>
+                    <div class="geo-banner">
+                        <strong>{{ geoMeta.in_region_count }}</strong>
+                        in {{ geoPlace.label }}<ng-container *ngIf="geoMeta.nearby_count">, <strong>{{ geoMeta.nearby_count }}</strong>
+                            more within {{ geoMeta.radius_mi }} mi</ng-container>.
+                    </div>
+                </ng-template>
             </div>
         </div>
         <div class="google_map">
@@ -23,3 +59,166 @@
         </div>
     </section>
 </main>
+
+<!-- send email and call modal -->
+<div class="modal fade" id="sendEmailModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+	aria-hidden="true" #sendEmailModalFocus>
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content" style="background: #f5f4fe;">
+
+			<div class="modal-header pb-0 flex-column align-items-center">
+				<h3 class="modal-title mb-0">
+					Affiliate : {{ selectedAffiliate?.affiliate_name }}
+				</h3>
+				<div class="geo-row-tags d-flex flex-row justify-content-center align-items-center flex-wrap mt-2"
+					style="gap: 6px;">
+					<span class="geo-tag geo-tag-region" *ngIf="!geoPlace || selectedAffiliate?.in_region">In area</span>
+					<span class="geo-tag" *ngIf="geoPlace && selectedAffiliate?.distance_mi != null">{{ selectedAffiliate.distance_mi }} mi</span>
+					<span class="geo-tag geo-tag-source" *ngIf="geoPlace && selectedAffiliate?.match_source === 'badge_city'"
+						[title]="'Business address: ' + (selectedAffiliate?.address_distance_mi != null ? selectedAffiliate.address_distance_mi + ' mi away' : 'not saved')">
+						By badge city</span>
+					<span class="geo-tag geo-tag-source" *ngIf="geoPlace && selectedAffiliate?.match_source === 'address'">By address</span>
+					<span class="geo-tag geo-tag-source" *ngIf="geoPlace && selectedAffiliate?.match_source === 'both'">Address &amp; badge city</span>
+				</div>
+				<button type="button" (click)="closeModal()" class="close closeButton x-circle-btn mx-2" data-dismiss="modal"
+					aria-label="Close">
+					<i class="bi bi-x-circle"></i>
+				</button>
+			</div>
+			<hr>
+			<div class="text-center iconStyle">
+				<div class="row">
+					<div class="col-md-12">
+						<h5 class="mb-5">
+							Connect with '<span>{{ selectedAffiliate?.affiliate_name }}</span>' ({{ selectedAffiliate?.affiliate_type || 'Affiliate' }}) Via
+						</h5>
+					</div>
+					<div class="d-flex" style="width: -webkit-fill-available;">
+						<div class="col-md-4" (click)="messageField('Phone')">
+							<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+								xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 122.88 122.88"
+								style="enable-background:new 0 0 122.88 122.88" xml:space="preserve">
+								<style type="text/css">
+									.step0 {
+										fill: #1A73E8;
+									}
+
+									.step1 {
+										fill: #185ABC;
+									}
+
+									.step2 {
+										fill: #FFFFFF;
+									}
+
+									.step3 {
+										fill: #8AB4F8;
+									}
+								</style>
+								<g>
+									<path class="step0"
+										d="M122.88,61.41C122.88,27.49,95.39,0,61.47,0S0.06,27.49,0.06,61.41s27.49,61.41,61.41,61.41 S122.88,95.32,122.88,61.41L122.88,61.41z" />
+									<path class="step1"
+										d="M83.82,87.93H41.97c-5.95,0-11.14-4.49-11.14-10.45v-0.06v3.48c0,5.95,5.19,11.14,11.14,11.14h41.85 c6.01,0,11.14-5.25,11.14-11.14v-3.48C94.96,83.38,89.77,87.93,83.82,87.93L83.82,87.93L83.82,87.93z M30.77,57.93v-4.75 l-7.79-12.85c-0.44-0.7-0.63-1.33-0.57-1.96v5.44c0,0.51,0.19,1.01,0.51,1.58L30.77,57.93L30.77,57.93z" />
+									<path class="step2"
+										d="M83.82,36.28H25.2c-2.34,0-3.67,2.03-2.09,4.18l7.66,13.29v23.74c0,6.08,4.43,11.14,10.45,11.14h42.54 c6.01,0,11.14-5.13,11.14-11.14V47.48C94.96,41.4,89.83,36.28,83.82,36.28L83.82,36.28z" />
+									<path class="step3"
+										d="M83.12,53.05H42.67c-1.77,0-3.48-1.08-3.48-2.79c0-1.71,1.71-2.79,3.48-2.79h40.45c1.77,0,3.48,1.08,3.48,2.79 C86.6,51.98,84.9,53.05,83.12,53.05L83.12,53.05L83.12,53.05z M83.12,64.19H42.67c-1.77,0-3.48-1.08-3.48-2.79 c0-1.71,1.71-2.79,3.48-2.79h40.45c1.77,0,3.48,1.08,3.48,2.79C86.6,63.12,84.9,64.19,83.12,64.19L83.12,64.19L83.12,64.19z M71.92,75.4H42.61c-1.77,0-3.48-1.08-3.48-2.79c0-1.71,1.71-2.79,3.48-2.79h29.31c1.77,0,3.48,1.08,3.48,2.79 C75.4,74.32,73.69,75.4,71.92,75.4L71.92,75.4z" />
+									<path class="step1"
+										d="M122.88,61.09c-0.13,26.91-17.66,49.76-41.85,57.86c-6.14,2.09-12.72,3.17-19.56,3.17 c-33.81,0-61.22-27.29-61.41-61.03v0.38c0,33.93,27.48,61.41,61.41,61.41c6.84,0,13.42-1.14,19.56-3.17 c24.31-8.17,41.85-31.15,41.85-58.24V61.09L122.88,61.09z" />
+									<path class="step3"
+										d="M80.97,3.17C74.83,1.08,68.25,0,61.41,0C27.48,0,0,27.48,0,61.41v0.38C0.19,28.04,27.6,0.76,61.41,0.76 c6.84,0,13.42,1.14,19.56,3.17c24.25,8.1,41.72,30.96,41.85,57.86v-0.38C122.88,34.31,105.34,11.33,80.97,3.17L80.97,3.17z" />
+								</g>
+							</svg>
+							<h6 class="headingStyle">Send SMS</h6>
+						</div>
+						<div class="col-md-4">
+							<a href="tel:{{selectedAffiliate?.mobile}}">
+								<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 122.88 122.88">
+									<defs>
+										<style>
+											.phoneCls-1 {
+												fill: #33a867;
+												fill-rule: evenodd;
+											}
+										</style>
+									</defs>
+									<path class="phoneCls-1"
+										d="M61.44,0A61.46,61.46,0,1,1,18,18,61.21,61.21,0,0,1,61.44,0ZM48.1,56.19A49.35,49.35,0,0,0,55.39,66.4a41.25,41.25,0,0,0,11.55,8.51,1.14,1.14,0,0,0,1,0,4.48,4.48,0,0,0,1.39-1A16.91,16.91,0,0,0,70.6,72.4c1.85-2.44,4.15-5.47,7.39-4l.2.11L89,74.77l.11.07a4.84,4.84,0,0,1,2,4.2,11.43,11.43,0,0,1-1.58,5.37,11.06,11.06,0,0,1-5.2,4.6A23.63,23.63,0,0,1,78,90.75a21.69,21.69,0,0,1-9.8-.82,43.06,43.06,0,0,1-9.85-4.76L58.05,85c-1.6-1-3.33-2.07-5-3.33a62.69,62.69,0,0,1-16.65-18.9c-3.46-6.26-5.34-13-4.32-19.44a14,14,0,0,1,4.72-8.85A12.68,12.68,0,0,1,46.18,32a1.35,1.35,0,0,1,1.09.7L54.21,44.4a3.68,3.68,0,0,1,.59,3.92,7.71,7.71,0,0,1-2.66,3c-.37.32-.82.64-1.29,1-1.55,1.12-3.32,2.42-2.71,4l0-.05Z" />
+								</svg>
+								<h6 class="headingStyle">Make Call</h6>
+							</a>
+						</div>
+						<div class="col-md-4 mailBoxStyle" (click)="messageField('Email')">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48px" height="48px">
+								<path
+									d="M34,42H14c-4.411,0-8-3.589-8-8V14c0-4.411,3.589-8,8-8h20c4.411,0,8,3.589,8,8v20 C42,38.411,38.411,42,34,42z" fill="#f3933d"/>
+								<path 
+									d="M34,16c0.178,0,0.347,0.031,0.512,0.074l-7.824,7.825C25.946,24.64,24.973,25.01,24,25.01 s-1.946-0.37-2.688-1.111l-7.824-7.825C13.653,16.031,13.822,16,14,16H34 M35.926,17.488C35.969,17.653,36,17.822,36,18v12 c0,0.178-0.031,0.347-0.074,0.512L29.414,24L35.926,17.488 M12.074,17.488L18.586,24l-6.511,6.511C12.031,30.347,12,30.178,12,30 V18C12,17.822,12.031,17.653,12.074,17.488 M27.99,25.404l6.522,6.522C34.347,31.969,34.178,32,34,32H14 c-0.178,0-0.347-0.031-0.512-0.074l6.522-6.522c1.117,1.063,2.55,1.605,3.99,1.605S26.873,26.467,27.99,25.404 M34,15H14 c-0.244,0-0.495,0.035-0.768,0.108c-0.346,0.092-0.616,0.361-0.709,0.707c-0.092,0.341,0.003,0.704,0.248,0.956 c-0.189-0.183-0.44-0.283-0.697-0.283c-0.087,0-0.174,0.011-0.26,0.034c-0.345,0.093-0.615,0.363-0.707,0.709 C11.035,17.505,11,17.756,11,18v12c0,0.244,0.035,0.495,0.108,0.768c0.092,0.346,0.361,0.616,0.707,0.709 c0.086,0.023,0.173,0.034,0.26,0.034c0.257,0,0.508-0.099,0.696-0.282c-0.245,0.253-0.34,0.616-0.248,0.956 c0.093,0.345,0.363,0.615,0.709,0.707C13.505,32.965,13.756,33,14,33h20c0.244,0,0.495-0.035,0.768-0.108 c0.346-0.092,0.616-0.361,0.709-0.707c0.092-0.341-0.003-0.704-0.248-0.956c0.189,0.183,0.44,0.282,0.696,0.282 c0.087,0,0.174-0.011,0.26-0.034c0.345-0.093,0.615-0.363,0.707-0.709C36.965,30.495,37,30.244,37,30V18 c0-0.244-0.035-0.495-0.108-0.768c-0.092-0.346-0.361-0.616-0.707-0.709c-0.086-0.023-0.173-0.034-0.26-0.034 c-0.257,0-0.508,0.099-0.697,0.282c0.245-0.253,0.34-0.616,0.248-0.956c-0.093-0.345-0.363-0.615-0.709-0.707 C34.495,15.035,34.244,15,34,15L34,15z"
+									opacity=".05" />
+								<path 
+									d="M34,15.5H14c-0.203,0-0.406,0.029-0.64,0.091c-0.173,0.046-0.308,0.181-0.354,0.353 c-0.046,0.173,0.003,0.357,0.129,0.483l7.824,7.825C21.77,25.063,22.85,25.51,24,25.51s2.23-0.447,3.041-1.257l7.824-7.825 c0.126-0.126,0.176-0.311,0.129-0.483c-0.046-0.173-0.182-0.307-0.354-0.353C34.406,15.529,34.203,15.5,34,15.5L34,15.5z M35.926,16.988c-0.131,0-0.259,0.051-0.354,0.146l-6.511,6.512c-0.195,0.195-0.195,0.512,0,0.707l6.511,6.511 c0.095,0.095,0.223,0.146,0.354,0.146c0.043,0,0.087-0.006,0.13-0.017c0.173-0.046,0.307-0.182,0.353-0.354 C36.471,30.406,36.5,30.203,36.5,30V18c0-0.203-0.029-0.406-0.091-0.64c-0.046-0.173-0.181-0.308-0.353-0.354 C36.013,16.994,35.969,16.988,35.926,16.988L35.926,16.988z M12.074,16.988c-0.043,0-0.087,0.006-0.13,0.017 c-0.173,0.046-0.307,0.182-0.353,0.354C11.529,17.594,11.5,17.797,11.5,18v12c0,0.203,0.029,0.406,0.091,0.64 c0.046,0.173,0.181,0.308,0.353,0.354c0.043,0.012,0.087,0.017,0.13,0.017c0.131,0,0.259-0.051,0.354-0.146l6.511-6.511 c0.195-0.195,0.195-0.512,0-0.707l-6.511-6.512C12.333,17.04,12.205,16.988,12.074,16.988L12.074,16.988z M27.99,24.904 c-0.124,0-0.248,0.046-0.345,0.138c-0.995,0.946-2.289,1.467-3.645,1.467s-2.651-0.521-3.645-1.467 c-0.097-0.092-0.221-0.138-0.345-0.138c-0.128,0-0.256,0.049-0.354,0.146l-6.522,6.522c-0.126,0.126-0.176,0.311-0.129,0.483 s0.182,0.307,0.354,0.353C13.594,32.471,13.797,32.5,14,32.5h20c0.203,0,0.406-0.029,0.64-0.091 c0.173-0.046,0.308-0.181,0.354-0.353s-0.003-0.357-0.129-0.483l-6.522-6.522C28.246,24.953,28.118,24.904,27.99,24.904 L27.99,24.904z"
+									opacity=".07" />
+								<path fill="#f9f9f9"
+									d="M35.926,17.488L29.414,24l6.511,6.511C35.969,30.347,36,30.178,36,30V18 C36,17.822,35.969,17.653,35.926,17.488z M26.688,23.899l7.824-7.825C34.347,16.031,34.178,16,34,16H14 c-0.178,0-0.347,0.031-0.512,0.074l7.824,7.825C22.795,25.38,25.205,25.38,26.688,23.899z M12.074,17.488 C12.031,17.653,12,17.822,12,18v12c0,0.178,0.031,0.347,0.074,0.512L18.586,24L12.074,17.488z M24,27.009 c-1.44,0-2.873-0.542-3.99-1.605l-6.522,6.522C13.653,31.969,13.822,32,14,32h20c0.178,0,0.347-0.031,0.512-0.074l-6.522-6.522 C26.873,26.467,25.44,27.009,24,27.009z" />
+							</svg>
+							<h6>Send E-Mail</h6>
+						</div>
+					</div>
+
+				</div>
+				<div class="row" [hidden]="!show">
+					<div class="col-md-12">
+						<div class="mt-2" *ngIf="!sendMessageField">
+							<input type="file" (change)="myUploader($event)" #fileInput multiple />
+						</div>
+
+						<!-- WYSIWYG Editor (Email mode) -->
+						<ng-container *ngIf="!sendMessageField">
+							<quill-editor #messageEditor
+								[(ngModel)]="editorContent"
+								[modules]="quillModules"
+								placeholder="Write a Message...."
+								(onEditorCreated)="onMessageEditorCreated($event)"
+								[styles]="{'min-height': '150px', 'background': '#fff', 'border-radius': '4px'}">
+							</quill-editor>
+						</ng-container>
+
+						<!-- Plain textarea (SMS mode) -->
+						<ng-container *ngIf="sendMessageField">
+							<mat-form-field class="example-full-width" appearance="outline">
+								<mat-label>
+									{{ sendMessageField ? 'Send SMS' : 'Send Email' }}
+								</mat-label>
+
+								<textarea matInput id="myTextarea" #inputmsg [(ngModel)]="smsMessage" placeholder="Write a Message...."
+									id="clearField" (focus)="$event.target.select()"
+									style="white-space: pre-wrap; font-weight: 600; overflow: auto; resize: vertical;"
+									rows="5">
+								</textarea>
+							</mat-form-field>
+						</ng-container>
+
+						<div class="d-flex justify-content-center mt-2">
+							<button class="btn saveButtonModal" (click)="submit(getEditorContent(), sendMessageField)"
+								data-dismiss="modal">Send</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModal" aria-hidden="true"
+	data-bs-backdrop="static" data-bs-keyboard="false">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header pb-0 mb-1 d-flex justify-content-center text-success">
+				<h4 class="mb-1" style="font-weight: 600; font-size: 23px;">{{successMessage}}!</h4>
+			</div>
+		</div>
+	</div>
+</div>

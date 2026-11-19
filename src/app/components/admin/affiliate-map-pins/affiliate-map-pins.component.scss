@@ -10,3 +10,406 @@
 		border-radius: 17px;
 	}
 }
+
+.modal-header {
+	justify-content: center;
+}
+
+#sendEmailModal {
+	.modal-header {
+		position: relative;
+		padding: 20px 65px 0 65px;
+		justify-content: center;
+		border-bottom: 0;
+		text-align: center;
+	}
+
+	.modal-title {
+		width: 100%;
+		text-align: center;
+		word-break: break-word;
+		overflow-wrap: break-word;
+		line-height: 1.3;
+		font-weight: 700;
+	}
+
+	.closeButton {
+		position: absolute;
+		right: 15px;
+		top: 15px;
+		z-index: 10;
+		background: transparent;
+		border: none;
+		padding: 0;
+		line-height: 1;
+		opacity: 1;
+	}
+
+	.modal-content hr {
+		border: 2px solid var(--orange-color);
+		width: 180px;
+		background-color: var(--orange-color);
+		display: block;
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+}
+
+#Layer_1 {
+	height: 48px;
+	width: 48px;
+}
+
+.mailBoxStyle svg {
+	width: 60px;
+	height: 60px;
+	margin-top: -5px;
+}
+
+.iconStyle {
+	margin: 20px 20px 10px 20px;
+	cursor: pointer;
+}
+
+.iconStyle a {
+	text-decoration: none;
+	color: #000;
+}
+
+.headingStyle {
+	margin-top: 7px;
+}
+
+.saveButtonModal {
+	color: #fff !important;
+	background-color: #5dbd8a;
+	border-color: #5dbd8a;
+	padding: 10px 40px;
+	bottom: -60px;
+	left: 15px;
+	transition: box-shadow 0.1s ease-in-out;
+	box-shadow: 0px 5px 10px 1px rgb(0 0 0 / 40%);
+}
+
+.x-circle-btn {
+	opacity: 1;
+	color: red;
+	font-size: 36px;
+	width: max-content;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.example-full-width {
+	width: 100%;
+}
+
+// ---- Geo ("Near") search ----------------------------------------------
+.affiliate-geo-panel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+}
+
+// Mimics the mat-form-field "outline" look used by the filter row above.
+// A <fieldset>/<legend> gives a real notch, so the label sits over the page background.
+.geo-search-field {
+    flex: 1 1 340px;
+    max-width: 560px;
+    min-width: 0;
+    // 64px total = 8px of legend above the top border + 56px visible box.
+    height: 64px;
+    margin: -8px 0 0;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.38);
+    border-radius: 4px;
+    cursor: text;
+    transition: border-color 0.15s ease;
+
+    &:hover {
+        border-color: rgba(0, 0, 0, 0.87);
+    }
+
+    // Same focus treatment as mat-form-field outline (theme primary: indigo 500).
+    &:focus-within {
+        border: 2px solid #3f51b5;
+        padding: 0 3px;
+
+        .geo-field-label {
+            color: #3f51b5;
+            margin-left: 5px;
+        }
+    }
+
+    input {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        font-size: 16px;
+        padding: 0 10px;
+    }
+
+    // The widget draws its own rounded border on the host element; strip it so only
+    // the .geo-search-field outline shows (page-level !important beats :host styles).
+    ::ng-deep gmp-place-autocomplete {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        color-scheme: light;
+        --gmp-mat-color-outline-decorative: transparent;
+        --gmp-mat-color-outline: transparent;
+        --gmp-color-stroke-input-focus: transparent;
+    }
+}
+
+// Overrides Bootstrap's legend defaults (float/width/font-size) so it sits in the border notch.
+.geo-field-label {
+    float: none;
+    width: auto;
+    max-width: calc(100% - 20px);
+    margin: 0 0 0 6px;
+    padding: 0 4px;
+    font-size: 12px;
+    line-height: 16px;
+    color: rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+}
+
+.geo-radius-group {
+    width: 100%;
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding: 6px 15px 12px 15px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.geo-radius-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+    white-space: nowrap;
+}
+
+.geo-radius-segment {
+    display: inline-flex;
+    border: 1px solid #f3933d;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.geo-radius-option {
+    border: 0;
+    background: transparent;
+    color: #b85f12;
+    height: 38px;
+    min-width: 72px;
+    padding: 0 14px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    & + & {
+        border-left: 1px solid #f3933d;
+    }
+
+    &:hover:not(.active) {
+        background: #fff3e8;
+    }
+
+    &.active {
+        background: #f3933d;
+        color: #fff;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #b85f12;
+        outline-offset: -3px;
+    }
+}
+
+.geo-clear-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: #555;
+    font-size: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    span {
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.05);
+        color: #000;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #b85f12;
+        outline-offset: 2px;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .geo-search-field {
+        flex-basis: 100%;
+        max-width: 100%;
+    }
+
+    // "Within" + Clear on one line, full-width segmented control below.
+    .geo-radius-group {
+        width: 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+        padding: 6px 15px 12px 15px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "label clear"
+            "segment segment";
+        gap: 8px;
+    }
+
+    .geo-radius-label { grid-area: label; }
+    .geo-clear-btn { grid-area: clear; }
+
+    .geo-radius-segment {
+        grid-area: segment;
+        display: flex;
+        width: 100%;
+    }
+
+    .geo-radius-option {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 0 6px;
+    }
+}
+
+.geo-banner {
+    background: #fff7ef;
+    border-left: 4px solid #f3933d;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+
+    &.geo-banner-warn {
+        background: #fff4e5;
+        border-left-color: #e07b00;
+    }
+}
+
+.geo-missing-note {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #777;
+}
+
+.geo-row-tags {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.geo-tag {
+    display: inline-block;
+    background: #eef1f5;
+    color: #333;
+    border-radius: 999px;
+    padding: 3px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.4;
+
+    &.geo-tag-region {
+        background: #e6f6ea;
+        color: #136c2e;
+    }
+
+    &.geo-tag-source {
+        background: #fff1e3;
+        color: #8a4a0c;
+        font-weight: 500;
+    }
+}
+
+// Google Maps InfoWindow Header adjustments for top-right status chip
+::ng-deep .gm-style-iw-chr {
+    align-items: center !important;
+}
+
+::ng-deep .gm-style-iw-ch {
+    padding-top: 0 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    overflow: visible !important;
+}
+
+::ng-deep .affiliate-pin-dialog {
+    .geo-row-tags {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 6px;
+        padding-right: 22px;
+    }
+
+    .geo-tag {
+        display: inline-block;
+        background: #eef1f5;
+        color: #333;
+        border-radius: 999px;
+        padding: 3px 12px;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        line-height: 1.4;
+
+        &.geo-tag-region {
+            background: #e6f6ea;
+            color: #136c2e;
+        }
+
+        &.geo-tag-source {
+            background: #fff1e3;
+            color: #8a4a0c;
+            font-weight: 500;
+        }
+    }
+}

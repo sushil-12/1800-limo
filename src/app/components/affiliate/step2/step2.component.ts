@@ -262,6 +262,9 @@ export class Step2Component implements OnInit, AfterViewInit {
 			})
 
 			this.fillGlobalValue('', 'currency', true)
+			// The currency list can arrive after the bank country is set: match the bank country's currency
+			const bankCountry = this.addBankForm?.get('country')?.value;
+			if (bankCountry) this.selectCountryCurrency(bankCountry, this.stripeFieldsByCountry[bankCountry.toUpperCase()]?.default_currency);
 
 
 			// this.postCountryName = this.currencyOptions.countryName;
@@ -892,6 +895,7 @@ export class Step2Component implements OnInit, AfterViewInit {
 		const code = (country || '').toUpperCase();
 		this.rules = withStripeFields(bankRules(code), this.stripeFieldsByCountry[code] ?? null);
 		this.applyRuleValidators();
+		if (code.length === 2) this.selectCountryCurrency(code, this.stripeFieldsByCountry[code]?.default_currency);
 		if (!code || code in this.stripeFieldsByCountry) return;
 		this.stripeFieldsByCountry[code] = null;
 		this.affiliateService.stripeCountryFields(code)
@@ -902,7 +906,7 @@ export class Step2Component implements OnInit, AfterViewInit {
 				if ((this.addBankForm?.get('country')?.value || '').toUpperCase() !== code) return;
 				this.rules = withStripeFields(bankRules(code), fields);
 				this.applyRuleValidators();
-				this.selectStripeCurrency(fields);
+				this.selectCountryCurrency(code, fields?.default_currency);
 			});
 	}
 
@@ -946,17 +950,23 @@ export class Step2Component implements OnInit, AfterViewInit {
 		required(controls['id_front_image'], this.rules.showIdDocument);
 	}
 
-	/** Pre-select the currency banks in that country are paid in, when it's one Stripe supports there. */
-	private selectStripeCurrency(fields: StripeCountryFields | null): void {
-		const wanted = (fields?.default_currency || '').toUpperCase();
-		const country = (fields?.country || '').toUpperCase();
-		if (!wanted || !this.addBankForm) return;
-		const current = String(this.addBankForm.get('currency')?.value || '');
-		if (current.split('-')[0].toUpperCase() === wanted) return;
+	/**
+	 * Pre-select the currency banks in the bank country are paid in: Stripe's default currency for the
+	 * country when known, else the country's own (IN -> INR, GB -> GBP). The option for that country is
+	 * chosen, so Germany and France each show their own EUR entry.
+	 */
+	private selectCountryCurrency(country: string, stripeCurrency?: string | null): void {
+		const code = (country || '').toUpperCase();
+		if (!code || !this.addBankForm) return;
 		const options = this.currencyOptions_copy || [];
-		const option = options.find((o: any) => o?.currency?.toUpperCase() === wanted && o?.currencyCountry?.toUpperCase() === country)
-			|| options.find((o: any) => o?.currency?.toUpperCase() === wanted);
-		if (option) this.SetFormValue('currency', option.currency + '-' + option.currencyCountry);
+		const wanted = (stripeCurrency || '').toUpperCase();
+		const option = (wanted && (
+				options.find((o: any) => o?.currency?.toUpperCase() === wanted && o?.currencyCountry?.toUpperCase() === code)
+				|| options.find((o: any) => o?.currency?.toUpperCase() === wanted)))
+			|| options.find((o: any) => (o?.currencyCountry || '').toUpperCase() === code);
+		if (!option) return;
+		const value = option.currency + '-' + option.currencyCountry;
+		if (this.addBankForm.get('currency')?.value !== value) this.SetFormValue('currency', value);
 	}
 
 	changeRadio(form_control: string, value: any) {

@@ -1459,6 +1459,67 @@ export class DailyBookingsComponent implements OnInit, AfterViewInit, OnDestroy 
 		return this.changeStatusForm.controls;
 	}
 
+	/** limo-rt's LIVE_STATUSES: the share link only works while the ride is in one of these. */
+	private static readonly LIVE_TRACKING_STATUSES = new Set([
+		'en_route_pu', 'on_location', 'start_ride', 'passenger_drop', 'passenger_pick', 'en_route_do',
+	]);
+
+	/** Booking ids whose tracking link is being minted, to disable the buttons meanwhile. */
+	trackingLinkLoading: Record<number, boolean> = {};
+
+	isLiveRide(status?: string | null): boolean {
+		return !!status && (DailyBookingsComponent.LIVE_TRACKING_STATUSES.has(status) || status.startsWith('passenger_'));
+	}
+
+	/**
+	 * Open the public tracking page for a live ride. Links are minted on click (signed,
+	 * ride-scoped, expire when the ride ends), never for every row.
+	 */
+	openTrackingLink(bookingId: number, event: Event) {
+		event.preventDefault();
+		event.stopPropagation();
+		// Open the tab now, inside the click, or the popup blocker eats it after the API call.
+		const tab = window.open('', '_blank');
+		if (tab) tab.opener = null;
+		this.fetchTrackingLink(bookingId, (url) => {
+			if (tab) tab.location.href = url;
+			else window.open(url, '_blank', 'noopener');
+		}, () => tab?.close());
+	}
+
+	copyTrackingLink(bookingId: number, event: Event) {
+		event.preventDefault();
+		event.stopPropagation();
+		this.fetchTrackingLink(bookingId, (url) => {
+			navigator.clipboard?.writeText(url).then(
+				() => this.toastr.success(`Tracking link for #${bookingId} copied`),
+				() => this.toastr.info(url, `Tracking link for #${bookingId}`, { timeOut: 15000 })
+			) ?? this.toastr.info(url, `Tracking link for #${bookingId}`, { timeOut: 15000 });
+		});
+	}
+
+	private fetchTrackingLink(bookingId: number, onUrl: (url: string) => void, onFail?: () => void) {
+		if (this.trackingLinkLoading[bookingId]) return;
+		this.trackingLinkLoading[bookingId] = true;
+		this.adminService.getTrackingLink(bookingId).subscribe({
+			next: (res) => {
+				this.trackingLinkLoading[bookingId] = false;
+				const url = res?.data?.url;
+				if (url) {
+					onUrl(url);
+				} else {
+					onFail?.();
+					this.toastr.error('Could not create a tracking link.');
+				}
+			},
+			error: (err) => {
+				this.trackingLinkLoading[bookingId] = false;
+				onFail?.();
+				this.toastr.error(err?.error?.data?.error || err?.error?.message || 'Could not create a tracking link.');
+			},
+		});
+	}
+
 	changeBookingStatus(bookingId, bookingStatus?: string) {
 		// Booking status cannot be updated once it is Paid or Paid Cash.
 		if (bookingStatus === "paid" || bookingStatus === "paid_cash") {

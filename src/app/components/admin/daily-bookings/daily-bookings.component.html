@@ -286,6 +286,23 @@
 											</div>
 										</div>
 
+										<!-- Row 3: public live-tracking link while the ride is in progress -->
+										<div *ngIf="isLiveRide(booking.booking_status)" class="live-track-actions">
+											<button type="button" class="live-track-open"
+												[disabled]="trackingLinkLoading[booking.booking_id]"
+												(click)="openTrackingLink(booking.booking_id, $event)"
+												title="Open the live tracking page">
+												<i class="fas" [ngClass]="trackingLinkLoading[booking.booking_id] ? 'fa-spinner fa-spin' : 'fa-map-marker-alt'"></i>
+												Track live
+											</button>
+											<button type="button" class="live-track-copy"
+												[disabled]="trackingLinkLoading[booking.booking_id]"
+												(click)="copyTrackingLink(booking.booking_id, $event)"
+												title="Copy tracking link">
+												<i class="far fa-copy"></i>
+											</button>
+										</div>
+
 									</td>
 
 									<td class="sorting_1 cursor-pointer"

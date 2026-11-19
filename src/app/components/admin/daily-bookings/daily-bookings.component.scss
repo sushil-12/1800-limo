@@ -425,6 +425,43 @@ input::-webkit-input-placeholder {
 	font-size: 19px;
 }
 
+.live-track-actions {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 6px;
+	margin-top: 8px;
+
+	button {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		border: 1px solid var(--orange-color);
+		background: #fff;
+		color: var(--orange-color);
+		font-size: 13px;
+		font-weight: 600;
+		border-radius: 3rem;
+		padding: 3px 10px;
+		cursor: pointer;
+		white-space: nowrap;
+
+		&:hover:not(:disabled) {
+			background: var(--orange-color);
+			color: #fff;
+		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: progress;
+		}
+	}
+
+	.live-track-copy {
+		padding: 3px 8px;
+	}
+}
+
 .status-pill {
 	display: inline-block;
 	font-size: 14px;

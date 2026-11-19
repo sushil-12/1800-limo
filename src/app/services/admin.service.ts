@@ -1098,6 +1098,12 @@ export class AdminService {
 	changeStatusBooking(data) {
 		return this.httpClient.put(this.serverUrl + 'change-booking-status', data);
 	}
+	// Signed public live-tracking link for a ride in progress (same link the rider app shares).
+	getTrackingLink(bookingId: number) {
+		return this.httpClient.get<{ data: { booking_id: number; url: string; expires_at: number | null } }>(
+			this.serverUrl + 'admin/reservations/' + bookingId + '/tracking-link'
+		);
+	}
 	//send email to affiliate, customer etc
 	sendEmail(data) {
 		return this.httpClient.post(this.serverUrl + 'send-reservation-detail-email', data);

@@ -55,8 +55,8 @@ export class BookingsHeaderComponent {
 	readonly tabs = [
 		{ key: 'upcoming', label: 'Upcoming' },
 		{ key: 'past', label: 'Past' },
-		{ key: 'custom', label: 'Custom' },
-		{ key: 'archive', label: 'Archive' },
+		{ key: 'custom', label: 'Custom' }
+		// { key: 'archive', label: 'Archive' },
 	];
 
 	/** Label of the chosen filter, shown on the button in place of "Filters". */

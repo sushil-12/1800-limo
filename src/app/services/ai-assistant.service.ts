@@ -90,6 +90,8 @@ export interface AiBooking {
 	booked?: AiBooked | null;
 	/** Registration: the question wants a photo (see uploadPhoto). */
 	upload?: AiUploadRequest | null;
+	/** Registration: `options` are toggles, sent together as "1, 3". */
+	multi?: boolean;
 }
 
 /** A registration question answered with a photo (limoagent registration_flow.py). */
@@ -103,6 +105,8 @@ export interface AiUploadRequest {
 const PHOTO_PREFIX = '📎 photo:';
 /** Laravel's base64 upload accepts jpeg/png/gif data URIs; big phone photos are scaled down first. */
 const PHOTO_MAX_SIDE = 1600;
+/** The preview kept in the user's bubble (and sessionStorage): small enough to stay a few KB. */
+const PREVIEW_MAX_SIDE = 320;
 
 export interface AiChatMessage {
 	id: string;
@@ -122,6 +126,8 @@ export interface AiChatMessage {
 	original?: string;
 	/** Spoken in a voice session (see VoiceSessionService). */
 	voice?: boolean;
+	/** A sent registration photo, as a small data URI preview; never sent to the server. */
+	image?: string;
 }
 
 /** One spoken exchange of a voice session (limoagent docs/VOICE.md, `VoiceTurnOut`). */
@@ -277,12 +283,12 @@ export class AiAssistantService {
 	}
 
 	/** `display` is shown in the bubble instead of `text` (e.g. the picked vehicle's name). */
-	send(text: string, display?: string): void {
+	send(text: string, display?: string, image?: string): void {
 		const content = text.trim();
 		if (!content || this.isStreaming$.value || this.switching) return;
 		this.syncOwner();
 		this.afterVoice(() => {
-			const user: AiChatMessage = { id: this.newId(), role: 'user', content, display, timestamp: new Date() };
+			const user: AiChatMessage = { id: this.newId(), role: 'user', content, display, image, timestamp: new Date() };
 			this.messages$.next([...this.messages, user]);
 			this.requestReply();
 		});
@@ -345,8 +351,10 @@ export class AiAssistantService {
 		if (this.isStreaming$.value || this.syncOwner()) return null;
 		if (!file.type.startsWith('image/')) return 'Please choose a photo (JPG or PNG).';
 		let image: string;
+		let preview: string | undefined;
 		try {
 			image = await this.photoDataUrl(file);
+			preview = await this.photoDataUrl(file, PREVIEW_MAX_SIDE, 0.7).catch(() => undefined);
 		} catch {
 			return 'That photo couldn\'t be read. Please try another one.';
 		}
@@ -357,28 +365,28 @@ export class AiAssistantService {
 			const body = await this.sendJson(`${environment.serverUrl}affiliate/add-single-image`, 'POST', headers, { image });
 			const id = body.json?.data?.id;
 			if (!body.ok || typeof id !== 'string' || !id) return this.apiErrorText(body.json, body.status);
-			this.send(`${PHOTO_PREFIX}${id}`, '📎 Photo added');
+			this.send(`${PHOTO_PREFIX}${id}`, '📎 Photo added', preview);
 			return null;
 		} catch {
 			return 'The photo could not be uploaded. Check your connection and try again.';
 		}
 	}
 
-	/** The photo as a JPEG data URI, at most PHOTO_MAX_SIDE pixels on its longer side. */
-	private photoDataUrl(file: File): Promise<string> {
+	/** The photo as a JPEG data URI, at most `maxSide` pixels on its longer side. */
+	private photoDataUrl(file: File, maxSide = PHOTO_MAX_SIDE, quality = 0.85): Promise<string> {
 		return new Promise((resolve, reject) => {
 			const url = URL.createObjectURL(file);
 			const img = new Image();
 			img.onload = () => {
 				URL.revokeObjectURL(url);
-				const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(img.width, img.height));
+				const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
 				const canvas = document.createElement('canvas');
 				canvas.width = Math.round(img.width * scale);
 				canvas.height = Math.round(img.height * scale);
 				const ctx = canvas.getContext('2d');
 				if (!ctx) { reject(new Error('no canvas')); return; }
 				ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-				resolve(canvas.toDataURL('image/jpeg', 0.85));
+				resolve(canvas.toDataURL('image/jpeg', quality));
 			};
 			img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('unreadable image')); };
 			img.src = url;

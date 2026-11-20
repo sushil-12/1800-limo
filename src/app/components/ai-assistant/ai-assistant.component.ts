@@ -56,6 +56,9 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 	locationError = '';
 	uploading = false; // a registration photo on its way to the 1800limo API
 	uploadError = '';
+	/** The toggled options of a pick-several question, for the message `pickedFor`. */
+	picked = new Set<number>();
+	private pickedFor = '';
 	hidden = false;
 	/** A text field elsewhere on the page has focus (on phones: the keyboard is up). */
 	pageFieldFocused = false;
@@ -303,6 +306,27 @@ export class AiAssistantComponent implements OnInit, AfterViewChecked, OnDestroy
 	pickOption(option: AiBookingOption): void {
 		if (this.isStreaming) return;
 		this.assistant.send(String(option.number), option.label);
+	}
+
+	/** A pick-several question (registration languages, amenities): options toggle, Done sends them. */
+	toggleOption(m: AiChatMessage, option: AiBookingOption): void {
+		if (this.pickedFor !== m.id) { this.pickedFor = m.id; this.picked.clear(); }
+		if (this.picked.has(option.number)) this.picked.delete(option.number); else this.picked.add(option.number);
+	}
+
+	isPicked(m: AiChatMessage, option: AiBookingOption): boolean {
+		return this.pickedFor === m.id && this.picked.has(option.number);
+	}
+
+	pickedCount(m: AiChatMessage): number {
+		return this.pickedFor === m.id ? this.picked.size : 0;
+	}
+
+	sendPicked(m: AiChatMessage): void {
+		if (this.isStreaming || !this.pickedCount(m)) return;
+		const options = (m.booking?.options || []).filter(o => this.picked.has(o.number));
+		this.picked.clear();
+		this.assistant.send(options.map(o => o.number).join(', '), options.map(o => o.label).join(', '));
 	}
 
 	/** Suggested answers; the booking's location button sends the browser's coordinates instead. */

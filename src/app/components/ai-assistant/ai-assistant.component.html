@@ -74,7 +74,7 @@
           </svg>
         </div>
         <div class="message-body">
-          <div *ngIf="m.role === 'user'" class="bubble user-bubble">{{ m.display || m.content }}</div>
+          <div *ngIf="m.role === 'user'" class="bubble user-bubble" [class.with-photo]="m.image"><img *ngIf="m.image" class="sent-photo" [src]="m.image" alt="Photo you sent">{{ m.display || m.content }}</div>
           <!-- The user's own words, before spelling and grammar were tidied for the assistant -->
           <div *ngIf="m.role === 'user' && m.original && originalShown.has(m.id)" class="original-text">
             <span class="original-label">{{ m.voice ? 'Heard as' : 'You wrote' }}</span>{{ m.original }}
@@ -238,10 +238,25 @@
           </div>
 
           <!-- Booking: any other numbered menu (places, airports, terminals, customers) as buttons -->
-          <div *ngIf="isLive(m) && m.booking?.options?.length" class="booking-options" role="list">
+          <div *ngIf="isLive(m) && m.booking?.options?.length && !m.booking?.multi" class="booking-options" role="list">
             <button *ngFor="let option of m.booking?.options" type="button" class="booking-option" role="listitem"
                     [disabled]="isStreaming" (click)="pickOption(option)">
               {{ option.label }}
+            </button>
+          </div>
+
+          <!-- Registration: pick several (languages, amenities), then Done -->
+          <div *ngIf="isLive(m) && m.booking?.options?.length && m.booking?.multi" class="booking-multi">
+            <div class="multi-chips" role="group">
+              <button *ngFor="let option of m.booking?.options" type="button" class="multi-chip"
+                      [class.selected]="isPicked(m, option)" [attr.aria-pressed]="isPicked(m, option)"
+                      [disabled]="isStreaming" (click)="toggleOption(m, option)">
+                {{ option.label }}
+              </button>
+            </div>
+            <button type="button" class="multi-done" [disabled]="isStreaming || !pickedCount(m)"
+                    (click)="sendPicked(m)">
+              Done{{ pickedCount(m) ? ' (' + pickedCount(m) + ')' : '' }}
             </button>
           </div>
 

@@ -1108,6 +1108,85 @@ $success: #16a34a;
   }
 }
 
+/* Registration pick-several: wrapping toggle chips (a long list scrolls), then Done */
+.booking-multi {
+  margin-top: 8px;
+}
+
+.multi-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 168px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.multi-chip {
+  border: 1px solid #fed7aa;
+  background: white;
+  color: $accent-dark;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover:not(:disabled):not(.selected) {
+    background-color: #fff7ed;
+    border-color: $accent;
+  }
+
+  &.selected {
+    background-color: $accent;
+    border-color: $accent;
+    color: white;
+
+    &::before {
+      content: '✓ ';
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.multi-done {
+  margin-top: 8px;
+  border: none;
+  background: $accent;
+  color: white;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+/* A registration photo the user sent, previewed in their bubble */
+.user-bubble.with-photo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  white-space: normal;
+}
+
+.sent-photo {
+  display: block;
+  max-width: 160px;
+  max-height: 160px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
 /* Quick replies */
 .quick-replies {
   display: flex;

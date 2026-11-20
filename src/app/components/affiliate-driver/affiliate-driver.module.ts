@@ -23,6 +23,9 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { GoogleMapsModule } from '@angular/google-maps';
+import { AffiliateModule } from '../affiliate/affiliate.module';
+import { BookingPreviewModule } from '../affiliate/booking-preview/booking-preview.module';
+import { AffiliateBookingHostModule } from '../affiliate/create-new-booking-v2/affiliate-booking-host.module';
 
 
 @NgModule({
@@ -48,7 +51,11 @@ import { GoogleMapsModule } from '@angular/google-maps';
 		MatTabsModule,
 		MatTableModule,
 		MatExpansionModule,
-		MatIconModule
+		MatIconModule,
+		// reuse the affiliate edit (shared booking) and finalize screens, same as sub_affiliate
+		AffiliateModule,
+		AffiliateBookingHostModule,
+		BookingPreviewModule
   ]
 })
 export class AffiliateDriverModule { }

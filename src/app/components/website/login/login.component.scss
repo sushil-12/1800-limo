@@ -267,3 +267,83 @@ label+input[type=radio]+label {
 		}
 	}
 }
+/* Associated accounts (multiple accounts linked to one phone number) */
+.associated-accounts {
+	text-align: left;
+	padding: 24px 24px 16px;
+
+	.associated-title {
+		font-size: 1.9rem;
+		font-weight: 700;
+		color: #202020;
+		text-align: left;
+		margin: 0 0 12px;
+		padding: 0;
+	}
+
+	.associated-subtitle {
+		font-size: 1rem;
+		line-height: 1.6;
+		color: #202020;
+		margin-bottom: 28px;
+	}
+
+	.account-card {
+		background: #fff;
+		border: 1px solid #e2e2e2;
+		border-radius: 16px;
+		padding: 20px;
+		margin-bottom: 16px;
+	}
+
+	.account-card-header {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 10px;
+		margin-bottom: 6px;
+	}
+
+	.account-card-title {
+		font-size: 1.3rem;
+		font-weight: 600;
+		color: #202020;
+	}
+
+	.account-card-badge {
+		border: 1px solid #e6954f;
+		border-radius: 6px;
+		padding: 2px 8px;
+		font-size: 0.8rem;
+		color: #202020;
+	}
+
+	.account-card-text {
+		font-size: 0.95rem;
+		color: #333;
+		margin-bottom: 18px;
+	}
+
+	.account-login-button {
+		width: 100%;
+		border: none;
+		border-radius: 12px;
+		background-color: #e6954f;
+		color: #202020;
+		font-size: 1.1rem;
+		font-weight: 600;
+		padding: 12px;
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.7;
+			cursor: not-allowed;
+		}
+	}
+
+	.back-to-login {
+		display: block;
+		text-align: center;
+		margin-top: 8px;
+	}
+}

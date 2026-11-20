@@ -117,6 +117,8 @@ export class BookingPreviewComponent implements OnInit {
 
       if (currentUser?.roleName === 'sub_affiliate') {
         this.router.navigate(['/sub_affiliate/create-new-booking-v2'], { queryParams: { bookingId: bookingId, updateType: updateType, nav: 'true' } });
+      } else if (currentUser?.roleName === 'affiliate_driver') {
+        this.router.navigate(['/affiliate_driver/create-new-booking-v2'], { queryParams: { bookingId: bookingId, updateType: updateType, nav: 'true' } });
       } else {
         this.router.navigate(['/affiliate/create-new-booking-v2'], { queryParams: { bookingId: bookingId, updateType: updateType, nav: 'true' } });
       }

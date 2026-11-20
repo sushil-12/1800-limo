@@ -84,6 +84,15 @@ export class BookingComponent implements OnInit, OnDestroy {
 		return this.mode === 'guest';
 	}
 
+	/** Bookings list of the affiliate-side portal the current user belongs to. */
+	private get affiliateBookingsPath(): string {
+		switch (this.currentUser?.roleName) {
+			case 'sub_affiliate': return '/sub_affiliate/my-bookings';
+			case 'affiliate_driver': return '/affiliate_driver/my-bookings';
+			default: return '/affiliate/my-bookings';
+		}
+	}
+
 	get userRole(): string {
 		if (this.isAffiliateMode || this.currentUser?.roleName === 'affiliate' || this.currentUser?.role === 'affiliate') {
 			return 'affiliate';
@@ -8916,7 +8925,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 			return
 		}
 		if (this.isAffiliateMode) {
-			const targetPath = this.currentUser?.roleName == 'sub_affiliate' ? '/sub_affiliate/my-bookings' : '/affiliate/my-bookings';
+			const targetPath = this.affiliateBookingsPath;
 			this.$router.navigate([targetPath]).then(() => {
 				window.location.reload();
 			});
@@ -9111,7 +9120,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 		// Same destinations as navigatePostSave(), minus the affiliate reload that would drop the dialog.
 		this.$spinner.hide();
 		if (this.isAffiliateMode) {
-			this.$router.navigate([this.currentUser?.roleName == 'sub_affiliate' ? '/sub_affiliate/my-bookings' : '/affiliate/my-bookings']);
+			this.$router.navigate([this.affiliateBookingsPath]);
 		} else if (this.isIndividualMode || this.isTravelAgentMode) {
 			this.$router.navigate([`/${this.currentUser?.roleName}/bookings`]);
 		} else {

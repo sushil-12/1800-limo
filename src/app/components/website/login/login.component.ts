@@ -35,6 +35,11 @@ export class LoginComponent implements OnInit, AfterViewInit {
 	alert_corporate: boolean = false;
 	alert_travel_agent: boolean = false;
 	referralCode: string = null;
+	// multiple accounts linked to one phone number (login-otp returns select_account)
+	selectAccount: boolean = false;
+	associatedAccounts: any[] = [];
+	loggingInAccount: any = null;
+	private baseLoginPayload: any = null;
 	private readonly existRoles = ['admin', 'driver', 'sub_admin', 'travel_agent', 'master_user', 'sub_travel_agent', 'individual', 'sub_affiliate', 'subscriber'];
 
 	constructor(private formBuilder: FormBuilder,
@@ -311,22 +316,46 @@ export class LoginComponent implements OnInit, AfterViewInit {
 			this.loginForm.value.phone = this.loginForm.value.phone.substring(this.countryCode.length);
 		}
 
+		// keep the base payload so the selected account can be sent with the same phone/role data
+		this.baseLoginPayload = { ...this.loginForm.value };
+		this.sendLoginOtp(this.baseLoginPayload);
+	}
+
+	// login-otp call shared by the normal Sign In and the "Associated accounts" selection
+	private sendLoginOtp(payload: any, account?: any) {
 		this.recaptchaService.execute('login').then(recaptchaToken => {
-			this.loginForm.value.recaptchaToken = recaptchaToken;
-			console.log("login form", this.loginForm.value)
-			this.authService.login(this.loginForm.value)
+			const requestPayload = { ...payload, recaptchaToken };
+			console.log("login form", requestPayload)
+			this.authService.login(requestPayload)
 			.pipe(
 				catchError(err => {
 					this.disableSubmit = false; //enable submit button
 					this.showProgressBar = false; //hide progressbar
+					this.loggingInAccount = null;
 					return throwError(err);
 				})
 			)
 			.subscribe((result: any) => {
+				// multiple accounts linked to this phone number -> let the user pick one
+				if (!account && result?.data?.select_account) {
+					this.associatedAccounts = result.data.accounts || [];
+					this.selectAccount = true;
+					this.disableSubmit = false;
+					this.showProgressBar = false;
+					return;
+				}
 				this.response = result;
 				var userId;
 				var email;
-				if (this.response?.data?.is_driver) {
+				const selectedRole = Number(this.response?.data?.user?.role);
+				if (account && (selectedRole === 10 || selectedRole === 2)) {
+					// account picked from "Associated accounts": verify-otp needs
+					// driver_id for role 10, userId for role 2 (handled in otp component via isDriver)
+					userId = this.response?.data?.user?.id;
+					email = this.response?.data?.user?.email;
+					sessionStorage.setItem("isDriver", selectedRole === 10 ? 'Driver' : '');
+				}
+				else if (this.response?.data?.is_driver) {
 					userId = this.response?.data?.user?.id
 					email = this.response?.data?.user?.email
 					sessionStorage.setItem("isDriver", 'Driver')
@@ -339,6 +368,8 @@ export class LoginComponent implements OnInit, AfterViewInit {
 				sessionStorage.setItem('userId', '' + userId);
 				if (this.response.data.family_data?.id) {
 					sessionStorage.setItem('family_id', this.response.data.family_data.id)
+				} else {
+					sessionStorage.removeItem('family_id');
 				}
 
 				if (environment['environmentName'] !== 'Production') {
@@ -352,7 +383,44 @@ export class LoginComponent implements OnInit, AfterViewInit {
 		}).catch(() => {
 			this.disableSubmit = false;
 			this.showProgressBar = false;
+			this.loggingInAccount = null;
 		});
+	}
+
+	// "Login" on one of the associated account cards
+	loginWithAccount(account: any) {
+		if (this.loggingInAccount) {
+			return;
+		}
+		const payload: any = {
+			...this.baseLoginPayload,
+			account_type: account.account_type,
+			invite_code: this.baseLoginPayload?.invite_code || '',
+		};
+		if (account.account_type === 'driver') {
+			payload.driver_id = account.driver_id;
+		}
+		this.loggingInAccount = account;
+		this.showProgressBar = true;
+		this.sendLoginOtp(payload, account);
+	}
+
+	// go back to the phone number form
+	backToPhoneLogin() {
+		this.selectAccount = false;
+		this.associatedAccounts = [];
+		this.loggingInAccount = null;
+		this.showProgressBar = false;
+	}
+
+	accountTitle(account: any): string {
+		return account?.account_type === 'driver' ? 'Driver account' : 'Company account';
+	}
+
+	accountDescription(account: any): string {
+		return account?.account_type === 'driver'
+			? 'View your assigned trips and driving activity.'
+			: 'Manage your company, fleet and bookings.';
 	}
 	numberOnly(event: any): boolean {
 		const charCode = (event.which) ? event.which : event.keyCode;

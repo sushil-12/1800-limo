@@ -1,3 +1,4 @@
+import { BookingTabCounts } from '../../shared/bookings-header/bookings-header.component';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { AffiliateService } from '../../../services/affiliate.service';
 import { Router } from '@angular/router';
@@ -21,6 +22,7 @@ declare var $: any;
 export class MyBookingsComponent implements OnInit {
   @ViewChild(GoogleMap, { static: false }) map!: GoogleMap;
   @ViewChild('inputmsg', { static: false }) message: ElementRef;
+  @ViewChild('bookingPreviewModal') bookingPreviewModal: any;
 
   zoom = 7;
   mapCenter: google.maps.LatLngLiteral = { lat: 41.850033, lng: -87.6500523 };
@@ -63,6 +65,11 @@ export class MyBookingsComponent implements OnInit {
   company_name: any = JSON.parse(localStorage.getItem('currentUser'))?.affiliate_company || ''
   cancelBookingId: any = null
   useDateFilter: boolean = false;
+  // Tabs of the shared bookings header: upcoming | past | custom
+  listTab: string = 'upcoming';
+  tabCounts: BookingTabCounts | null = null;
+  /** Start of the "Past" range — the driver API filters by date, so Past = everything up to yesterday. */
+  private readonly pastRangeStart = '2000-01-01';
   adminSharePercent: number;
   shareArray: any;
   rates_preview: any;
@@ -97,6 +104,8 @@ export class MyBookingsComponent implements OnInit {
       (localStorage.getItem('farmInuseDateFilter') == 'true' ? true : false)
       : false;
     console.log('farmInuseDateFilter-->', this.useDateFilter)
+    this.listTab = this.useDateFilter ? 'custom' :
+      (localStorage.getItem('affiliateDriverBookingsTab') == 'past' ? 'past' : 'upcoming');
 
     this.loadBookings();
 
@@ -207,7 +216,8 @@ export class MyBookingsComponent implements OnInit {
 
     // var keyword = ((document.getElementById("keyword") as HTMLInputElement).value);
     // Load Our bookings using API
-    this.adminService.loadDriverBookings(pageUrl, this.searchText, this.startDate, this.endDate, this.useDateFilter).then(result => {
+    const { from, to, useDateFilter } = this.listRange();
+    this.adminService.loadDriverBookings(pageUrl, this.searchText, from, to, useDateFilter, this.listTab).then(result => {
       console.log('result------------------------->>>', result)
       let date = new Date();
       let timestamp = date.getTime();
@@ -216,7 +226,9 @@ export class MyBookingsComponent implements OnInit {
       this.bookingsRes = result;
       this.currencySymbol = this.bookingsRes?.currency?.symbol
       this.bookings = this.bookingsRes?.data?.data;
-      if (!this.useDateFilter && !this.searchText) {
+      // Only used if the API starts returning per-tab counts.
+      this.tabCounts = this.bookingsRes?.tab_counts ?? this.bookingsRes?.data?.tab_counts ?? this.tabCounts;
+      if (this.listTab == 'upcoming' && !this.useDateFilter && !this.searchText) {
         this.endDate = this.bookings?.length > 0 ? this.bookings[this.bookings?.length - 1]?.pickup_date : moment(timestamp).format("YYYY-MM-DD")
       }
       this.totalRecords = this.bookingsRes?.data?.total;
@@ -250,10 +262,41 @@ export class MyBookingsComponent implements OnInit {
     return m.format("ll");
   }
 
+  /** Dates sent to the driver API for the selected tab. */
+  private listRange(): { from: string, to: string, useDateFilter: boolean } {
+    if (this.listTab == 'past') {
+      return { from: this.pastRangeStart, to: moment().subtract(1, 'day').format('YYYY-MM-DD'), useDateFilter: true };
+    }
+    return { from: this.startDate, to: this.endDate, useDateFilter: this.useDateFilter };
+  }
+
+  selectTab(tab: string) {
+    // Picking a tab drops the search so the tab's own list shows.
+    clearTimeout(this.timer);
+    this.searchText = "";
+    this.saveCookie('affiliate_search', "");
+    this.listTab = tab;
+    localStorage.setItem('affiliateDriverBookingsTab', tab);
+    this.useDateFilter = tab == 'custom';
+    localStorage.setItem('farmInuseDateFilter', String(this.useDateFilter));
+    if (!this.startDate || !this.endDate || tab == 'custom') {
+      this.startDate = this.startDate || moment().format('YYYY-MM-DD');
+      this.endDate = this.endDate && moment(this.endDate).isSameOrAfter(this.startDate) ? this.endDate : moment(this.startDate).add(7, 'day').format('YYYY-MM-DD');
+    }
+    this.loadBookings();
+  }
+
+  /** Search button / Enter: skip the typing debounce. */
+  submitSearch(search_value: string) {
+    clearTimeout(this.timer);
+    this.searchText = search_value ?? "";
+    this.saveCookie('affiliate_search', this.searchText);
+    this.loadBookings();
+  }
+
   searchInBookings(search_value: string) {
-    this.searchText = search_value
-    console.log('--->>>>>', search_value)
-    this.saveCookie('affiliate_search', search_value)
+    this.searchText = search_value ?? ""
+    this.saveCookie('affiliate_search', this.searchText)
     clearTimeout(this.timer);
     this.timer = setTimeout(() => {
       this.loadBookings(null)
@@ -304,6 +347,8 @@ export class MyBookingsComponent implements OnInit {
   }
 
   reset() {
+    this.listTab = 'upcoming';
+    localStorage.removeItem('affiliateDriverBookingsTab');
     let date = new Date();
     this.startDate = date.toISOString().substring(0, 10);
     date.setDate(date.getDate() + 7);
@@ -356,44 +401,9 @@ export class MyBookingsComponent implements OnInit {
   }
 
   bookingPreview: any;
+  // Booking number click → shared booking preview modal (affiliate data, same as the affiliate bookings list)
   showBookingPreviewModal(booking_id: number) {
-    console.log("hii im here")
-    this.spinner.show()
-    this.affiliateService.getBookingPreview(booking_id)
-      .pipe(
-        catchError((err) => {
-          this.spinner.hide(); //hide spinner
-          return throwError(err);
-        })
-      ).subscribe((response: any) => {
-        console.log("respinse", response.data)
-        this.bookingPreview = response.data;
-        this.MapController()
-        if (this.bookingPreview?.account_type == 'travel_planner' && this.bookingPreview?.created_by != 1) {
-          console.log("in if created by ta")
-          this.adminSharePercent = 15
-        }
-        else if (this.bookingPreview?.share_array?.farmoutShare) {
-          this.adminSharePercent = 15
-        }
-        else {
-          console.log("in if created by admin")
-          this.adminSharePercent = 25
-        }
-        if (this.bookingPreview?.payment_status == "unpaid") {
-
-          console.log("in if share array", this.bookingPreview.affiliate_type === 'affiliate' && this.bookingPreview.payment_status == 'unpaid' && this.bookingPreview?.share_array?.length != 0)
-          this.shareArray = this?.bookingPreview?.share_array
-
-          this.rates_preview = this.bookingPreview?.rates_preview;
-        }
-        this.isAffiliate = this.bookingPreview.affiliate_type == "affiliate" ? true : false;
-        this.isLooseAffiliate = this.bookingPreview.affiliate_type == "loose_affiliate" ? true : false;
-        this.bookingPreview['booking_instructions'] = this.bookingPreview?.booking_instructions.replaceAll('<br />', ' ')
-        console.log('get preview data-->>>', this.bookingPreview.affiliate_type, this.isAffiliate)
-        $('#previewBookingOnID').modal('show');
-      })
-    this.spinner.hide();
+    this.bookingPreviewModal.openPreview(booking_id, 'affiliate');
   }
 
 
@@ -522,11 +532,27 @@ export class MyBookingsComponent implements OnInit {
   }
 
   changeDate(dateType, date) {
+    if (!date) {
+      return;
+    }
     if (dateType == 'startDate') {
       this.startDate = date;
+      // keep the range valid
+      if (this.endDate && moment(this.startDate, 'YYYY-MM-DD').isAfter(moment(this.endDate, 'YYYY-MM-DD'), 'day')) {
+        this.endDate = this.startDate;
+      }
     }
     else {
       this.endDate = date;
+      if (this.startDate && moment(this.endDate, 'YYYY-MM-DD').isBefore(moment(this.startDate, 'YYYY-MM-DD'), 'day')) {
+        this.endDate = this.startDate;
+      }
+    }
+    this.saveCookie('affiliate_startDate', this.startDate);
+    this.saveCookie('affiliate_endDate', this.endDate);
+    // No Search button any more: the Custom tab reloads as soon as a date is picked.
+    if (this.listTab == 'custom') {
+      this.loadBookings();
     }
   }
   dateFormat(value: any) {
@@ -637,22 +663,14 @@ export class MyBookingsComponent implements OnInit {
 
 
 
+  // Edit/Rate — opens the shared booking form (affiliate mode) under the affiliate-driver portal
   editAction(bookingId, updateType) {
-    if (this.currentUser.roleName == 'sub_affiliate') {
-      this.router.navigate(['/sub_affiliate/new-booking'], { queryParams: { bookingId: bookingId, updateType: updateType, nav: 'true' } });
-    }
-    else {
-      this.router.navigate(['/affiliate/new-booking'], { queryParams: { bookingId: bookingId, updateType: updateType, nav: 'true' } });
-    }
+    this.router.navigate(['/affiliate_driver/create-new-booking-v2'], { queryParams: { bookingId: bookingId, updateType: updateType, nav: 'true' } });
   }
 
+  // Finalize — opens the affiliate finalize screen under the affiliate-driver portal
   finalizeAction(bookingId) {
-    if (this.currentUser.roleName == 'sub_affiliate') {
-      this.router.navigate(['/sub_affiliate/finalize-booking'], { queryParams: { bookingId: bookingId } });
-    }
-    else {
-      this.router.navigate(['/affiliate/finalize-booking'], { queryParams: { bookingId: bookingId } });
-    }
+    this.router.navigate(['/affiliate_driver/finalize-booking'], { queryParams: { bookingId: bookingId } });
   }
 
   // Method to convert hours to days and hours

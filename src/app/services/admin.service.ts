@@ -1479,13 +1479,16 @@ export class AdminService {
 	}
 
 	//Booking
-	loadDriverBookings(url, keyword, startDate, endDate, useDateFilter) {
+	loadDriverBookings(url, keyword, startDate, endDate, useDateFilter, filter: string = '') {
 		var path;
 		if (url) {
 			path = url + '?from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&current_date=' + this.current_date + '&current_time=' + this.current_time;
 		}
 		else {
 			path = this.serverUrl + 'driver/get-all-reservations' + '?from=' + startDate + '&to=' + endDate + '&search=' + keyword + '&useDateFilter=' + useDateFilter + '&current_date=' + this.current_date + '&current_time=' + this.current_time;
+		}
+		if (filter) {
+			path += '&filter=' + filter;
 		}
 		return this.httpClient.get(path).toPromise();
 	}

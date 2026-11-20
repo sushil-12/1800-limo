@@ -100,12 +100,7 @@ export class AffiliateFinalizeComponent implements OnInit {
 				console.log("booking id---->>>>>>", this.bookingId,)
 
 				if (!this.bookingId) {
-					if (this.currentUser.roleName == 'sub_affiliate') {
-						this.router.navigate(['/sub_affiliate/my-bookings']);
-					}
-					else {
-						this.router.navigate(['/affiliate/my-bookings']);
-					}
+					this.router.navigate([this.portalBasePath + '/my-bookings']);
 				}
 				else {
 					// this.buildChargesFormGroup()
@@ -278,12 +273,7 @@ export class AffiliateFinalizeComponent implements OnInit {
 						}
 					});
 					if (success == true) {
-						if (this.currentUser.roleName == 'sub_affiliate') {
-							this.router.navigate(['/sub_affiliate/my-bookings']);
-						}
-						else {
-							this.router.navigate(['/affiliate/my-bookings']);
-						}
+						this.router.navigate([this.portalBasePath + '/my-bookings']);
 					}
 				});
 
@@ -303,12 +293,7 @@ export class AffiliateFinalizeComponent implements OnInit {
 				.subscribe(({ data, success, message }: any) => {
 					this.spinner.hide();//hide spinner
 					if (success == true) {
-						if (this.currentUser.roleName == 'sub_affiliate') {
-							this.router.navigate(['/sub_affiliate/my-bookings']);
-						}
-						else {
-							this.router.navigate(['/affiliate/my-bookings']);
-						}
+						this.router.navigate([this.portalBasePath + '/my-bookings']);
 					}
 				});
 		}
@@ -475,12 +460,7 @@ export class AffiliateFinalizeComponent implements OnInit {
 				// 		error: `<span class='text-success'>${response.message}</span>`
 				// 	}
 				// })
-				if (this.currentUser.roleName == 'sub_affiliate') {
-					this.router.navigate(['/sub_affiliate/invoice-summary'], { queryParams: { bookingId: this.bookingId } })
-				}
-				else {
-					this.router.navigate(['/affiliate/invoice-summary'], { queryParams: { bookingId: this.bookingId } })
-				}
+				this.router.navigate([this.portalBasePath + '/invoice-summary'], { queryParams: { bookingId: this.bookingId } });
 				console.log('response---------------------->>', response)
 				this.spinner.hide()
 			})
@@ -560,14 +540,18 @@ export class AffiliateFinalizeComponent implements OnInit {
 
 	}
 
+	/** Route prefix of the portal the current user belongs to (affiliate, sub-affiliate or affiliate driver). */
+	get portalBasePath(): string {
+		switch (this.currentUser?.roleName) {
+			case 'sub_affiliate': return '/sub_affiliate';
+			case 'affiliate_driver': return '/affiliate_driver';
+			default: return '/affiliate';
+		}
+	}
+
 	redirecttodailybooking() {
 		$('#paymentSuccessModal').modal('hide')
-		if (this.currentUser.roleName == 'sub_affiliate') {
-			this.router.navigate(['/sub_affiliate/invoice-summary'], { queryParams: { bookingId: this.bookingId } })
-		}
-		else {
-			this.router.navigate(['/affiliate/invoice-summary'], { queryParams: { bookingId: this.bookingId } })
-		}
+		this.router.navigate([this.portalBasePath + '/invoice-summary'], { queryParams: { bookingId: this.bookingId } });
 	}
 
 	deleteCard() {

@@ -11,7 +11,29 @@
 	<div id="formContent">
 		<!-- Tabs Titles -->
 		<!-- Login Form -->
-		<form [formGroup]="loginForm">
+		<!-- Associated accounts (login-otp returned select_account) -->
+		<div class="associated-accounts" *ngIf="selectAccount">
+			<h2 class="associated-title">Associated accounts</h2>
+			<p class="associated-subtitle">
+				We found {{associatedAccounts.length}} accounts linked to this number.<br>
+				Choose an account to log in.
+			</p>
+			<mat-progress-bar class="my-color my-3" mode="indeterminate" *ngIf="showProgressBar"></mat-progress-bar>
+			<div class="account-card" *ngFor="let account of associatedAccounts">
+				<div class="account-card-header">
+					<span class="account-card-title">{{accountTitle(account)}}</span>
+					<span class="account-card-badge" *ngIf="account.company_name">{{account.company_name | titlecase}}</span>
+				</div>
+				<p class="account-card-text">{{accountDescription(account)}}</p>
+				<button type="button" class="account-login-button" (click)="loginWithAccount(account)"
+					[disabled]="!!loggingInAccount">
+					{{ loggingInAccount === account ? 'Logging in...' : 'Login' }}
+				</button>
+			</div>
+			<a class="common-anchor cursor-pointer back-to-login" (click)="backToPhoneLogin()">Use a different number</a>
+		</div>
+
+		<form [formGroup]="loginForm" [hidden]="selectAccount">
 			<!-- Icon -->
 			<div class="fadeIn first">
 				<img src="assets/images/limo-home-new-black-logo.png" class="cursor-pointer" id="icon" alt="User Icon"
@@ -102,7 +124,7 @@
 		</form>
 
 		<!-- Remind Passowrd -->
-		<div id="formFooter">
+		<div id="formFooter" [hidden]="selectAccount">
 			<p class="firebaseui-tos firebaseui-phone-tos">By tapping Verify, you are indicating that you accept our <a
 					routerLink="/client-terms-condition" class="common-anchor" target="_blank">Terms of Service</a> and
 				<a routerLink="/privacy-policy" class="common-anchor" target="_blank">Privacy Policy</a>. An SMS may be

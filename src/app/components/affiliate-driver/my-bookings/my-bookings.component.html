@@ -8,7 +8,7 @@
             <button bhToolbar type="button" class="bh-ghost-btn bh-reset-btn" (click)="reset(); loadBookings()">Reset</button>
             <div bhCustomRange class="bh-range" *ngIf="listTab == 'custom'">
                 <mat-form-field appearance="outline">
-                    <mat-label>Start</mat-label>
+                    <mat-label>Start Date</mat-label>
                     <input matInput [setOutputDateFormat]="outputDateFormat" [matDatepicker]="picker1"
                         placeholder="Start Date" id="id_4" (dateChangeWithFormat)="changeDate('startDate', $event)"
                         (click)="picker1.open()" [value]="startDate" readonly />

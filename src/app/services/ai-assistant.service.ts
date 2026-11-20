@@ -92,6 +92,19 @@ export interface AiBooking {
 	upload?: AiUploadRequest | null;
 	/** Registration: `options` are toggles, sent together as "1, 3". */
 	multi?: boolean;
+	/** Registration: a step was just saved in the chat; see applyPortalSync. */
+	portal?: AiPortalSync | null;
+}
+
+/**
+ * What the driver portal keeps in localStorage, sent after a registration step is saved in the chat
+ * (limoagent registration_flow.py). The step pages read it, e.g. Step 1 loads the saved details only
+ * when `currentUser.account_id` is set.
+ */
+export interface AiPortalSync {
+	step_completed: string[];
+	/** After Affiliate Settings: the fields its response sets on `currentUser` (incl. account_id). */
+	user?: Record<string, unknown> | null;
 }
 
 /** A registration question answered with a photo (limoagent registration_flow.py). */
@@ -459,7 +472,10 @@ export class AiAssistantService {
 				// Server ignored stream:true and answered with a single JSON body.
 				const body = await res.json();
 				reply.content = body?.content ?? body?.choices?.[0]?.message?.content ?? body?.choices?.[0]?.delta?.content ?? '';
-				if (body?.booking) reply.booking = body.booking;
+				if (body?.booking) {
+					reply.booking = body.booking;
+					this.applyPortalSync(body.booking.portal);
+				}
 				if (body?.correction) this.applyCorrection(reply, body.correction);
 			}
 			if (!reply.content.trim()) throw new Error('Empty reply from assistant');
@@ -540,6 +556,7 @@ export class AiAssistantService {
 		}
 		if (eventName === 'booking') {
 			reply.booking = json as AiBooking;
+			this.applyPortalSync(reply.booking.portal);
 			this.scheduleEmit();
 			return false;
 		}
@@ -600,6 +617,24 @@ export class AiAssistantService {
 		if (saved === null && !this.messages.length) return false;
 		this.clear();
 		return true;
+	}
+
+	/**
+	 * Do what the portal's step page does after its own submit (step1.component.ts submit): store the
+	 * steps done and the updated user, so the pages show what was saved in the chat. The user's
+	 * fields are merged into the stored one, which keeps its token and everything else; nothing is
+	 * written for another user's chat.
+	 */
+	private applyPortalSync(portal?: AiPortalSync | null): void {
+		if (!portal || !Array.isArray(portal.step_completed)) return;
+		try {
+			const stored = JSON.parse(localStorage.getItem('currentUser') || 'null');
+			if (!stored || typeof stored !== 'object') return;
+			const user = portal.user && typeof portal.user === 'object' ? portal.user : null;
+			if (user && user['id'] != null && String(user['id']) !== String(stored.id)) return;
+			localStorage.setItem('stepCompleted', portal.step_completed.map(String).toString());
+			if (user) localStorage.setItem('currentUser', JSON.stringify({ ...stored, ...user }));
+		} catch { }
 	}
 
 	private currentOwner(): string {

@@ -80,6 +80,13 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
   private lastRouteUpdate = 0;
   private routeCalculated = false;
   private pickupToDropoffRouteCalculated = false;
+  /** Last bounds handed to fitMapToBounds, re-applied when the panel resizes or the trip line arrives. */
+  private lastFitBounds: any = null;
+  /** Set once the viewer drags/zooms the map, so automatic re-fits stop fighting them. */
+  private userMovedMap = false;
+  private panelResizeObserver: ResizeObserver | null = null;
+  private observedPanel: HTMLElement | null = null;
+  private refitTimer: any = null;
   private currentBookingId: string | number | null = null;
   private currentCustomerId: string | number | null = null;
   private connectionCheckInterval: any = null;
@@ -123,6 +130,9 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
     this.shareClient = null;
     clearInterval(this.tickTimer);
     clearTimeout(this.mapUpdateTimer);
+    clearTimeout(this.refitTimer);
+    this.panelResizeObserver?.disconnect();
+    window.removeEventListener('resize', this.onWindowResize);
 
     // Clear connection check interval
     if (this.connectionCheckInterval) {
@@ -175,6 +185,15 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
         { featureType: "transit", stylers: [{ visibility: "off" }] }
       ]
     });
+
+    // Stop auto-fitting once the viewer takes control of the map (drag, wheel or pinch).
+    this.googleMap.addListener('dragstart', () => (this.userMovedMap = true));
+    const el: HTMLElement = this.mapContainer.nativeElement;
+    el.addEventListener('wheel', () => (this.userMovedMap = true), { passive: true });
+    el.addEventListener('touchstart', (e: TouchEvent) => {
+      if (e.touches.length > 1) this.userMovedMap = true;
+    }, { passive: true });
+    window.addEventListener('resize', this.onWindowResize);
 
     // Route Line (Black) - Driver to destination
     this.directionsRenderer = new google.maps.DirectionsRenderer({
@@ -893,6 +912,7 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
 
   handleRecenter(): void {
     if (!this.googleMap || !this.rideData) return;
+    this.userMovedMap = false;
 
     const bounds = new google.maps.LatLngBounds();
     let hasPoints = false;
@@ -924,38 +944,85 @@ export class LiveRideTrackingComponent implements OnInit, OnDestroy, AfterViewIn
     }
   }
 
+  private onWindowResize = (): void => this.scheduleRefit();
+
+  /** Re-apply the last fit (debounced) unless the viewer has moved the map themselves. */
+  private scheduleRefit(): void {
+    clearTimeout(this.refitTimer);
+    this.refitTimer = setTimeout(() => {
+      if (!this.userMovedMap && this.lastFitBounds) this.fitMapToBounds(this.lastFitBounds);
+    }, 150);
+  }
+
+  /** Re-fit when the panel changes size (addresses/ETA load after the first fit). */
+  private observePanel(panel: HTMLElement | null): void {
+    if (!panel || panel === this.observedPanel || typeof ResizeObserver === 'undefined') return;
+    this.panelResizeObserver?.disconnect();
+    this.observedPanel = panel;
+    let first = true;
+    this.panelResizeObserver = new ResizeObserver(() => {
+      if (first) { first = false; return; } // fires once on observe()
+      this.scheduleRefit();
+    });
+    this.panelResizeObserver.observe(panel);
+  }
+
   /**
-   * Fit the map tightly around `bounds`, padding only the side the info panel covers (left
-   * on desktop, the bottom sheet on mobile) so the route sits in the visible part of the map
-   * instead of underneath the card. Zoom is capped so two nearby points (driver already at
-   * pickup) don't zoom in to street-number level.
+   * Fit the map around `bounds`, padding the side the info panel covers so the route sits in
+   * the visible part of the map instead of underneath the card. Only the driver's current leg
+   * is fitted (not the whole trip) so the car's movement stays readable.
+   * Zoom is capped so two nearby points (driver already at pickup) don't zoom in too far.
    */
   private fitMapToBounds(bounds: any): void {
     if (!this.googleMap || !bounds || bounds.isEmpty()) return;
+    this.lastFitBounds = bounds;
 
-    const container: HTMLElement | null = this.mapContainer.nativeElement.parentElement;
+    const mapEl: HTMLElement = this.mapContainer.nativeElement;
+    const container: HTMLElement | null = mapEl.parentElement;
     const panel = container?.querySelector('.info-panel') as HTMLElement | null;
-    const isMobile = window.innerWidth <= 640;
-    const edge = 40;
-    const padding = { top: edge + 40, right: edge + 40, bottom: edge, left: edge }; // 40 = recenter button
+    this.observePanel(panel);
 
-    if (panel) {
-      if (isMobile) {
-        padding.bottom = Math.min(panel.offsetHeight + edge, window.innerHeight * 0.65);
-        padding.top = edge + 20;
+    const W = mapEl.clientWidth || window.innerWidth;
+    const H = mapEl.clientHeight || window.innerHeight;
+    const edge = W <= 640 ? 24 : 40;
+    const button = 56; // recenter button, top-right
+    const padding = { top: edge + button, right: edge, bottom: edge, left: edge };
+    const MIN_VISIBLE = 160; // never pad the visible area below this, or fitBounds gives up
+
+    if (panel && panel.offsetHeight > 0) {
+      const mapRect = mapEl.getBoundingClientRect();
+      const r = panel.getBoundingClientRect();
+      const panelTop = r.top - mapRect.top;
+      const panelBottom = r.bottom - mapRect.top;
+      const panelRight = r.right - mapRect.left;
+
+      if (panelTop > H * 0.25) {
+        // Bottom sheet (phones): route goes above it.
+        padding.bottom = Math.min(H - panelTop + edge, H - padding.top - MIN_VISIBLE);
       } else {
-        // On mid-size windows the panel can be most of the width; padding past half the
-        // map makes fitBounds zoom far *out*, the opposite of what we want.
-        padding.left = Math.min(panel.offsetLeft + panel.offsetWidth + edge, window.innerWidth * 0.5);
+        // Floating card at top-left: put the route beside it or below it, whichever
+        // leaves the larger clear area (below on portrait tablets, beside on desktop).
+        const besideArea = Math.max(0, W - panelRight - edge) * H;
+        const belowArea = W * Math.max(0, H - panelBottom - edge);
+        if (belowArea > besideArea) {
+          padding.top = Math.min(panelBottom + edge, H - padding.bottom - MIN_VISIBLE);
+        } else {
+          padding.left = Math.min(panelRight + edge, W - padding.right - MIN_VISIBLE);
+        }
       }
     }
 
-    this.googleMap.fitBounds(bounds, padding);
+    // Cap the zoom by giving fitBounds a minimum area (~500 m) instead of calling setZoom()
+    // afterwards: setZoom() zooms around the map's centre, not the padded area, which slid the
+    // car and route back under the panel when the driver was close to the pickup.
+    const MIN_SPAN = 0.0045; // degrees ≈ 500 m
+    const center = bounds.getCenter();
+    const target = new google.maps.LatLngBounds();
+    target.union(bounds);
+    target.extend({ lat: center.lat() + MIN_SPAN / 2, lng: center.lng() + MIN_SPAN / 2 });
+    target.extend({ lat: center.lat() - MIN_SPAN / 2, lng: center.lng() - MIN_SPAN / 2 });
 
-    const MAX_ZOOM = 16;
-    google.maps.event.addListenerOnce(this.googleMap, 'idle', () => {
-      if (this.googleMap.getZoom() > MAX_ZOOM) this.googleMap.setZoom(MAX_ZOOM);
-    });
+    this.googleMap.fitBounds(target, padding);
   }
 
   /** Numbered markers for the extra stops (share links); rebuilt only when the stops change. */

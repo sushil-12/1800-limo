@@ -23,6 +23,8 @@ export interface AdminNotification {
 	actor_role: number | null;
 	actor_name: string | null;
 	source: 'web' | 'app';
+	ip_address?: string | null;
+	country?: string | null;
 	title: string;
 	changes: AdminNotificationChange[] | null;
 	read_at: string | null;
@@ -187,7 +189,8 @@ export class AdminNotificationService {
 			}
 			this.recent$.next(page.data);
 			if (alertAfterId !== undefined) {
-				const fresh = page.data.filter(n => n.id > alertAfterId);
+				// Admin-made entries arrive pre-read (silent): listed, but no toast or chime.
+				const fresh = page.data.filter(n => n.id > alertAfterId && !n.read_at);
 				if (fresh.length) {
 					this.alert(fresh);
 				}

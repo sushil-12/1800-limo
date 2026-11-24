@@ -10,8 +10,13 @@ export const EVENT_LABELS: Record<string, string> = {
 };
 
 const ROLE_LABELS: Record<number, string> = {
+	1: 'Admin',
+	2: 'Affiliate',
 	3: 'Travel planner',
 	5: 'Customer',
+	6: 'Sub-admin',
+	8: 'Affiliate',
+	10: 'Driver',
 };
 
 export function eventLabel(event: string): string {
@@ -42,8 +47,12 @@ export function actorRole(n: AdminNotification): string {
 	return (n.actor_role && ROLE_LABELS[n.actor_role]) || '';
 }
 
+/** "Website", or "Website · IP 1.2.3.4 · US" when the request origin was recorded. */
 export function sourceLabel(n: AdminNotification): string {
-	return n.source === 'app' ? 'Mobile app' : 'Website';
+	const source = n.source === 'app' ? 'Mobile app' : 'Website';
+	const ip = n.ip_address ? ` · IP ${n.ip_address}` : '';
+	const country = n.country ? ` · ${n.country}` : '';
+	return source + ip + country;
 }
 
 export function initials(name: string): string {
